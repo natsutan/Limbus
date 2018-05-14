@@ -1,2 +1,7 @@
 
 .idea/*
+.vs/*
+Limbus/.vs/*
+Limbus/Limbus/bin/*
+Limbus/Limbus/obj/*
+Limbus/packages/*

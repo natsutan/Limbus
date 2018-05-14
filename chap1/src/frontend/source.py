@@ -6,7 +6,7 @@ class Source:
     EOF = None
 
     def __init__(self, reader):
-        self.init_num = 0
+        self.line_num = 0
         self.current_pos = -2  # -2が最初の値
         self.reader = reader
         self.line = ""
@@ -28,7 +28,13 @@ class Source:
         return self.line[self.current_pos]
 
     def read_line(self):
-        pass
+        try:
+            self.line = self.reader.readline()
+        except StopIteration:
+            return self.EOF
+
+        self.current_pos = -1
+        self.line_num = self.line_num + 1
 
     def next_char(self):
         self.current_pos = self.current_pos + 1
