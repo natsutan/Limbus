@@ -1,0 +1,52 @@
+@startuml
+
+class "Parser" as Parser {
+# iCode :iCode
+# symTab : SymTab
++ paser ()
++ getDErrorCount () : int
++ currentToken () : Token
++ nextToken() : Token
+}
+
+class "Scanner" as Scanner {
++ currentToken () : Token
++ nextToken() : Token
+# extractToken
++ currentChar () : Char
++ nextChar() : Char
+}
+
+class "Token" as Token {
+# txt : String
+# value : object
+- lineNum : int
+- position : int
+# extract()
+# currentChar () : Char
+# nextChar () : Char
+# peekChar () : Char
+}
+
+class "Source" as Source {
+- reader : java.io.BufferedReader
+- line : String
+- lineNum : int
+- currentPos : int
++ currentChar() : Char
++ nextChar () : Char
+}
+
+object TokenType
+
+Parser .down..> Token
+Parser o-ri---> Scanner : "scanner"
+
+Scanner o-down--> Token : "-currentToken"
+Scanner o-down--> Source : "source"
+
+Token o-right--> Source : "source"
+Token o-ri->TokenType
+EofToken o-le->Token
+
+@enduml

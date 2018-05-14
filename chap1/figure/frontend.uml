@@ -1,0 +1,19 @@
+
+@startuml
+
+object Parser
+object Scanner
+
+object Token
+object Source
+
+Parser .down..> Token
+Parser o-ri-> Scanner : "scanner"
+
+Scanner o-down-> Token : "-currentToken"
+Scanner o-down-> Source : "source"
+
+Token o-right-> Source : "source"
+
+
+@enduml
