@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 # package wci.frontend;
 # import wci.intermediate.ICode;

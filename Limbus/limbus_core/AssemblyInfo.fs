@@ -1,4 +1,4 @@
-﻿namespace Limbus.AssemblyInfo
+﻿namespace limbus_core.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -7,11 +7,11 @@ open System.Runtime.InteropServices
 // アセンブリに関する一般情報は、以下の属性セットによって
 // 制御されます。アセンブリに関連付けられている情報を変更するには、
 // これらの属性値を変更します。
-[<assembly: AssemblyTitle("Limbus")>]
+[<assembly: AssemblyTitle("limbus_core")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("")>]
-[<assembly: AssemblyProduct("Limbus")>]
+[<assembly: AssemblyProduct("limbus_core")>]
 [<assembly: AssemblyCopyright("Copyright ©  2018")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
@@ -22,7 +22,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 
 // このプロジェクトが COM に公開される場合、次の GUID がタイプ ライブラリの ID になります
-[<assembly: Guid("186c3623-3d29-4b28-b29f-971e395553bc")>]
+[<assembly: Guid("289927a8-4e2c-4769-b547-015788888914")>]
 
 // アセンブリのバージョン情報は、以下の 4 つの値で構成されます。:
 // 
