@@ -55,9 +55,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Token.fs" />
-    <Compile Include="Scanner.fs" />
-    <Compile Include="Parser.fs" />
     <Compile Include="limbus_core.fs" />
     <Content Include="packages.config" />
     <None Include="Script.fsx" />
@@ -79,6 +76,11 @@
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="frontend\Token.fs" />
+    <Compile Include="frontend\Scanner.fs" />
+    <Compile Include="frontend\Parser.fs" />
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
