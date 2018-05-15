@@ -78,6 +78,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="frontend\Source.fs" />
     <Compile Include="frontend\Token.fs" />
     <Compile Include="frontend\Scanner.fs" />
     <Compile Include="frontend\Parser.fs" />
