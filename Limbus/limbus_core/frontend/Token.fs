@@ -9,36 +9,41 @@ let tchar2s(t : TCHAR) : string =
         | EOL | EOF -> ""
         | _ -> string(C)    
 
-[<AbstractClass>]
-type Token(source : Source) = 
+[<Class>]
+type Token(src : Source) = 
     class
         let mutable _type : TokenType = 0
-        let mutable _text : string = ""
-        let mutable _value : TokenValue = I 0
-        let mutable _source = source
-        let mutable _line_num = _source.line_num
-        let mutable _position = _source.current_pos
+        member val text : string = "" with get, set
+        member val value : TokenValue = I 0 with get, set
+        member val source = src with get, set
+        member val line_num = src.line_num with get
+        member val position = src.current_pos with get
         
         member this.extract()  = 
-            _text <- this.currnet_char() |> tchar2s
-            _value <- None
+            this.text <- this.currnet_char() |> tchar2s
+            this.value <- None
             this.next_char()
                     
         member this.currnet_char() : TCHAR =
-            _source.current_char()
+            this.source.current_char()
     
         member this.next_char() : TCHAR  =
-            _source.next_char()
+            this.source.next_char()
             
         member this.peek_char() : TCHAR =
-            _source.peek_char()
+            this.source.peek_char()
     end
 
 [<Class>]
-type EodOfToken(source : Source) =
+type EofOfToken(source : Source) =
     inherit Token(source)
-    
 
     member this.extract() = 
         base.extract()
 
+[<Class>]
+type DummyToken(source : Source) =
+    inherit Token(source)
+
+    member this.extract() = 
+        base.extract()

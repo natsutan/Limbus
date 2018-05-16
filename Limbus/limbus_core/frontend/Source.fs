@@ -44,7 +44,7 @@ type Source(reader : StreamReader )  =
 
         if line = null then 
             rearch_eof <- true
-            let m = {msg_type = SOURCE_LINE ; body = MSGS [string(this.line_num) ; line]}
+            let m = {msg_type = PARSER_SUMMARY ; body = MSGS [string(this.line_num) ; line]}
             this.send_message(m)
             
         this.line_num <- this.line_num + 1

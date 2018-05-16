@@ -1,0 +1,40 @@
+@startuml
+
+package "backend" #DDDDDD {
+  class Backend
+}
+
+package "intermidiate" #DDDDDD {
+  iCode .[hidden]d. Symtab
+}
+
+class "Backend" as Backend {
++ process ()
+}
+
+package "backend.compier" #DDDDDD {
+  class CodeGenerater
+}
+
+package "backend.interpreter" #DDDDDD {
+  class Executer
+}
+
+package "message" #DDDDDD {
+   MessageProducer .[hidden]d. MessageHandler
+   MessageHandler .[hidden]d. Message
+}
+
+
+CodeGenerater -[hidden]- Executer
+
+Backend o...l> iCode
+Backend o....> Symtab
+CodeGenerater ..u> Backend
+Executer ..u> Backend
+
+MessageProducer <|...o  Backend
+Backend o..> MessageHandler
+Backend o.r> Message
+
+@enduml
