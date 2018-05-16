@@ -1,8 +1,8 @@
 ﻿// F# の詳細については、http://fsharp.org を参照してください。F# プログラミングのガイダンスについては、
 // 'F# チュートリアル' プロジェクトを参照してください。
 
-#load "Library1.fs"
-open limbus_core
+//#load "Library1.fs"
+//open limbus_core
 
 // ここでライブラリ スクリプト コードを定義します
 

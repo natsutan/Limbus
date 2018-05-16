@@ -1,6 +1,6 @@
 module backend
 open common
-open MessageIF
+
 
 [<AbstractClass>]
 type Backend(iCode : iCode, symTab : SymTab) = 

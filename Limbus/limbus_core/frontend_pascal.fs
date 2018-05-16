@@ -1,10 +1,8 @@
 module frontend.pascal
 open System.Diagnostics
-open MessageIF
-open Parser
-open Scanner
-open Token
-open Source
+
+open common
+open Frontend
 
 [<Class>]
 type PascalParserTD(scanner : Scanner) = 
@@ -23,7 +21,7 @@ type PascalParserTD(scanner : Scanner) =
             | _ -> 
                 token <- this.next_token()
         
-        let ln : string = string(token._line_num)
+        let ln : string = string(token.line_num)
         let en : string = string(this.get_error_count())
             
         let m : Message = {msg_type = SOURCE_LINE ; body = MSGS [ln ;en]}
