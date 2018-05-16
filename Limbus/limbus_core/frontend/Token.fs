@@ -1,40 +1,44 @@
 module Token
 open Source
 
-type TokenType = INT | FLOAT
-type TokenValue = I of int | F of float
-
-type Token = { Type : TokenType ; text : string ; value : TokenValue ;  sourse : string ; line_num : int ; position : int}
-
+type TokenType = int
+type TokenValue = I of int | F of float | None
 
 let tchar2s(t : TCHAR) : string =
     match t with 
         | EOL | EOF -> ""
         | _ -> string(C)    
 
-let extract(source : Source) : string =
-    let text = source.current_char() |> tchar2s
-    source.next_char() |> ignore
+[<AbstractClass>]
+type Token(source : Source) = 
+    class
+        let mutable _type : TokenType = 0
+        let mutable _text : string = ""
+        let mutable _value : TokenValue = I 0
+        let mutable _source = source
+        let mutable _line_num = _source.line_num
+        let mutable _position = _source.current_pos
+        
+        member this.extract()  = 
+            _text <- this.currnet_char() |> tchar2s
+            _value <- None
+            this.next_char()
+                    
+        member this.currnet_char() : TCHAR =
+            _source.current_char()
     
-    text
+        member this.next_char() : TCHAR  =
+            _source.next_char()
+            
+        member this.peek_char() : TCHAR =
+            _source.peek_char()
+    end
 
-
-let make_token(source : Source) : Token =
-    let t = INT
-    let text = extract(source)
-                   
-    let value = I 10
-    let src = ""
-    let line_num = source.line_num()
-    let position = source.current_pos()
+[<Class>]
+type EodOfToken(source : Source) =
+    inherit Token(source)
     
-    { Type = t; text = text; value = value; sourse = src; line_num = line_num; position = position }
 
-let make_dummy_token() : Token =
-    let t = INT
-    let text = ""
-    let value = I 0
-    let src = ""
-    let line_num = 0
-    let position = 0
-    { Type = t; text = text; value = value; sourse = src; line_num = line_num; position = position }
+    member this.extract() = 
+        base.extract()
+

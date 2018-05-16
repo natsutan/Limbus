@@ -1,0 +1,34 @@
+@startuml
+
+
+
+package "frontend" #DDDDDD {
+  Parser .[hidden]r Scanner
+}
+
+class "Parser" as Parser {
++ paser ()
++ getDErrorCount () : int
+}
+
+class "Scanner" as Scanner {
+# ExactToken ()
+}
+
+package "frontend.pascal" #DDDDDD {
+  PascalParserTd .[hidden]r PascalScanner
+}
+
+class "PascalParserTd" as PascalParserTd {
++ paser ()
++ getDErrorCount () : int
+}
+
+class "PascalScanner" as PascalScanner {
+# ExactToken ()
+}
+
+PascalParserTd -u-> Parser
+PascalScanner -u-> Scanner
+
+@enduml

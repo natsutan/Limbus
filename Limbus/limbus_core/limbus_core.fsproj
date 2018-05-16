@@ -55,9 +55,13 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="backend\backend.fs" />
+    <Compile Include="frontend_pascal.fs" />
     <Compile Include="limbus_core.fs" />
     <Content Include="packages.config" />
     <None Include="Script.fsx" />
+    <Compile Include="MessageIF.fs" />
+    <Compile Include="common.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

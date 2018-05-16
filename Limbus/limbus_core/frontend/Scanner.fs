@@ -6,9 +6,10 @@ open Source
 [<AbstractClass>]
 type Scanner(source : Source) =
     class
-        let mutable current_token = make_dummy_token()
+        let mutable current_token : Token = EodOfToken  (source) :> Token
     
         member this.source = source
+        
         abstract member extra_token : unit -> Token
 
         member this.cuurent_token() : Token = 
