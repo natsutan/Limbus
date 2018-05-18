@@ -3,7 +3,9 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Parser(metaclass=ABCMeta):
+class Scanner(metaclass=ABCMeta):
+    EOF = None
+
     def __init__(self, source):
         self.source = source
         self.cur_token = None

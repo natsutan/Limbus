@@ -2,7 +2,8 @@
 from abc import ABCMeta, abstractmethod
 from .. message import MessageProducer, MessageHandler
 
-class Parser(metaclass=ABCMeta, MessageProducer):
+
+class Parser(MessageProducer, metaclass=ABCMeta):
     def __init__(self, scanner):
         self.symTab = None
         self.scanner = scanner

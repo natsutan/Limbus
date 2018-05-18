@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 class Source:
     EOL = '\n'
     EOF = None
