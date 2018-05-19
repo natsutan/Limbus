@@ -23,6 +23,16 @@ class ParserMessageListener(MessageListener):
             print("%3d %s" % (body[0], body[1]))
 
 
+class BackendMessageListener(MessageListener):
+    def message_received(self, msg):
+        type = msg.type
+        body = msg.body
+        if type == MessageType.INTERPRETER_SUMMARY:
+            print('%d statements executed. %d runtime errors.' % (body[0], body[1]))
+        elif type == MessageType.COMPILER_SUMMARY:
+            print('%d instructions generated' % body)
+
+
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         super().__init__(scanner)
@@ -77,3 +87,13 @@ class Pascal:
         self.parser.add_message_listener(ParserMessageListener())
 
         self.backend = BackendFactory().create_backend(op)
+        self.backend.add_message_listener(BackendMessageListener())
+
+        self.parser.parse()
+        self.source.close()
+
+        self.iCode = self.parser.get_iCode()
+        self.symTab = self.parser.get_symTab()
+
+        self.backend.process(self.iCode, self.symTab)
+        

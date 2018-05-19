@@ -4,13 +4,13 @@ from .. message import MessageProducer, MessageHandler
 
 
 class Backend(MessageProducer, metaclass=ABCMeta):
-    def __init__(self, icode, symtab):
-        self.iCode = icode
-        self.symTab = symtab
+    def __init__(self):
+        self.iCode = None
+        self.symTab = None
         self.message_handler = MessageHandler()
 
     @abstractmethod
-    def process(self):
+    def process(self, icode, symtab):
         raise NotImplementedError()
 
     # delegate
