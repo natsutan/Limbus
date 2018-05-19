@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from .. message import MessageProducer, MessageHandler
 
 
-class Backend(metaclass=ABCMeta, MessageProducer):
+class Backend(MessageProducer, metaclass=ABCMeta):
     def __init__(self, icode, symtab):
         self.iCode = icode
         self.symTab = symtab

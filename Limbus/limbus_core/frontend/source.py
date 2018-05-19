@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from .. message import MessageProducer, MessageHandler
 
-class Source:
+
+class Source(MessageProducer):
     EOL = '\n'
     EOF = None
 
@@ -9,6 +11,7 @@ class Source:
         self.current_pos = -2  # -2が最初の値
         self.reader = reader
         self.line = ""
+        self.message_handler = MessageHandler()
 
     def current_char(self):
         # first line
@@ -47,8 +50,18 @@ class Source:
         next_pos = self.current_pos + 1
         if next_pos > len(self.line):
             return self.line[next_pos]
-        else
+        else:
             return self.EOL
 
     def close(self):
         self.reader.close()
+
+    # delegate
+    def add_message_listener(self, listener):
+        self.message_handler.add_message_listener(listener)
+
+    def remove_message_listener(self, listener):
+        self.message_handler.remove_message_listener(listener)
+
+    def send_message(self, message):
+        self.message_handler.send_message(message)
