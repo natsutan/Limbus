@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
-from limbus_core.frontend.token import Token
+from limbus_core.frontend.token import Token, TokenType
 from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
 from limbus_core.backend.backend_factory import BackendFactory
@@ -39,7 +39,7 @@ class PascalParserTD(Parser):
 
     def parse(self):
         token = self.next_token()
-        while token.type != Token.EOF:
+        while token.type != TokenType.EOF:
             token = self.next_token()
 
         line_number = self.get_line_number()
@@ -96,4 +96,4 @@ class Pascal:
         self.symTab = self.parser.get_symTab()
 
         self.backend.process(self.iCode, self.symTab)
-        
+

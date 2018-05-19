@@ -13,7 +13,7 @@ class Scanner(metaclass=ABCMeta):
     def current_token(self):
         return self.cur_token
 
-    def next_topen(self):
+    def next_token(self):
         self.cur_token = self.extract_token()
         return self.cur_token
 

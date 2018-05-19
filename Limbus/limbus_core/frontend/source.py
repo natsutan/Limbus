@@ -56,6 +56,12 @@ class Source(MessageProducer):
     def close(self):
         self.reader.close()
 
+    def get_line_num(self):
+        return self.line_num
+
+    def get_position(self):
+        return self.current_pos
+
     # delegate
     def add_message_listener(self, listener):
         self.message_handler.add_message_listener(listener)
