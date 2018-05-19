@@ -23,6 +23,7 @@ class PascalParserTD(Parser):
     def get_error_count(self):
         return 0
 
+
 class PascalScanner(Scanner):
     def __init__(self, source):
         super(Scanner, self).__init__(source)

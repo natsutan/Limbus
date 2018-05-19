@@ -9,6 +9,7 @@ class MessageType(Enum):
     SYNTAX_ERROR = auto()
     PARSER_SUMMARY = auto()
     INTERPRETER_SUMMARY = auto()
+    EXECUTE_SUMMARY = auto()
     COMPILER_SUMMARY = auto() 
     MISCELLANEOUS = auto() 
     MSG_TOKEN = auto() 
