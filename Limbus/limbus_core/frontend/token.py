@@ -15,6 +15,7 @@ class Token:
         self.source = source
         self.line_num = source.get_line_num()
         self.pos = source.get_position()
+        self.extract()
 
     def extract(self):
         self.text = self.current_char()

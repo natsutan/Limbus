@@ -15,6 +15,14 @@ class Parser(MessageProducer, metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_iCode(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_symTab(self):
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_error_count(self):
         raise NotImplementedError()
 

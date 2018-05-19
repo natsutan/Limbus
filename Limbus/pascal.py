@@ -12,7 +12,7 @@ class SourceMessageListener(MessageListener):
         type = msg.type
         body = msg.body
         if type == MessageType.PARSER_SUMMARY:
-            print("%d source lines%s\n%d syntax errors" % (body[0], body[1]))
+            print("%d source lines\n%d syntax errors" % (body[0], body[1]))
 
 
 class ParserMessageListener(MessageListener):
@@ -42,7 +42,7 @@ class PascalParserTD(Parser):
         while token.type != TokenType.EOF:
             token = self.next_token()
 
-        line_number = self.get_line_number()
+        line_number = token.line_num
         err_cnt = self.get_error_count()
 
         msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
@@ -50,6 +50,12 @@ class PascalParserTD(Parser):
 
     def get_error_count(self):
         return 0
+
+    def get_iCode(self):
+        return []
+
+    def get_symTab(self):
+        return []
 
 
 class PascalScanner(Scanner):
@@ -60,7 +66,7 @@ class PascalScanner(Scanner):
         cc = self.current_char()
         if cc == Scanner.EOF:
             token = Token(self.source)
-            token.type = Token.EOF
+            token.type = TokenType.EOF
         else:
             token = Token(self.source)
         return token

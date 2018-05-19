@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .. message import MessageProducer, MessageHandler
+from .. message import MessageProducer, MessageHandler, Message, MessageType
 
 
 class Source(MessageProducer):
@@ -23,20 +23,27 @@ class Source(MessageProducer):
         if self.line == self.EOF:
             return self.EOF
 
-        if self.current_pos > len(self.line):
+        if self.current_pos >= len(self.line):
             self.read_line()
             return self.next_char()
 
         return self.line[self.current_pos]
 
     def read_line(self):
-        try:
-            self.line = self.reader.readline()
-        except StopIteration:
+        self.line = self.reader.readline()
+
+        if self.line == "":
+            self.line = self.EOF
             return self.EOF
+
+        self.line = self.line.rstrip('\n')
 
         self.current_pos = -1
         self.line_num = self.line_num + 1
+        ln = self.line_num
+        line = self.line
+        msg = Message(MessageType.SOURCE_LINE, (ln, line))
+        self.send_message(msg)
 
     def next_char(self):
         self.current_pos = self.current_pos + 1

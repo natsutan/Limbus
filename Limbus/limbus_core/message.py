@@ -48,21 +48,21 @@ class MessageListener(metaclass=ABCMeta):
 
 
 class MessageHandler:
-    def __init__(self):
-        self.msg = None
-        self.listener = []
+    # クラス変数として宣言
+    msg = None
+    listener = []
 
     def add_message_listener(self, listener):
-        self.listener.append(listener)
+        MessageHandler.listener.append(listener)
 
     def remove_message_listener(self, listener):
-        self.listener.remove(listener)
+        MessageHandler.listener.remove(listener)
 
     def send_message(self, message):
-        self.msg = message
+        MessageHandler.msg = message
         self.notify_listener()
 
     def notify_listener(self):
-        for l in self.listener:
-            l.message_received(self.msg)
+        for l in MessageHandler.listener:
+            l.message_received(MessageHandler.msg)
 
