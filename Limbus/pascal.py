@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
-from limbus_core.frontend.token import Token, TokenType
+from limbus_core.frontend.token import Token, TokenType, ErrorToken
 from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
 from limbus_core.backend.backend_factory import BackendFactory
+
+from pascal_error import PascalErrorType, PascalError
+from pascal_token import *
 
 
 class SourceMessageListener(MessageListener):
@@ -17,29 +22,75 @@ class SourceMessageListener(MessageListener):
 
 class ParserMessageListener(MessageListener):
     def message_received(self, msg):
-        type = msg.type
+        mtype = msg.type
         body = msg.body
-        if type == MessageType.SOURCE_LINE:
-            print("%3d %s" % (body[0], body[1]))
+
+        if mtype == MessageType.TOKEN:
+            if not body.value:
+                vs = ""
+            else:
+                vs = "value = %s" % str(body.value)
+            print("%-5s line = %d, pos =%d, text = %s %s" %
+                  (body.type, body.line_num, body.pos, body.text, vs))
+
+        elif mtype == MessageType.SYNTAX_ERROR:
+            prefix_width = 5
+            token = body[0]
+            error_message = body[1]
+
+            space_cnt = prefix_width + token.pos
+
+            print("%s^", ' ' * space_cnt)
+            print("*** ", error_message)
+            if not token.text:
+                print("at [%s]" % token.text)
 
 
 class BackendMessageListener(MessageListener):
     def message_received(self, msg):
-        type = msg.type
+        mtype = msg.type
         body = msg.body
-        if type == MessageType.INTERPRETER_SUMMARY:
+        if mtype == MessageType.INTERPRETER_SUMMARY:
             print('%d statements executed. %d runtime errors.' % (body[0], body[1]))
-        elif type == MessageType.COMPILER_SUMMARY:
+        elif mtype == MessageType.COMPILER_SUMMARY:
             print('%d instructions generated' % body)
 
 
+class PascalErrorHandler:
+    def __init__(self):
+        self.MAX_ERROR = 25
+        self.error_cnt = 0
+
+    def flag(self, token, error_code, parser):
+        msg = Message(MessageType.SYNTAX_ERROR, (token, error_code))
+        parser.send_message(msg)
+
+        self.error_cnt = self.error_cnt + 1
+        if self.error_cnt > self.MAX_ERROR:
+            self.abort_translation('TOO_MANY_ERRORS', parser)
+
+    def abort_translation(self, err_code, parser):
+        msg = Message(MessageType.SYNTAX_ERROR, "FATAL_ERROR:"+err_code)
+        parser.send_message(msg)
+        sys.exit(1)
+
+    def get_error_count(self):
+        return self.error_cnt
+
 class PascalParserTD(Parser):
     def __init__(self, scanner):
+        self.error_handler = PascalErrorHandler()
         super().__init__(scanner)
 
     def parse(self):
         token = self.next_token()
         while token.type != TokenType.EOF:
+            if token.type != TokenType.ERROR:
+                msg = Message(MessageType.TOKEN, token)
+                self.send_message(msg)
+            else:
+                self.error_handler.flag(token, token.err_code, self)
+
             token = self.next_token()
 
         line_number = token.line_num
@@ -49,7 +100,7 @@ class PascalParserTD(Parser):
         self.send_message(msg)
 
     def get_error_count(self):
-        return 0
+        return self.error_handler.get_error_count()
 
     def get_iCode(self):
         return []
@@ -59,17 +110,44 @@ class PascalParserTD(Parser):
 
 
 class PascalScanner(Scanner):
+    special_chars = "<>=()[]{}^.+-*/:.,;'="
+
     def __init__(self, source):
         super().__init__(source)
 
     def extract_token(self):
+        self.skip_whitespace()
         cc = self.current_char()
+
         if cc == Scanner.EOF:
             token = Token(self.source)
             token.type = TokenType.EOF
+        elif cc.isalpha():
+            token = PascalWordToken(self.source)
+        elif cc.isdigit():
+            token = PascalNumberToken(self.source)
+        elif cc == '"':
+            token = PascalStringToken(self.source)
+        elif cc in PascalScanner.special_chars:
+            token = PascalSpecialToken(self.source)
         else:
-            token = Token(self.source)
+            token = ErrorToken("PascalScanner", self.source)
+            self.next_char()
+
         return token
+
+    def skip_whitespace(self):
+        cc = self.current_char()
+        while cc == ' ' or cc == '{' :
+            # comment
+            if cc == '{':
+                cc = self.next_char()
+                while cc == Scanner.EOF or cc != '}':
+                    cc = self.next_char()
+                if cc == '}':
+                    cc = self.next_char()
+            else:
+                cc = self.next_char()
 
 
 class Pascal:
