@@ -3,7 +3,8 @@ from pascal import Pascal
 
 #hello_ps = 'pascal_src/scannertest.txt'
 # hello_ps = 'pascal_src/comment.txt'
-hello_ps = 'pascal_src/word.txt'
+# hello_ps = 'pascal_src/word.txt'
+hello_ps = 'pascal_src/string.txt'
 
 
 def main():

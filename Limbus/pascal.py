@@ -36,13 +36,15 @@ class ParserMessageListener(MessageListener):
                   (body.type, body.line_num, body.pos, body.text, vs))
 
         elif mtype == MessageType.SYNTAX_ERROR:
-            prefix_width = 5
+            prefix_width = 7
             token = body[0]
             error_message = body[1]
+            line = body[2]
 
             space_cnt = prefix_width + token.pos
 
-            print("%s^", ' ' * space_cnt)
+            print("ERROR:", line)
+            print(' ' * space_cnt + '^')
             print("*** ", error_message)
             if not token.text:
                 print("at [%s]" % token.text)
@@ -64,7 +66,8 @@ class PascalErrorHandler:
         self.error_cnt = 0
 
     def flag(self, token, error_code, parser):
-        msg = Message(MessageType.SYNTAX_ERROR, (token, error_code))
+        line = parser.get_line()
+        msg = Message(MessageType.SYNTAX_ERROR, (token, error_code, line))
         parser.send_message(msg)
 
         self.error_cnt = self.error_cnt + 1
@@ -110,6 +113,9 @@ class PascalParserTD(Parser):
 
     def get_symTab(self):
         return []
+
+    def get_line(self):
+        return self.scanner.source.line
 
 
 class PascalScanner(Scanner):
