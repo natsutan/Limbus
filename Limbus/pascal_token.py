@@ -79,6 +79,8 @@ class PascalWordToken(Token):
     def __init__(self, source):
         super().__init__(source)
 
+    def extract(self):
+
 
 class PascalNumberToken(Token):
     def __init__(self, source):

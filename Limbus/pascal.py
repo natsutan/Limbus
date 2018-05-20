@@ -77,6 +77,7 @@ class PascalErrorHandler:
     def get_error_count(self):
         return self.error_cnt
 
+
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
