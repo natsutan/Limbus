@@ -26,10 +26,12 @@ class ParserMessageListener(MessageListener):
         body = msg.body
 
         if mtype == MessageType.TOKEN:
-            if not body.value:
-                vs = ""
-            else:
-                vs = "value = %s" % str(body.value)
+            vs = ""
+            if body.type == TokenType.PASCAL:
+                vs = vs + str(body.ptype) + " "
+
+            if body.value:
+                vs = vs + "value = %s" % str(body.value)
             print("%-5s line = %d, pos =%d, text = %s %s" %
                   (body.type, body.line_num, body.pos, body.text, vs))
 
@@ -139,7 +141,7 @@ class PascalScanner(Scanner):
 
     def skip_whitespace(self):
         cc = self.current_char()
-        while cc == ' ' or cc == '{' :
+        while cc == ' ' or cc == '{' or cc == '\n' :
             # comment
             if cc == '{':
                 cc = self.next_char()

@@ -73,13 +73,27 @@ special_symbols = {
 }
 
 
-
-
 class PascalWordToken(Token):
     def __init__(self, source):
+        self.ptype = None
         super().__init__(source)
+        self.type = TokenType.PASCAL
 
     def extract(self):
+        s = ""
+        cc = self.current_char()
+        while cc.isalpha() or cc.isdigit():
+            s = s + cc
+            cc = self.next_char()
+            if not cc:
+                break
+
+        if s.upper() in reserved_list:
+            self.ptype = PascalTokenType.RESERVED
+            self.value = s.upper()
+        else:
+            self.ptype = PascalTokenType.IDENTIFIER
+            self.value = s
 
 
 class PascalNumberToken(Token):
