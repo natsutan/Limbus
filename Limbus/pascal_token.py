@@ -144,5 +144,49 @@ class PascalStringToken(Token):
 
 
 class  PascalSpecialToken(Token):
+
+    single_chars = "+-*/,;'=(){}^[]"
+
     def __init__(self, source):
+        self.ptype = None
         super().__init__(source)
+        self.type = TokenType.PASCAL
+
+    def extract(self):
+        cc = self.current_char()
+        text = cc
+        if cc in self.single_chars:
+            self.next_char()
+        elif cc == ':':
+            cc = self.next_char()
+            if cc == '=':
+                text = text + cc
+                self.next_char()
+        elif cc == '<':
+            cc = self.next_char()
+            if cc == '=':
+                text = text + cc
+                self.next_char()
+            elif cc == '>':
+                text = text + cc
+                self.next_char()
+        elif cc == '>':
+            cc = self.next_char()
+            if cc == '=':
+                text = text + cc
+                self.next_char()
+        elif cc == '.':
+            cc = self.next_char()
+            if cc == '.':
+                text = text + cc
+                self.next_char()
+        else:
+            self.next_char()
+            self.type = TokenType.ERROR
+            self.value = 'INVALID CHAR'
+            return
+
+        self.text = text
+        self.ptype = special_symbols[text]
+
+
