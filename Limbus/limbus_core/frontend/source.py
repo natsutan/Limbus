@@ -58,7 +58,7 @@ class Source(MessageProducer):
             return self.EOF
 
         next_pos = self.current_pos + 1
-        if next_pos > len(self.line):
+        if next_pos < len(self.line):
             return self.line[next_pos]
         else:
             return self.EOL

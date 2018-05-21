@@ -1,6 +1,3 @@
-'Hello, world.'
-'It''s Friday!'
-''
 ' '' '' '   ''''''
 'This string
 spans

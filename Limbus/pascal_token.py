@@ -103,7 +103,44 @@ class PascalNumberToken(Token):
 
 class PascalStringToken(Token):
     def __init__(self, source):
+        self.ptype = None
         super().__init__(source)
+        self.type = TokenType.PASCAL
+
+    def extract(self):
+        value = ""
+        cc = self.next_char()
+        text = "'"
+        # EOF時、ccはNone
+        # do while
+        while True:
+            if cc != "'" and cc != None:
+                text = text + cc
+                value = value + cc
+                cc = self.next_char()
+
+            if cc == "'":
+                pc = self.peek_char()
+                while cc == "'" and pc == "'":
+                    text = text + "''"
+                    value = value + "'"
+                    cc = self.next_char()
+                    cc = self.next_char()
+                    pc = self.peek_char()
+
+            if cc == "'" or not cc:
+                break
+
+        if cc == "'":
+            self.next_char()
+            text = text + "'"
+            self.ptype = PascalTokenType.STRING
+            self.value = value
+        else:
+            self.type = TokenType.ERROR
+            self.value = "UNEXPECTED_EOF"
+
+        self.text = str(text)
 
 
 class  PascalSpecialToken(Token):

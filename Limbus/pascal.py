@@ -135,7 +135,7 @@ class PascalScanner(Scanner):
             token = PascalWordToken(self.source)
         elif cc.isdigit():
             token = PascalNumberToken(self.source)
-        elif cc == '"':
+        elif cc == "'":
             token = PascalStringToken(self.source)
         elif cc in PascalScanner.special_chars:
             token = PascalSpecialToken(self.source)
