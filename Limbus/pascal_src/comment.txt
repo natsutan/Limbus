@@ -1,0 +1,7 @@
+{This is a comment.}
+
+{This is a comment
+ that spans several
+ source lines.}
+
+Two{comments in}{a row} here

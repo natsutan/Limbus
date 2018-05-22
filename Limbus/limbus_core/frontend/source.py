@@ -23,7 +23,10 @@ class Source(MessageProducer):
         if self.line == self.EOF:
             return self.EOF
 
-        if self.current_pos >= len(self.line):
+        if self.current_pos == len(self.line):
+            return self.EOL
+
+        if self.current_pos > len(self.line):
             self.read_line()
             return self.next_char()
 
@@ -55,7 +58,7 @@ class Source(MessageProducer):
             return self.EOF
 
         next_pos = self.current_pos + 1
-        if next_pos > len(self.line):
+        if next_pos < len(self.line):
             return self.line[next_pos]
         else:
             return self.EOL

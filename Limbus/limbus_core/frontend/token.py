@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from enum import Enum,  auto
 
-
 class TokenType(Enum):
     DUMMY = auto()
     EOF = auto()
+    ERROR = auto()
+    PASCAL = auto()
 
 
 class Token:
@@ -12,6 +13,7 @@ class Token:
         self.type = TokenType.DUMMY
         self.text = ""
         self.value = None
+        self.error_code = None
         self.source = source
         self.line_num = source.get_line_num()
         self.pos = source.get_position()
@@ -32,6 +34,16 @@ class Token:
         return self.source.peek_char()
 
 
+class ErrorToken(Token):
+    def __init__(self, err_code, source):
+        super().__init__(source)
+        self.type = TokenType.ERROR
+        self.err_code = err_code
 
+
+class EofToken(Token):
+    def __init__(self, source):
+        super().__init__(source)
+        self.type = TokenType.EOF
 
 

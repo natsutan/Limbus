@@ -19,6 +19,7 @@ class MessageType(Enum):
     RUNTIME_ERROR = auto() 
     CALL = auto() 
     RETURN = auto()
+    TOKEN = auto()
 
 
 class Message:

@@ -1,0 +1,4 @@
+' '' '' '   ''''''
+'This string
+spans
+source lines.'
