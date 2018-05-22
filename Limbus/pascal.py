@@ -26,14 +26,28 @@ class ParserMessageListener(MessageListener):
         body = msg.body
 
         if mtype == MessageType.TOKEN:
-            vs = ""
-            if body.type == TokenType.PASCAL:
-                vs = vs + str(body.ptype) + " "
+            if body.type == TokenType.ERROR:
+                prefix_width = 7
+                token = body[0]
+                error_message = body[1]
+                line = body[2]
 
-            if body.value:
-                vs = vs + "value = %s" % str(body.value)
-            print("%-5s line = %d, pos =%d, text = %s %s" %
-                  (body.type, body.line_num, body.pos, body.text, vs))
+                space_cnt = prefix_width + token.pos
+
+                print("ERROR:", line)
+                print(' ' * space_cnt + '^')
+                print("*** ", error_message)
+                if not token.text:
+                    print("at [%s]" % token.text)
+            else:
+                vs = ""
+                if body.type == TokenType.PASCAL:
+                    vs = vs + str(body.ptype) + " "
+
+                if body.value:
+                    vs = vs + "value = %s" % str(body.value)
+                print("%-5s line = %d, pos =%d, text = %s %s" %
+                      (body.type, body.line_num, body.pos, body.text, vs))
 
         elif mtype == MessageType.SYNTAX_ERROR:
             prefix_width = 7
@@ -95,7 +109,7 @@ class PascalParserTD(Parser):
                 msg = Message(MessageType.TOKEN, token)
                 self.send_message(msg)
             else:
-                self.error_handler.flag(token, token.err_code, self)
+                self.error_handler.flag(token, token.error_code, self)
 
             token = self.next_token()
 

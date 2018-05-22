@@ -105,9 +105,9 @@ class PascalNumberToken(Token):
         self.value = None
         self.text = ""
         super().__init__(source)
-        self.type = TokenType.PASCAL
 
     def extract(self):
+        self.type = TokenType.PASCAL
 
         exponent_sign = '+'
         fraction_digits = None
