@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 from enum import Enum,  auto
 from limbus_core.frontend.token import Token, TokenType
 
@@ -97,9 +98,106 @@ class PascalWordToken(Token):
 
 
 class PascalNumberToken(Token):
-    def __init__(self, source):
-        super().__init__(source)
+    MAX_EXPONENT = 37
 
+    def __init__(self, source):
+        self.ptype = None
+        self.value = None
+        self.text = ""
+        super().__init__(source)
+        self.type = TokenType.PASCAL
+
+    def extract(self):
+
+        exponent_sign = '+'
+        fraction_digits = None
+        exponent_digits = None
+        saw_dotdot = False
+        self.text = ""
+
+        self.ptype = PascalTokenType.INTEGER  # 仮
+        whole_digits = self.unsigned_integer_digits()
+        if self.type == TokenType.ERROR:
+            return
+
+        cc = self.current_char()
+        if cc == '.':
+            pc = self.peek_char()
+            if pc == '.':
+                saw_dotdot = True
+            else:
+                self.ptype = PascalTokenType.REAL
+                self.text = self.text + cc
+                cc = self.next_char()
+                fraction_digits = self.unsigned_integer_digits()
+                if self.type == TokenType.ERROR:
+                    return
+        cc = self.current_char()
+        if (not saw_dotdot) and (cc == 'e' or cc == 'E'):
+            self.ptype = PascalTokenType.REAL
+            self.text = self.text + cc
+            cc = self.next_char()
+
+            if cc == '+' or cc == '-':
+                self.text = self.text + cc
+                exponent_sign = cc
+                cc = self.next_char()
+
+            exponent_digits = self.unsigned_integer_digits()
+
+        if self.ptype == PascalTokenType.INTEGER:
+            self.value = int(whole_digits)
+        elif self.ptype == PascalTokenType.REAL:
+            fv = self.compute_float_value(whole_digits, fraction_digits, exponent_digits, exponent_sign)
+            if self.type != TokenType.ERROR:
+                  self.value = float(fv)
+
+
+
+    def unsigned_integer_digits(self):
+        cc = self.current_char()
+        if not cc.isdigit():
+            self.type = TokenType.ERROR
+            self.value = 'INVALID_NUMBER'
+            return None
+
+        digits = ''
+        while cc.isdigit():
+            self.text = self.text + cc
+            digits = digits + cc
+            cc = self.next_char()
+
+        return digits
+
+    def compute_float_value(self, whole_digits, fraction_digits, exponent_digits, exponent_sign):
+        fv = 0.0
+        if exponent_digits == None:
+            exponentical_value = 0
+        else:
+            exponentical_value = int(exponent_digits)
+        digits = whole_digits
+
+        if exponent_sign == '-':
+            exponentical_value = -exponentical_value
+
+        if fraction_digits != None:
+            exponentical_value = exponentical_value - len(fraction_digits)
+            digits = digits + fraction_digits
+
+        if abs(exponentical_value + len(whole_digits)) > PascalNumberToken.MAX_EXPONENT:
+            self.type = TokenType.ERROR
+            self.value = 'RANGE_REAL'
+            return 0.0
+
+        index = 0
+        while index < len(digits):
+            fv = 10 * fv + int(digits[index])
+            index = index + 1
+
+        if exponentical_value != 0:
+            fv = fv * math.pow(10, exponentical_value)
+
+        return fv
 
 class PascalStringToken(Token):
     def __init__(self, source):
