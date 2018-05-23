@@ -177,12 +177,12 @@ class Pascal:
     def __init__(self, op, file, flags):
         # options
         if 'i' in flags:
-            self.intermediate = flags['i'] > - 1
+            self.intermediate = True
         else:
             self.intermediate = False
 
         if 'x' in flags:
-            self.xref = flags['x'] > -1
+            self.xref = True
         else:
             self.xref = False
 
@@ -200,7 +200,11 @@ class Pascal:
         self.source.close()
 
         self.iCode = self.parser.get_iCode()
-        self.symTab = self.parser.get_symTab()
+        self.symtab_stack = self.parser.get_symTab()
 
-        self.backend.process(self.iCode, self.symTab)
+        if self.xref :
+            cross_referencer = CrossReferencer()
+            cross_referencer.print(symtabb_stack)
+
+        self.backend.process(self.iCode, self.symtab_stack)
 

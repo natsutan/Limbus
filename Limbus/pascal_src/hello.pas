@@ -5,8 +5,8 @@ PROGRAM hello (output);
 VAR
     i : integer;
 
-BEGIN {hello}
+begin {hello}
     FOR i := 1 TO 10 DO BEGIN
         writeln('Hello, world.');
     END;
-END {hello}.
+end {hello}.
