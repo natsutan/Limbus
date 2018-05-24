@@ -2,7 +2,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class SynTabStackIF(metaclass=ABCMeta):
+class SymTabStackIF(metaclass=ABCMeta):
 
     @abstractmethod
     def get_current_nesting_level(self):
@@ -36,7 +36,7 @@ class SymTabIF(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def enter(self, lookup):
+    def lookup(self, name):
         raise NotImplementedError()
 
     @abstractmethod

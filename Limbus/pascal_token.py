@@ -241,7 +241,7 @@ class PascalStringToken(Token):
         self.text = str(text)
 
 
-class  PascalSpecialToken(Token):
+class PascalSpecialToken(Token):
 
     single_chars = "+-*/,;'=(){}^[]"
 

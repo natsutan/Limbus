@@ -7,6 +7,7 @@ from limbus_core.frontend.token import Token, TokenType, ErrorToken
 from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
 from limbus_core.backend.backend_factory import BackendFactory
+from limbus_core.intermidiate.cross_referencer import CrossReferencer
 
 from pascal_error import PascalErrorType, PascalError
 from pascal_token import *
@@ -32,7 +33,10 @@ class ParserMessageListener(MessageListener):
                 error_message = body[1]
                 line = body[2]
 
-                space_cnt = prefix_width + token.pos
+                try:
+                    space_cnt = prefix_width + token.pos
+                except AttributeError:
+                    space_cnt = prefix_width
 
                 print("ERROR:", line)
                 print(' ' * space_cnt + '^')
@@ -55,7 +59,11 @@ class ParserMessageListener(MessageListener):
             error_message = body[1]
             line = body[2]
 
-            space_cnt = prefix_width + token.pos
+            try:
+                space_cnt = prefix_width + token.pos
+            except AttributeError:
+                print("Internal error token = ", token)
+                return
 
             print("ERROR:", line)
             print(' ' * space_cnt + '^')
@@ -105,10 +113,14 @@ class PascalParserTD(Parser):
     def parse(self):
         token = self.next_token()
         while token.type != TokenType.EOF:
-            if token.type != TokenType.ERROR:
-                msg = Message(MessageType.TOKEN, token)
-                self.send_message(msg)
-            else:
+            if token.ptype == PascalTokenType.IDENTIFIER:
+                name = token.text.lower()
+                entry = self.symtab_stack.lookup(name)
+                if not entry:
+                    entry = self.symtab_stack.enter_local(name)
+
+                entry.append_line_number(token.line_num)
+            elif token.type == TokenType.ERROR:
                 self.error_handler.flag(token, token.error_code, self)
 
             token = self.next_token()
@@ -126,7 +138,7 @@ class PascalParserTD(Parser):
         return []
 
     def get_symTab(self):
-        return []
+        return self.symtab_stack
 
     def get_line(self):
         return self.scanner.source.line
@@ -204,7 +216,7 @@ class Pascal:
 
         if self.xref :
             cross_referencer = CrossReferencer()
-            cross_referencer.print(symtabb_stack)
+            cross_referencer.print(self.symtab_stack)
 
         self.backend.process(self.iCode, self.symtab_stack)
 

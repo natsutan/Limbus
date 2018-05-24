@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-class CrossReferencor:
+class CrossReferencer:
     def __init__(self):
         self.NAME_WIDTH = 16
         self.NAME_FORMAT = "%-" + str(self.NAME_WIDTH) + "s"
@@ -19,11 +19,11 @@ class CrossReferencor:
 
     def print_column_headings(self):
         print()
-        print(self.NAME_FORMAT & "Identifier", self.NUMBERS_LABEL)
+        print(self.NAME_FORMAT % "Identifier", self.NUMBERS_LABEL)
         print(self.NAME_FORMAT % "----------", self.NUMBERS_UNDERLINE)
 
     def print_symtab(self, symtab):
-        sorted = symtab.sorrted_entries()
+        sorted = symtab.get_sorted_entries()
         for entry in sorted:
             line_numbers = entry.get_line_numbers()
             print(self.NAME_FORMAT % entry.get_name())

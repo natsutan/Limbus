@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 from .. message import MessageProducer, MessageHandler
+from .. intermidiate.symtabstack_impl import SymTabStack
 
 
 class Parser(MessageProducer, metaclass=ABCMeta):
@@ -9,6 +10,7 @@ class Parser(MessageProducer, metaclass=ABCMeta):
         self.scanner = scanner
         self.iCode = None
         self.message_handler = MessageHandler()
+        self.symtab_stack = SymTabStack()
 
     @abstractmethod
     def parse(self):
