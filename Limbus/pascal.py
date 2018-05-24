@@ -114,9 +114,9 @@ class PascalParserTD(Parser):
         token = self.next_token()
         while token.type != TokenType.EOF:
             if token.ptype == PascalTokenType.IDENTIFIER:
-                name = token.text.lower()
+                name = token.value.lower()
                 entry = self.symtab_stack.lookup(name)
-                if not entry:
+                if entry == None:
                     entry = self.symtab_stack.enter_local(name)
 
                 entry.append_line_number(token.line_num)

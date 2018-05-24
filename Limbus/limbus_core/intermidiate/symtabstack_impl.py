@@ -55,7 +55,9 @@ class SymTab(SymTabIF):
         return self.map.get(name)
 
     def get_sorted_entries(self):
-        return list(self.map.values())
+        l = list(self.map.values())
+        l.sort(key=lambda x:x.name)
+        return l
 
 
 class SymTabEntry(SynTabEntryIF):

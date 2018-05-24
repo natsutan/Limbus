@@ -6,8 +6,8 @@ class CrossReferencer:
         self.NAME_WIDTH = 16
         self.NAME_FORMAT = "%-" + str(self.NAME_WIDTH) + "s"
         self.NUMBERS_LABEL = " Line numbers   "
-        self.NUMBERS_UNDERLINE = " ------ "
-        self.NUMBER_FORMAT = "%03d"
+        self.NUMBERS_UNDERLINE = " ----------- "
+        self.NUMBER_FORMAT = "%03d "
         self.LABEL_WIDTH = len(self.NUMBERS_LABEL)
         self.INDENT_WIDTH = self.NAME_WIDTH + self.LABEL_WIDTH
         self.INDENT = " " * self.INDENT_WIDTH
@@ -26,7 +26,7 @@ class CrossReferencer:
         sorted = symtab.get_sorted_entries()
         for entry in sorted:
             line_numbers = entry.get_line_numbers()
-            print(self.NAME_FORMAT % entry.get_name())
+            print(self.NAME_FORMAT % entry.get_name(), end='')
             for l in line_numbers:
                 print(self.NUMBER_FORMAT % l, end='')
             print()
