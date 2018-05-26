@@ -1,0 +1,29 @@
+@startuml
+
+package "intermiiate" #DDDDDD {
+  class iCode
+  class iCodeNode
+  class iNodeType
+  class iNodeKey
+}
+
+
+class "iCode" as iCode {
++ setRoot ()
++ GetRoot
+}
+
+class "iCodeNode" as iCodeNode {
++ getParent ()
++ getType ()
++ addChild ()
++ getChildren ()
++ setAttribute()
++ getAttribute ()
++ copy()
+}
+
+iCode -d->iCodeNode
+iCodeNode -r-> iNodeType
+iCodeNode -r-> iNodeKey
+@enduml

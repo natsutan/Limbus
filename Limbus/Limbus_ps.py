@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pascal import Pascal
 
-hello_ps = 'pascal_src/NEWTON.pas'
+hello_ps = 'pascal_src/assignments.txt'
 
 
 
