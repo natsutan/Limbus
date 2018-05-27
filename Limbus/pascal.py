@@ -2,7 +2,6 @@
 import sys
 
 from limbus_core.message import Message, MessageType ,MessageListener
-from limbus_core.frontend.parser import Parser
 from limbus_core.frontend.token import Token, TokenType, ErrorToken
 from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
@@ -11,7 +10,6 @@ from limbus_core.intermidiate.cross_referencer import CrossReferencer
 
 from pascal_error import PascalErrorType, PascalError
 from pascal_token import *
-
 
 class SourceMessageListener(MessageListener):
     def message_received(self, msg):
@@ -80,68 +78,6 @@ class BackendMessageListener(MessageListener):
             print('%d statements executed. %d runtime errors.' % (body[0], body[1]))
         elif mtype == MessageType.COMPILER_SUMMARY:
             print('%d instructions generated' % body)
-
-
-class PascalErrorHandler:
-    def __init__(self):
-        self.MAX_ERROR = 25
-        self.error_cnt = 0
-
-    def flag(self, token, error_code, parser):
-        line = parser.get_line()
-        msg = Message(MessageType.SYNTAX_ERROR, (token, error_code, line))
-        parser.send_message(msg)
-
-        self.error_cnt = self.error_cnt + 1
-        if self.error_cnt > self.MAX_ERROR:
-            self.abort_translation('TOO_MANY_ERRORS', parser)
-
-    def abort_translation(self, err_code, parser):
-        msg = Message(MessageType.SYNTAX_ERROR, "FATAL_ERROR:"+err_code)
-        parser.send_message(msg)
-        sys.exit(1)
-
-    def get_error_count(self):
-        return self.error_cnt
-
-
-class PascalParserTD(Parser):
-    def __init__(self, scanner):
-        self.error_handler = PascalErrorHandler()
-        super().__init__(scanner)
-
-    def parse(self):
-        token = self.next_token()
-        while token.type != TokenType.EOF:
-            if token.ptype == PascalTokenType.IDENTIFIER:
-                name = token.value.lower()
-                entry = self.symtab_stack.lookup(name)
-                if entry == None:
-                    entry = self.symtab_stack.enter_local(name)
-
-                entry.append_line_number(token.line_num)
-            elif token.type == TokenType.ERROR:
-                self.error_handler.flag(token, token.error_code, self)
-
-            token = self.next_token()
-
-        line_number = token.line_num
-        err_cnt = self.get_error_count()
-
-        msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
-        self.send_message(msg)
-
-    def get_error_count(self):
-        return self.error_handler.get_error_count()
-
-    def get_iCode(self):
-        return []
-
-    def get_symTab(self):
-        return self.symtab_stack
-
-    def get_line(self):
-        return self.scanner.source.line
 
 
 class PascalScanner(Scanner):

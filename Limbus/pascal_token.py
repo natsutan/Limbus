@@ -3,7 +3,8 @@ import math
 from enum import Enum,  auto
 from limbus_core.frontend.token import Token, TokenType
 
-class PascalTokenType(Enum):
+
+class PTT(Enum):
     DUMMY = auto()
     RESERVED = auto()
     SPECIAL_SYMBOL = auto()
@@ -90,10 +91,10 @@ class PascalWordToken(Token):
                 break
 
         if s.upper() in reserved_list:
-            self.ptype = PascalTokenType.RESERVED
+            self.ptype = PTT.RESERVED
             self.value = s.upper()
         else:
-            self.ptype = PascalTokenType.IDENTIFIER
+            self.ptype = PTT.IDENTIFIER
             self.value = s
 
 
@@ -115,7 +116,7 @@ class PascalNumberToken(Token):
         saw_dotdot = False
         self.text = ""
 
-        self.ptype = PascalTokenType.INTEGER  # 仮
+        self.ptype = PTT.INTEGER  # 仮
         whole_digits = self.unsigned_integer_digits()
         if self.type == TokenType.ERROR:
             return
@@ -126,7 +127,7 @@ class PascalNumberToken(Token):
             if pc == '.':
                 saw_dotdot = True
             else:
-                self.ptype = PascalTokenType.REAL
+                self.ptype = PTT.REAL
                 self.text = self.text + cc
                 cc = self.next_char()
                 fraction_digits = self.unsigned_integer_digits()
@@ -134,7 +135,7 @@ class PascalNumberToken(Token):
                     return
         cc = self.current_char()
         if (not saw_dotdot) and (cc == 'e' or cc == 'E'):
-            self.ptype = PascalTokenType.REAL
+            self.ptype = PTT.REAL
             self.text = self.text + cc
             cc = self.next_char()
 
@@ -145,9 +146,9 @@ class PascalNumberToken(Token):
 
             exponent_digits = self.unsigned_integer_digits()
 
-        if self.ptype == PascalTokenType.INTEGER:
+        if self.ptype == PTT.INTEGER:
             self.value = int(whole_digits)
-        elif self.ptype == PascalTokenType.REAL:
+        elif self.ptype == PTT.REAL:
             fv = self.compute_float_value(whole_digits, fraction_digits, exponent_digits, exponent_sign)
             if self.type != TokenType.ERROR:
                   self.value = float(fv)
@@ -232,7 +233,7 @@ class PascalStringToken(Token):
         if cc == "'":
             self.next_char()
             text = text + "'"
-            self.ptype = PascalTokenType.STRING
+            self.ptype = PTT.STRING
             self.value = value
         else:
             self.type = TokenType.ERROR
