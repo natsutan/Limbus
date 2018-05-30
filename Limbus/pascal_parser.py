@@ -152,19 +152,97 @@ class ExpressionParser(StatementParser):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.op_map =  {'EQUALS', EQ);
-        REL_OPS_MAP.put(NOT_EQUALS, NE);
-        REL_OPS_MAP.put(LESS_THAN, LT);
-        REL_OPS_MAP.put(LESS_EQUALS, LE);
-        REL_OPS_MAP.put(GREATER_THAN, GT);
-        REL_OPS_MAP.put(GREATER_EQUALS, GE);
+        self.op_map =  {'EQUALS' : 'EQ',
+                        'NOT_EQUALS' : 'NE',
+                        'LESS_THAN':  'LT',
+                        'LESS_EQUALS' : 'LE',
+                        'GREATER_THAN' : 'GT',
+                        'GREATER_EQUALS' : 'GE',
+                        'PLUS' : 'ADD',
+                        'MINUS' : 'SUBTRACT',
+                        'OR' : 'OR',
+                        'STAR' : 'MULTIPLY',
+                        'SLASH' : 'FLOAT_DIVIDE',
+                        'DIV' : 'INTEGER_DIVIDE',
+                        'MOD' : 'MOD',
+                        'AND' : 'AND'
+        }
+        self.add_ops = ['PLUS', 'MINUS', 'OR']
+        self.mul_ops = ['STAR', 'SLASH', 'DIV', 'MOD', 'AND']
+
 
     def parse(self, token):
         return self.parse_expression(token)
 
     def parse_expression(self, token):
+        root_node = self.parse_simple_expression(token)
+        token = self.current_token()
+        token_type = token.value
+
+        if token_type in self.op_map:
+            node_type = self.op_map[token_type]
+            opnode = iCodeNode(node_type)
+            opnode.add_child(root_node)
+
+            token = self.next_token()
+            opnode.add_child(self.parse_simple_expression(token))
+            root_node = opnode
+
+        return root_node
 
 
+    def parse_simple_expression(self, token):
+        sign_type = None
+
+        token_type = token.value
+        if token_type == 'PLUS' or token_type == 'MINUS':
+            sign_type = token_type
+            token = self.next_token()
+
+        root_node = self.parse_term(token)
+
+        if sign_type == 'MINUS':
+            negate_node = iCodeNode('NEGATE')
+            negate_node.add_child(root_node)
+            root_node = negate_node
+
+        token = self.current_token()
+        token_type = token.value
+
+        while token_type in self.add_ops:
+            node_type = self.op_map[token_type]
+            op_node = iCodeNode(node_type)
+            op_node.add_child(root_node)
+
+            token = self.next_token()
+            op_node.add_child(self.parse_term(token))
+
+            root_node = op_node
+            token = self.current_token()
+            token_type = token.value
+
+        return root_node
+
+    def parse_term(self, token):
+        root_node = self.parse_factor(token)
+        token = self.current_token()
+        token_type = token.value
+
+        while token_type in self.mul_ops:
+            node_type = self.op_map[token_type]
+            op_node = iCodeNode(node_type)
+            op_node.add_child(root_node)
+
+            root_node = op_node
+
+            token = self.current_token()
+            token_type = token.value
+
+        return root_node
+
+    def parser_factor(self, token):
+        ptype = token.ptype
+        
 
 
 def set_line_number(node, token):
