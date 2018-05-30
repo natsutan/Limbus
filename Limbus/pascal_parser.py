@@ -242,7 +242,7 @@ class ExpressionParser(StatementParser):
 
     def parser_factor(self, token):
         ptype = token.ptype
-        
+
 
 
 def set_line_number(node, token):
