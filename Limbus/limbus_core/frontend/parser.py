@@ -34,6 +34,9 @@ class Parser(MessageProducer, metaclass=ABCMeta):
     def next_token(self):
         return self.scanner.next_token()
 
+    def get_scanner(self):
+        return self.scanner
+
     # delegate
     def add_message_listener(self, listener):
         self.message_handler.add_message_listener(listener)

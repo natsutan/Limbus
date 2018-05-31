@@ -8,6 +8,7 @@ from limbus_core.frontend.source import Source
 from limbus_core.backend.backend_factory import BackendFactory
 from limbus_core.intermidiate.cross_referencer import CrossReferencer
 
+from pascal_parser import PascalParserTD
 from pascal_error import PascalErrorType, PascalError
 from pascal_token import *
 

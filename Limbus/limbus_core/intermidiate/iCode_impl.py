@@ -3,7 +3,7 @@ import copy
 
 from .iCode_if import *
 
-class iCode(iCodeIF)
+class iCode(iCodeIF):
     def __init__(self):
         self.root = None
 

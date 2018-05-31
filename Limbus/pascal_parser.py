@@ -32,10 +32,10 @@ class PascalErrorHandler:
 
 # -------------- Parser --------------------------
 class PascalParserTD(Parser):
-    def __init__(self, parent):
+    def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
-        super().__init__(parent.get_scanner())
-        self.iCode = iCodeFactory.create()
+        super().__init__(scanner)
+        self.iCode = iCodeFactory().create()
 
     def parse(self):
         token = self.next_token()
@@ -98,7 +98,7 @@ class StatementParser(PascalParserTD):
                 token = self.next_token()
             elif token.ptype == PTT.IDENTIFIER:
                 self.error_handler.flag(token, 'MISSING_SEMICOLLON', self)
-            elif token.value != terminator
+            elif token.value != terminator:
                 self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
                 token = self.next_token()
 
