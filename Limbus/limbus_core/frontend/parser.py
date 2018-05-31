@@ -29,7 +29,7 @@ class Parser(MessageProducer, metaclass=ABCMeta):
         raise NotImplementedError()
 
     def current_token(self):
-        return self.scanner.cuurent_token()
+        return self.scanner.current_token()
 
     def next_token(self):
         return self.scanner.next_token()

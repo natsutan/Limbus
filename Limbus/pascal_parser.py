@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import sys
+
+from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
-from limbus_core.intermidiate.iCode_factory import iCodeFactory
+from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
 
 from pascal_error import PascalErrorType, PascalError
 from pascal_token import *
@@ -34,7 +37,11 @@ class PascalErrorHandler:
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
-        super().__init__(scanner)
+        if isinstance(scanner, Parser):
+            super().__init__(scanner.get_scanner())
+        else:
+            super().__init__(scanner)
+
         self.iCode = iCodeFactory().create()
 
     def parse(self):
@@ -81,7 +88,7 @@ class StatementParser(PascalParserTD):
         elif token.ptype == PTT.IDENTIFIER:
             statement_node = AssignmentStatementParser(self).parse(token)
         else:
-            statement_node = iCodeNode('NO_OP')
+            statement_node = iCodeNodeFactory().create('NO_OP')
 
         set_line_number(statement_node, token)
         return statement_node
@@ -113,15 +120,15 @@ class AssignmentStatementParser(StatementParser):
         super().__init__(parent)
 
     def parse(self, token):
-        assigin_node = iCodeNode('ASSIGN')
-        target_name = token.get_text().lower()
+        assigin_node = iCodeNodeFactory().create('ASSIGN')
+        target_name = token.text.lower()
         target_id = self.symtab_stack.lookup(target_name)
         if not target_id:
             target_id = self.symtab_stack.enter_local(target_name)
 
-        target_id.append_line_number(token.get_line_number())
+        target_id.append_line_number(token.line_num)
         token = self.next_token()
-        variable_node = iCodeNode('VARIABLE')
+        variable_node = iCodeNodeFactory().create('VARIABLE')
         variable_node.set_attribute('ID', target_id)
 
         assigin_node.add_child(variable_node)
@@ -143,7 +150,7 @@ class CompoundStatementParser(StatementParser):
 
     def parse(self, token):
         token = self.next_token()
-        compound_node = iCodeNode('COMPOUND')
+        compound_node = iCodeNodeFactory().create('COMPOUND')
         statement_parser = StatementParser(self)
         statement_parser.parse_list(token, compound_node, 'END', 'MISSING_END')
         return compound_node
@@ -240,7 +247,7 @@ class ExpressionParser(StatementParser):
 
         return root_node
 
-    def parser_factor(self, token):
+    def parse_factor(self, token):
         ptype = token.ptype
         if ptype == PTT.IDENTIFIER:
             name = token.text.lower()
@@ -269,17 +276,17 @@ class ExpressionParser(StatementParser):
             root_node.set_attributes('VALUE', token.value)
             token = self.next_token()
 
-        elif ptype == PTT.NOT:
+        elif token.value == 'NOT':
             token = self.next_token()
             root_node = iCodeNode('NOT')
             root_node.set_attributes(self.parser_factor(token))
 
-        elif ptype == PTT.LEFT_PAREN:
+        elif token.value == 'LEFT_PAREN':
             token = self.next_token()
             root_node = self.parse_expression(token)
 
             token = self.current_token()
-            if token.ptyep == PTT.RIGHT_PAREN:
+            if token.value == 'RIGHT_PAREN':
                 token = self.next_token()
             else:
                 self.error_handler.flag(token, 'MISSING_RIGHT_PAREN', self)
@@ -290,4 +297,4 @@ class ExpressionParser(StatementParser):
 
 def set_line_number(node, token):
     if node:
-        node.set_attribute('LINE', token.get_line_number())
+        node.set_attribute('LINE', token.line_num)
