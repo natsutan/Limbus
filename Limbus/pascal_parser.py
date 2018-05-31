@@ -242,7 +242,50 @@ class ExpressionParser(StatementParser):
 
     def parser_factor(self, token):
         ptype = token.ptype
+        if ptype == PTT.IDENTIFIER:
+            name = token.text.lower()
+            id = self.symtab_stack.lookup(name)
+            if not id:
+                self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+                id = self.symtab_stack(name)
 
+            root_node = iCodeNode('VARIABLE')
+            root_node.set_attributes('ID', id)
+            id.append_line_number(token.get_line_number())
+            token = self.next_token()
+
+        elif ptype == PTT.INTEGER:
+            root_node = iCodeNode('INTEGER_CONSTANT')
+            root_node.set_attributes('VALUE', token.value)
+            token = self.next_token()
+
+        elif ptype == PTT.REAL:
+            root_node = iCodeNode('REAL_CONSTANT')
+            root_node.set_attributes('VALUE', token.value)
+            token = self.next_token()
+
+        elif ptype == PTT.STRING:
+            root_node = iCodeNode('STRING_CONSTANT')
+            root_node.set_attributes('VALUE', token.value)
+            token = self.next_token()
+
+        elif ptype == PTT.NOT:
+            token = self.next_token()
+            root_node = iCodeNode('NOT')
+            root_node.set_attributes(self.parser_factor(token))
+
+        elif ptype == PTT.LEFT_PAREN:
+            token = self.next_token()
+            root_node = self.parse_expression(token)
+
+            token = self.current_token()
+            if token.ptyep == PTT.RIGHT_PAREN:
+                token = self.next_token()
+            else:
+                self.error_handler.flag(token, 'MISSING_RIGHT_PAREN', self)
+
+        else:
+            self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
 
 def set_line_number(node, token):
