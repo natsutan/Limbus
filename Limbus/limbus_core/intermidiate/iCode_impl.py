@@ -11,6 +11,9 @@ class iCode(iCodeIF):
         self.root = node
         return self.root
 
+    def get_root(self):
+        return self.root
+
 
 class iCodeNode(iCodeNodeIF):
     def __init__(self, ntype):
