@@ -287,5 +287,5 @@ class PascalSpecialToken(Token):
 
         self.text = text
         self.ptype = special_symbols[text]
-
+        self.value = str(self.ptype).split('.')[1]
 
