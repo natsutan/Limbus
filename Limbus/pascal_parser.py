@@ -4,7 +4,7 @@ from limbus_core.intermidiate.iCode_factory import iCodeFactory
 
 from pascal_error import PascalErrorType, PascalError
 from pascal_token import *
-
+from pascal_parser import *
 
 class PascalErrorHandler:
     def __init__(self):
@@ -42,7 +42,7 @@ class PascalParserTD(Parser):
         root_node = None
 
         if token.ptype == PTT.RESERVED and token.value == 'BEGIN':
-            statement_parser = StatmentParser(self)
+            statement_parser = StatementParser(self)
             root_node = statement_parser.parse(token)
             token = self.current_token()
         else:
@@ -77,7 +77,7 @@ class StatementParser(PascalParserTD):
 
     def parse(self, token):
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
-            statement_node = CompoundParser(self).parse(token)
+            statement_node = CompoundStatementParser(self).parse(token)
         elif token.ptype == PTT.IDENTIFIER:
             statement_node = AssignmentStatementParser(self).parse(token)
         else:
