@@ -142,7 +142,7 @@ class CompoundStatementParser(StatementParser):
         super().__init__(parent)
 
     def parse(self, token):
-        token = token.next_token()
+        token = self.next_token()
         compound_node = iCodeNode('COMPOUND')
         statement_parser = StatementParser(self)
         statement_parser.parse_list(token, compound_node, 'END', 'MISSING_END')
