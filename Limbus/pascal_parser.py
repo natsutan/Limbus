@@ -101,7 +101,7 @@ class StatementParser(PascalParserTD):
 
             token = self.current_token()
 
-            if token.value == 'SEMICOLLON':
+            if token.value == 'SEMICOLON':
                 token = self.next_token()
             elif token.ptype == PTT.IDENTIFIER:
                 self.error_handler.flag(token, 'MISSING_SEMICOLLON', self)
@@ -209,7 +209,7 @@ class ExpressionParser(StatementParser):
         root_node = self.parse_term(token)
 
         if sign_type == 'MINUS':
-            negate_node = iCodeNode('NEGATE')
+            negate_node = iCodeNodeFactory().create('NEGATE')
             negate_node.add_child(root_node)
             root_node = negate_node
 
@@ -218,7 +218,7 @@ class ExpressionParser(StatementParser):
 
         while token_type in self.add_ops:
             node_type = self.op_map[token_type]
-            op_node = iCodeNode(node_type)
+            op_node = iCodeNodeFactory().create(node_type)
             op_node.add_child(root_node)
 
             token = self.next_token()
@@ -237,7 +237,7 @@ class ExpressionParser(StatementParser):
 
         while token_type in self.mul_ops:
             node_type = self.op_map[token_type]
-            op_node = iCodeNode(node_type)
+            op_node = iCodeNodeFactory().create(node_type)
             op_node.add_child(root_node)
 
             root_node = op_node
@@ -254,31 +254,31 @@ class ExpressionParser(StatementParser):
             id = self.symtab_stack.lookup(name)
             if not id:
                 self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
-                id = self.symtab_stack(name)
+                id = self.symtab_stack.enter_local(name)
 
-            root_node = iCodeNode('VARIABLE')
-            root_node.set_attributes('ID', id)
-            id.append_line_number(token.get_line_number())
+            root_node = iCodeNodeFactory().create('VARIABLE')
+            root_node.set_attribute('ID', id)
+            id.append_line_number(token.line_num)
             token = self.next_token()
 
         elif ptype == PTT.INTEGER:
-            root_node = iCodeNode('INTEGER_CONSTANT')
-            root_node.set_attributes('VALUE', token.value)
+            root_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
+            root_node.set_attribute('VALUE', token.value)
             token = self.next_token()
 
         elif ptype == PTT.REAL:
-            root_node = iCodeNode('REAL_CONSTANT')
-            root_node.set_attributes('VALUE', token.value)
+            root_node = iCodeNodeFactory().create('REAL_CONSTANT')
+            root_node.set_attribute('VALUE', token.value)
             token = self.next_token()
 
         elif ptype == PTT.STRING:
-            root_node = iCodeNode('STRING_CONSTANT')
-            root_node.set_attributes('VALUE', token.value)
+            root_node = iCodeNodeFactory().create('STRING_CONSTANT')
+            root_node.set_attribute('VALUE', token.value)
             token = self.next_token()
 
         elif token.value == 'NOT':
             token = self.next_token()
-            root_node = iCodeNode('NOT')
+            root_node = iCodeNodeFactory().create('NOT')
             root_node.set_attributes(self.parser_factor(token))
 
         elif token.value == 'LEFT_PAREN':
