@@ -95,7 +95,7 @@ class StatementParser(PascalParserTD):
 
     def parse_list(self, token, parent_node, terminator, err_code):
 
-        while token.type != TokenType.EOF and token.value != err_code:
+        while token.type != TokenType.EOF and token.value != terminator:
             statement_node = self.parse(token)
             parent_node.add_child(statement_node)
 
