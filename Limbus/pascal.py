@@ -7,6 +7,8 @@ from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
 from limbus_core.backend.backend_factory import BackendFactory
 from limbus_core.intermidiate.cross_referencer import CrossReferencer
+from limbus_core.intermidiate.parse_tree_printer import ParseTreePrinter
+
 
 from pascal_parser import PascalParserTD
 from pascal_error import PascalErrorType, PascalError
@@ -151,9 +153,13 @@ class Pascal:
         self.iCode = self.parser.get_iCode()
         self.symtab_stack = self.parser.get_symTab()
 
-        if self.xref :
+        if self.xref:
             cross_referencer = CrossReferencer()
             cross_referencer.print(self.symtab_stack)
+
+        if self.intermediate:
+            tree_printer = ParseTreePrinter()
+            tree_printer.print(self.iCode)
 
         self.backend.process(self.iCode, self.symtab_stack)
 

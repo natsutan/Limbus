@@ -3,7 +3,7 @@
 import xml.dom.minidom
 
 
-class ParseTreePrintter:
+class ParseTreePrinter:
     def __init__(self, ps):
         self.INDENT_WIDTH = 4
         self.LINE_WIDTH = 80
@@ -35,7 +35,7 @@ class ParseTreePrintter:
             self.length = len(self.indentation)
             line_break = True
 
-        if not (line_break and text == " ")
+        if not (line_break and text == " "):
             self.line = self.line + text
             self.length = self.length + text_len
 
