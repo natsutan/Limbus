@@ -5,12 +5,13 @@ from .. intermidiate.symtabstack_impl import SymTabStack
 
 
 class Parser(MessageProducer, metaclass=ABCMeta):
+    symtab_stack = SymTabStack()
+
     def __init__(self, scanner):
         self.symTab = None
         self.scanner = scanner
         self.iCode = None
         self.message_handler = MessageHandler()
-        self.symtab_stack = SymTabStack()
 
     @abstractmethod
     def parse(self):

@@ -121,10 +121,10 @@ class AssignmentStatementParser(StatementParser):
 
     def parse(self, token):
         assigin_node = iCodeNodeFactory().create('ASSIGN')
-        target_name = token.text.lower()
-        target_id = self.symtab_stack.lookup(target_name)
+        target_name = token.value.lower()
+        target_id = Parser.symtab_stack.lookup(target_name)
         if not target_id:
-            target_id = self.symtab_stack.enter_local(target_name)
+            target_id = Parser.symtab_stack.enter_local(target_name)
 
         target_id.append_line_number(token.line_num)
         token = self.next_token()
@@ -250,11 +250,11 @@ class ExpressionParser(StatementParser):
     def parse_factor(self, token):
         ptype = token.ptype
         if ptype == PTT.IDENTIFIER:
-            name = token.text.lower()
-            id = self.symtab_stack.lookup(name)
+            name = token.value.lower()
+            id = Parser.symtab_stack.lookup(name)
             if not id:
                 self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
-                id = self.symtab_stack.enter_local(name)
+                id = Parser.symtab_stack.enter_local(name)
 
             root_node = iCodeNodeFactory().create('VARIABLE')
             root_node.set_attribute('ID', id)
