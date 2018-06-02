@@ -50,7 +50,8 @@ class ParseTreePrinter:
             self.append(">")
             self.print_line()
             self.print_child_nodes(child_node)
-            self.append("</" + str(node) + ">")
+            self.append(self.indentation)
+            self.append("</" + str(node) + ">\n")
         else:
             self.append(" ")
             self.append(">")
@@ -60,14 +61,14 @@ class ParseTreePrinter:
         save_indentation = self.indentation
         self.indentation = self.indentation + self.indent
 
-        for k, v in node.get_attribute().items():
+        for k, v in node.get_all_attributes().items():
             self.print_attribute(k, v)
 
         self.indentation = save_indentation
 
     def print_attribute(self, key, value):
         # value がsymtabなら処理を入れる
-        is_symtab =  value.__class__.__name__ == 'SymTab'
+        is_symtab = value.__class__.__name__ == 'SymTabEntry'
 
         if is_symtab:
             vs = value.get_name()
@@ -78,7 +79,7 @@ class ParseTreePrinter:
         self.append(" ")
         self.append(text)
         if is_symtab:
-            level = value.get_symtab.get_nesting_level()
+            level = value.get_symtab().get_nesting_level()
             self.print_attribute("LEVEL", level)
 
     def print_child_nodes(self, child_nodes):

@@ -158,8 +158,9 @@ class Pascal:
             cross_referencer.print(self.symtab_stack)
 
         if self.intermediate:
-            tree_printer = ParseTreePrinter()
-            tree_printer.print(self.iCode)
+            with open('tree.xml', 'w') as fp:
+                tree_printer = ParseTreePrinter(fp)
+                tree_printer.print(self.iCode)
 
         self.backend.process(self.iCode, self.symtab_stack)
 

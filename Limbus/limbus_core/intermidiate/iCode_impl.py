@@ -42,6 +42,9 @@ class iCodeNode(iCodeNodeIF):
     def get_attribute(self, key):
         return self.attribute[key]
 
+    def get_all_attributes(self):
+        return self.attribute
+
     def copy(self):
         return copy.deepcopy(self)
 
