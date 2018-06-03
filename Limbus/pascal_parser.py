@@ -31,9 +31,9 @@ class PascalErrorHandler:
     def get_error_count(self):
         return self.error_cnt
 
-
-
 # -------------- Parser --------------------------
+
+
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
@@ -155,6 +155,7 @@ class CompoundStatementParser(StatementParser):
         statement_parser.parse_list(token, compound_node, 'END', 'MISSING_END')
         return compound_node
 
+
 class ExpressionParser(StatementParser):
 
     def __init__(self, parent):
@@ -177,7 +178,6 @@ class ExpressionParser(StatementParser):
         self.add_ops = ['PLUS', 'MINUS', 'OR']
         self.mul_ops = ['STAR', 'SLASH', 'DIV', 'MOD', 'AND']
 
-
     def parse(self, token):
         return self.parse_expression(token)
 
@@ -188,7 +188,7 @@ class ExpressionParser(StatementParser):
 
         if token_type in self.op_map:
             node_type = self.op_map[token_type]
-            opnode = iCodeNode(node_type)
+            opnode = iCodeNodeFactory().create(node_type)
             opnode.add_child(root_node)
 
             token = self.next_token()
@@ -196,7 +196,6 @@ class ExpressionParser(StatementParser):
             root_node = opnode
 
         return root_node
-
 
     def parse_simple_expression(self, token):
         sign_type = None
@@ -238,6 +237,8 @@ class ExpressionParser(StatementParser):
         while token_type in self.mul_ops:
             node_type = self.op_map[token_type]
             op_node = iCodeNodeFactory().create(node_type)
+            token = self.next_token()
+
             op_node.add_child(root_node)
 
             root_node = op_node
@@ -249,6 +250,7 @@ class ExpressionParser(StatementParser):
 
     def parse_factor(self, token):
         ptype = token.ptype
+        root_node = None
         if ptype == PTT.IDENTIFIER:
             name = token.value.lower()
             id = Parser.symtab_stack.lookup(name)
@@ -295,6 +297,7 @@ class ExpressionParser(StatementParser):
             self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
         return root_node
+
 
 def set_line_number(node, token):
     if node:

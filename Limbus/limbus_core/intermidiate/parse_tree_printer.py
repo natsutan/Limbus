@@ -6,7 +6,7 @@ import xml.dom.minidom
 class ParseTreePrinter:
     def __init__(self, ps):
         self.INDENT_WIDTH = 4
-        self.LINE_WIDTH = 80
+        self.LINE_WIDTH = 160
 
         self.ps = ps
         self.length = 0
