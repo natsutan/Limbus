@@ -5,9 +5,10 @@ from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
 
-from pascal_error import PascalErrorType, PascalError
-from pascal_token import *
-from pascal_parser import *
+from pascal.pascal_error import PascalErrorType, PascalError
+from pascal.pascal_token import *
+from pascal.pascal_parser import *
+
 
 class PascalErrorHandler:
     def __init__(self):

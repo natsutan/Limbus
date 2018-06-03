@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from pascal import Pascal
+from pascal.pascal import Pascal
 
 hello_ps = 'pascal_src/assignments.txt'
+# hello_ps = 'pascal_src/assignerrors.txt'
+# hello_ps = 'pascal_src/assignerrors.txt'
 # hello_ps = 'pascal_src/assignments_test.txt'
 
 
