@@ -294,6 +294,7 @@ class ExpressionParser(StatementParser):
         else:
             self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
+        return root_node
 
 def set_line_number(node, token):
     if node:
