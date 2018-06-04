@@ -239,9 +239,10 @@ class ExpressionParser(StatementParser):
         while token_type in self.mul_ops:
             node_type = self.op_map[token_type]
             op_node = iCodeNodeFactory().create(node_type)
-            token = self.next_token()
-
             op_node.add_child(root_node)
+
+            token = self.next_token()
+            op_node.add_child(self.parse_factor(token))
 
             root_node = op_node
 
