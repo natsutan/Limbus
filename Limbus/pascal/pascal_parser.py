@@ -83,6 +83,7 @@ class StatementParser(PascalParserTD):
     def __init__(self, parent):
         super().__init__(parent)
 
+
     def parse(self, token):
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
             statement_node = CompoundStatementParser(self).parse(token)
