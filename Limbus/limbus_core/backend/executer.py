@@ -19,8 +19,8 @@ class RunTimeErrorHandler:
         msg = Message('RUNTIME_ERROR', (error_code, node.get_attribute('LINE')))
         backend.send_message(msg)
 
-        self.error_count += 1
-        if self.error_count > self.MAX_ERRORS:
+        Executer.runtime_error += 1
+        if Executer.runtime_error > self.MAX_ERRORS:
             print("*** ABORTED AFTER TOO MANY RUNTIME ERRORS.")
             sys.exit(1)
 
@@ -47,9 +47,9 @@ class Executer(Backend):
         statement_exec = StatementExecutor(self)
         statement_exec.execute(root_node)
 
-        ec = 0
-        re = 0
-        msg = Message(MessageType.EXECUTE_SUMMARY, (ec, re))
+        ec = Executer.execution_count
+        re = Executer.runtime_error
+        msg = Message(MessageType.INTERPRETER_SUMMARY, (ec, re))
         self.send_message(msg)
 
 
