@@ -8,7 +8,7 @@ class BackendFactory:
         if operation == 'compile':
             return CodeGeneretor()
         elif operation == 'execute':
-            return Executer()
+            return Executer(None)
         else:
             raise ValueError(operation)
 

@@ -10,9 +10,9 @@ from limbus_core.intermidiate.cross_referencer import CrossReferencer
 from limbus_core.intermidiate.parse_tree_printer import ParseTreePrinter
 
 
-from pascal_parser import PascalParserTD
-from pascal_error import PascalErrorType, PascalError
-from pascal_token import *
+from pascal.pascal_parser import PascalParserTD
+from pascal.pascal_error import PascalErrorType, PascalError
+from pascal.pascal_token import *
 
 class SourceMessageListener(MessageListener):
     def message_received(self, msg):
@@ -74,6 +74,10 @@ class ParserMessageListener(MessageListener):
 
 
 class BackendMessageListener(MessageListener):
+    def __init__(self):
+        self.first_output_msg = True
+        self.ASSIGN_FORMAT = '>>> LINE %3d: %s = %s'
+
     def message_received(self, msg):
         mtype = msg.type
         body = msg.body
@@ -81,6 +85,19 @@ class BackendMessageListener(MessageListener):
             print('%d statements executed. %d runtime errors.' % (body[0], body[1]))
         elif mtype == MessageType.COMPILER_SUMMARY:
             print('%d instructions generated' % body)
+        elif mtype == 'ASSIGN':
+            if self.first_output_msg:
+                print('===== OUTPUT =====')
+                self.first_output_msg = False
+            line_number, name, value = body
+            print(self.ASSIGN_FORMAT % (line_number, name, str(value)))
+        elif mtype == 'RUNTIME_ERROR':
+            err_msg, line_number = body
+
+            print("*** RUNTIME ERROR")
+            if line_number:
+                print(' AT LINE %03d' % line_number, end = '')
+            print(" : ", err_msg)
 
 
 class PascalScanner(Scanner):

@@ -5,9 +5,10 @@ from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
 
-from pascal_error import PascalErrorType, PascalError
-from pascal_token import *
-from pascal_parser import *
+from pascal.pascal_error import PascalErrorType, PascalError
+from pascal.pascal_token import *
+from pascal.pascal_parser import *
+
 
 class PascalErrorHandler:
     def __init__(self):
@@ -81,6 +82,7 @@ class PascalParserTD(Parser):
 class StatementParser(PascalParserTD):
     def __init__(self, parent):
         super().__init__(parent)
+
 
     def parse(self, token):
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
@@ -237,9 +239,10 @@ class ExpressionParser(StatementParser):
         while token_type in self.mul_ops:
             node_type = self.op_map[token_type]
             op_node = iCodeNodeFactory().create(node_type)
-            token = self.next_token()
-
             op_node.add_child(root_node)
+
+            token = self.next_token()
+            op_node.add_child(self.parse_factor(token))
 
             root_node = op_node
 

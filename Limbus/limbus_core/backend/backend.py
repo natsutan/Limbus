@@ -6,7 +6,7 @@ from .. message import MessageProducer, MessageHandler
 class Backend(MessageProducer, metaclass=ABCMeta):
     def __init__(self):
         self.iCode = None
-        self.symTab = None
+        self.symtab = None
         self.message_handler = MessageHandler()
 
     @abstractmethod
