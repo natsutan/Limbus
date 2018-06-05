@@ -9,8 +9,8 @@ hello_ps = 'pascal_src/assignments.txt'
 
 
 def main():
-#    pascal = Pascal('execute', hello_ps, {})
-    pascal = Pascal('compile', hello_ps, 'xi')
+    pascal = Pascal('execute', hello_ps, 'xi')
+#    pascal = Pascal('compile', hello_ps, 'xi')
 
 
 if __name__ == '__main__':

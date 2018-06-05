@@ -40,7 +40,11 @@ class iCodeNode(iCodeNodeIF):
         self.attribute[key] = value
 
     def get_attribute(self, key):
-        return self.attribute[key]
+        dic = self.attribute
+        if key in dic:
+            return dic[key]
+        else:
+            return None
 
     def get_all_attributes(self):
         return self.attribute

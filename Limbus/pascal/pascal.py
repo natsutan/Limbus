@@ -76,7 +76,7 @@ class ParserMessageListener(MessageListener):
 class BackendMessageListener(MessageListener):
     def __init__(self):
         self.first_output_msg = True
-        self.ASSIGN_FORMAT = '>>> LINE %3D: %s = %s'
+        self.ASSIGN_FORMAT = '>>> LINE %3d: %s = %s'
 
     def message_received(self, msg):
         mtype = msg.type
@@ -95,7 +95,7 @@ class BackendMessageListener(MessageListener):
             err_msg, line_number = body
 
             print("*** RUNTIME ERROR")
-            if not line_number:
+            if line_number:
                 print(' AT LINE %03d' % line_number, end = '')
             print(" : ", err_msg)
 

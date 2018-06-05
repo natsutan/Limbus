@@ -16,8 +16,8 @@ class RunTimeErrorHandler:
         while node and node.get_attribute("LINE"):
             node = node.get_parent()
 
-        msg = Message(error_code, node.get_attribute('LINE'))
-        backend.send_message('RUNTIME_ERROR', msg)
+        msg = Message('RUNTIME_ERROR', (error_code, node.get_attribute('LINE')))
+        backend.send_message(msg)
 
         self.error_count += 1
         if self.error_count > self.MAX_ERRORS:
@@ -30,7 +30,7 @@ class Executer(Backend):
     execution_count = 0
     runtime_error = 0
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
 
     def get_error_handler(self):
@@ -75,7 +75,7 @@ class StatementExecutor(Executer):
             return None
 
     def send_sourceline_message(self, node):
-        line_number = node.get_attrbute('LINE')
+        line_number = node.get_attribute('LINE')
         if line_number:
             msg =  Message(MessageType.SOURCE_LINE, line_number)
             self.message_handler.send_message(msg)
@@ -103,7 +103,7 @@ class AssignmentExecutor(StatementExecutor):
         expression_node = children[1]
 
         expression_exec = ExpressionExecutor(self)
-        value = expression_exec.execution(expression_node)
+        value = expression_exec.execute(expression_node)
 
         variable_id = variable_node.get_attribute('ID')
         variable_id.set_attribute('DATA_VALUE', value)
@@ -115,7 +115,7 @@ class AssignmentExecutor(StatementExecutor):
         return None
 
     def _send_message(self, node, name, value):
-        line_number = node.get_attrbute('LINE')
+        line_number = node.get_attribute('LINE')
         if line_number:
             msg = Message('ASSIGN', (line_number, name, value))
             self.send_message(msg)
