@@ -32,9 +32,8 @@ class PascalErrorHandler:
     def get_error_count(self):
         return self.error_cnt
 
+
 # -------------- Parser --------------------------
-
-
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
@@ -57,6 +56,10 @@ class PascalParserTD(Parser):
             self.error_handler.flag(token, 'MISSING BEGIN', self)
             token = self.current_token()
 
+        token = self.current_token()
+        if token.value == 'DOT':
+            self.error_handler.flag(token, 'MISSING_PERIOD', self)
+
         if root_node:
             self.iCode.set_root(root_node)
 
@@ -78,24 +81,47 @@ class PascalParserTD(Parser):
     def get_line(self):
         return self.scanner.source.line
 
+    def synchronize(self, syncset):
+        token = self.current_token()
+        if not (token.value in syncset):
+            self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
+
+        token = self.next_token()
+        while (token.type != TokenType.EOF) and (not token.value in syncset):
+            token = self.next_token()
+
+
 
 class StatementParser(PascalParserTD):
     def __init__(self, parent):
+        self.STMT_START_SET = ['BEGIN', 'CASE', 'FOR', 'IF', 'REPEAT', 'WHILE', 'IDENTIFIER', 'SEMICOLON']
+        self.STMT_FOLLOW_SET = ['SEMICOLON', 'END', 'ELSE', 'UNTIL', 'DOT']
         super().__init__(parent)
-
 
     def parse(self, token):
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
             statement_node = CompoundStatementParser(self).parse(token)
         elif token.ptype == PTT.IDENTIFIER:
             statement_node = AssignmentStatementParser(self).parse(token)
+        elif token.ptype == PTT.RESERVED and  token.value == 'REPEAT':
+            statement_node = RepeatStatementParser(self).parse(token)
+        elif token.ptype == PTT.RESERVED and  token.value == 'WHILE':
+            statement_node = WhileStatementParser(self).parse(token)
+        elif token.ptype == PTT.RESERVED and  token.value == 'FOR':
+            statement_node = ForStatementParser(self).parse(token)
+        elif token.ptype == PTT.RESERVED and  token.value == 'IF':
+            statement_node = IfStatementParser(self).parse(token)
+        elif token.ptype == PTT.RESERVED and  token.value == 'CASE':
+            statement_node = CaseStatementParser(self).parse(token)
         else:
             statement_node = iCodeNodeFactory().create('NO_OP')
-
         set_line_number(statement_node, token)
         return statement_node
 
+
     def parse_list(self, token, parent_node, terminator, err_code):
+        terminator_set = self.STMT_START_SET + [terminator]
+
 
         while token.type != TokenType.EOF and token.value != terminator:
             statement_node = self.parse(token)
@@ -107,9 +133,11 @@ class StatementParser(PascalParserTD):
                 token = self.next_token()
             elif token.ptype == PTT.IDENTIFIER:
                 self.error_handler.flag(token, 'MISSING_SEMICOLLON', self)
-            elif token.value != terminator:
-                self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
-                token = self.next_token()
+
+            token = self.synchronize(terminator_set)
+            if token == None:
+                self.error_handler.flag(token, err_code, self)
+                return
 
         if token.value == terminator:
             token = self.next_token()
@@ -300,6 +328,130 @@ class ExpressionParser(StatementParser):
             self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
         return root_node
+
+
+class CaseStatementParser(StatementParser):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.CONSTANT_START_SET = ['IDENTIFIER', 'INTEGER',' PLUS', 'MINUS,' 'STRING']
+        self.OF_SET = self.CONSTANT_START_SET + ['OF'] + self.STMT_FOLLOW_SET
+        self.COMMA_SET = self.CONSTANT_START_SET + ['COMMA', 'COLON'] +self.STMT_START_SET + self.STMT_FOLLOW_SET
+
+    def parse(self, token):
+        token = self.next_token()
+        select_node = iCodeNodeFactory().create('SELECT')
+
+        expression_parser = ExpressionParser(self)
+        select_node.add_child(expression_parser.parse(token))
+
+        token = self.synchronize(self.OF_SET)
+        if token.value == 'OF':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_OF', self)
+
+        constain_set = {}
+        while token.type != TokenType.EOF and token.value != 'END':
+            select_node.add_child(self. parse_branch(token, constain_set))
+            token = self.current_token()
+            token_type = token.get_type()
+            if token_type == 'SEMICOLON':
+                token = self.next_token()
+            elif token_type in self.CONSTANT_START_SET:
+                self.error_handler.flag(token, 'MISSING_SEMICOLON', this)
+
+        if token.value == 'END':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_END', self)
+
+        return select_node
+
+    def parse_branch(self, token, constant_set):
+        branch_node = iCodeNodeFactory().create('SELECT_BRANCH')
+        constants_node = iCodeNodeFactory().create('SELECT_CONSTANTS')
+        branch_node.add_child(constants_node)
+
+        self.parse_constant_list(token, constants_node, constant_set)
+        token = self.current_token()
+
+        if token.value == 'COLON':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_COLON', self)
+
+        return branch_node
+
+    def parse_constant_list(self, token, constants_node, constants_set):
+        while token.value in self.CONSTANT_START_SET:
+            constants_node.add_child(self.parse_constant(token, constants_set))
+            token = self.synchronize(self.COMMA_SET)
+
+            if token.value == 'COMMA':
+                token = self.next_token
+
+            elif token.value in self.CONSTANT_START_SET:
+                self.error_handler.flag(token, 'MISSING_COMMA', self)
+
+    def parse_constant(self, token, constants_set):
+        sign = None
+        constant_node = None
+
+        token = self.synchronize(self.CONSTANT_START_SET)
+        token_type = token.value
+
+        if token_type == 'PLUS' or token_type == 'MINUS':
+            sign = token_type
+            token = self.next_token()
+
+        if token.ptype == PTT.IDENTIFIER:
+            constant_node = self.parse_identifier_constant(token, sign)
+        elif token.ptype == PTT.INTEGER:
+            constant_node = self.parse_integer_constant(token.get_text(), sign)
+        elif token.ptype == PTT.STRING:
+            constant_node = self.parse_character_constant(token, token.value, sign)
+        else:
+            self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+
+        if constant_node != None:
+            value = constant_node.get_attribute('VALUE')
+            if value in constants_set:
+                self.error_handler.flag(token, 'CASE_CONSTANT_REUSED', self)
+            else:
+                constants_set.add(value)
+
+        token = self.next_token()
+        return constant_node
+
+    def parse_identifier_constant(self, token, sign):
+        self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+        return None
+
+    def parse_integer_constant(self, value, sign):
+        constant_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
+        int_value = int(value)
+        if sign == 'MINUS':
+            int_value = -int_value
+
+        constant_node.set_attribute('VALUE', int_value)
+        return constant_node
+
+    def parse_character_constant(self, token, value, sign):
+        constant_node = None
+
+        if sign != None:
+            self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+        else:
+            if len(value) == 1:
+                constant_node = iCodeNodeFactory().create('STRING_CONSTANT')
+                constant_node.set_attribute('VALUE', value)
+            else:
+                self.error_handler.flag(token, 'STRING_CONSTANT', self)
+
+        return constant_node
+
+
+
 
 
 def set_line_number(node, token):
