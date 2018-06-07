@@ -4,5 +4,41 @@
         <VARIABLE id="i" level="0" >
         <INTEGER_CONSTANT value="3" >
     </ASSIGN>
+    <ASSIGN line="2">
+        <VARIABLE id="ch" level="0" >
+        <STRING_CONSTANT value="b" >
+    </ASSIGN>
+    <SELECT line="4">
+        <ADD>
+            <VARIABLE id="i" level="0" >
+            <INTEGER_CONSTANT value="1" >
+        </ADD>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="1" >
+            </SELECT_CONSTANTS>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS >
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="4" >
+            </SELECT_CONSTANTS>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS >
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="5" >
+                <INTEGER_CONSTANT value="2" >
+                <INTEGER_CONSTANT value="3" >
+            </SELECT_CONSTANTS>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS >
+        </SELECT_BRANCH>
+    </SELECT>
 </COMPOUND>
 

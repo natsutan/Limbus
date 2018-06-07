@@ -81,10 +81,12 @@ class PascalParserTD(Parser):
     def get_line(self):
         return self.scanner.source.line
 
-    def synchronize(self, syncset):
+    def synchronize(self, syncset, ptt_set = []):
         token = self.current_token()
 
-        if (token.ptype == PTT.IDENTIFIER) and ('IDENTIFIER' in syncset):
+        if token.ptype in ptt_set:
+            sync = True
+        elif (token.ptype == PTT.IDENTIFIER) and ('IDENTIFIER' in syncset):
             sync = True
         elif token.value in syncset:
             sync = True
@@ -393,13 +395,12 @@ class CaseStatementParser(StatementParser):
         return branch_node
 
     def parse_constant_list(self, token, constants_node, constants_set):
-
-        while token.ptype in self.CONSTANT_START_SET_PTT or token.value in self.CONSTANT_START_SET:
+        while token.value in self.CONSTANT_START_SET or token.ptype in self.CONSTANT_START_SET_PTT:
             constants_node.add_child(self.parse_constant(token, constants_set))
             token = self.synchronize(self.COMMA_SET)
 
             if token.value == 'COMMA':
-                token = self.next_token
+                token = self.next_token()
 
             elif token.value in self.CONSTANT_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
@@ -408,7 +409,7 @@ class CaseStatementParser(StatementParser):
         sign = None
         constant_node = None
 
-        token = self.synchronize(self.CONSTANT_START_SET)
+        token = self.synchronize(self.CONSTANT_START_SET, ptt_set = self.CONSTANT_START_SET_PTT)
         token_type = token.value
 
         if token_type == 'PLUS' or token_type == 'MINUS':
