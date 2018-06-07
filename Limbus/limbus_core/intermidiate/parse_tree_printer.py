@@ -15,7 +15,7 @@ class ParseTreePrinter:
         self.indent = " " * self.INDENT_WIDTH
 
     def print(self, inode):
-        self.ps.write('===== INTERMEDIATE CODE =====\n')
+        self.ps.write('<!--- ===== INTERMEDIATE CODE =====  -->\n')
         self.print_node(inode.get_root())
         self.print_line()
 
