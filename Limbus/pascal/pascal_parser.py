@@ -83,13 +83,22 @@ class PascalParserTD(Parser):
 
     def synchronize(self, syncset):
         token = self.current_token()
-        if not (token.value in syncset):
+
+        if (token.ptype == PTT.IDENTIFIER) and ('IDENTIFIER' in syncset):
+            sync = True
+        elif token.value in syncset:
+            sync = True
+        else:
+            sync = False
+
+        if not sync:
             self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
-        token = self.next_token()
-        while (token.type != TokenType.EOF) and (not token.value in syncset):
             token = self.next_token()
+            while (token.type != TokenType.EOF) and (not token.value in syncset):
+                token = self.next_token()
 
+        return token
 
 
 class StatementParser(PascalParserTD):
@@ -333,7 +342,8 @@ class ExpressionParser(StatementParser):
 class CaseStatementParser(StatementParser):
     def __init__(self, parent):
         super().__init__(parent)
-        self.CONSTANT_START_SET = ['IDENTIFIER', 'INTEGER',' PLUS', 'MINUS,' 'STRING']
+        self.CONSTANT_START_SET = [ 'PLUS', 'MINUS']
+        self.CONSTANT_START_SET_PTT = [PTT.IDENTIFIER, PTT.INTEGER, PTT.STRING]
         self.OF_SET = self.CONSTANT_START_SET + ['OF'] + self.STMT_FOLLOW_SET
         self.COMMA_SET = self.CONSTANT_START_SET + ['COMMA', 'COLON'] +self.STMT_START_SET + self.STMT_FOLLOW_SET
 
@@ -350,11 +360,11 @@ class CaseStatementParser(StatementParser):
         else:
             self.error_handler.flag(token, 'MISSING_OF', self)
 
-        constain_set = {}
+        constain_set = []
         while token.type != TokenType.EOF and token.value != 'END':
             select_node.add_child(self. parse_branch(token, constain_set))
             token = self.current_token()
-            token_type = token.get_type()
+            token_type = token.value
             if token_type == 'SEMICOLON':
                 token = self.next_token()
             elif token_type in self.CONSTANT_START_SET:
@@ -383,7 +393,8 @@ class CaseStatementParser(StatementParser):
         return branch_node
 
     def parse_constant_list(self, token, constants_node, constants_set):
-        while token.value in self.CONSTANT_START_SET:
+
+        while token.ptype in self.CONSTANT_START_SET_PTT or token.value in self.CONSTANT_START_SET:
             constants_node.add_child(self.parse_constant(token, constants_set))
             token = self.synchronize(self.COMMA_SET)
 
@@ -407,7 +418,7 @@ class CaseStatementParser(StatementParser):
         if token.ptype == PTT.IDENTIFIER:
             constant_node = self.parse_identifier_constant(token, sign)
         elif token.ptype == PTT.INTEGER:
-            constant_node = self.parse_integer_constant(token.get_text(), sign)
+            constant_node = self.parse_integer_constant(token.text, sign)
         elif token.ptype == PTT.STRING:
             constant_node = self.parse_character_constant(token, token.value, sign)
         else:
@@ -418,7 +429,7 @@ class CaseStatementParser(StatementParser):
             if value in constants_set:
                 self.error_handler.flag(token, 'CASE_CONSTANT_REUSED', self)
             else:
-                constants_set.add(value)
+                constants_set.append(value)
 
         token = self.next_token()
         return constant_node

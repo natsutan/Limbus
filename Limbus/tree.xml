@@ -1,24 +1,8 @@
 ===== INTERMEDIATE CODE =====
 <COMPOUND line="1">
-    <COMPOUND line="2">
-        <ASSIGN line="3">
-            <VARIABLE id="five" level="0" >
-            <ADD>
-                <ADD>
-                    <SUBTRACT>
-                        <ADD>
-                            <NEGATE>
-                                <INTEGER_CONSTANT value="1" >
-                            </NEGATE>
-                            <INTEGER_CONSTANT value="2" >
-                        </ADD>
-                        <INTEGER_CONSTANT value="3" >
-                    </SUBTRACT>
-                    <INTEGER_CONSTANT value="4" >
-                </ADD>
-                <INTEGER_CONSTANT value="3" >
-            </ADD>
-        </ASSIGN>
-    </COMPOUND>
+    <ASSIGN line="2">
+        <VARIABLE id="i" level="0" >
+        <INTEGER_CONSTANT value="3" >
+    </ASSIGN>
 </COMPOUND>
 
