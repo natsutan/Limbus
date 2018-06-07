@@ -17,17 +17,22 @@
             <SELECT_CONSTANTS>
                 <INTEGER_CONSTANT value="1" >
             </SELECT_CONSTANTS>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS >
+            <ASSIGN line="5">
+                <VARIABLE id="j" level="0" >
+                <VARIABLE id="i" level="0" >
+            </ASSIGN>
         </SELECT_BRANCH>
         <SELECT_BRANCH>
             <SELECT_CONSTANTS>
                 <INTEGER_CONSTANT value="4" >
             </SELECT_CONSTANTS>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS >
+            <ASSIGN line="6">
+                <VARIABLE id="j" level="0" >
+                <MULTIPLY>
+                    <INTEGER_CONSTANT value="4" >
+                    <VARIABLE id="i" level="0" >
+                </MULTIPLY>
+            </ASSIGN>
         </SELECT_BRANCH>
         <SELECT_BRANCH>
             <SELECT_CONSTANTS>
@@ -35,9 +40,13 @@
                 <INTEGER_CONSTANT value="2" >
                 <INTEGER_CONSTANT value="3" >
             </SELECT_CONSTANTS>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS >
+            <ASSIGN line="7">
+                <VARIABLE id="j" level="0" >
+                <MULTIPLY>
+                    <INTEGER_CONSTANT value="523" >
+                    <VARIABLE id="i" level="0" >
+                </MULTIPLY>
+            </ASSIGN>
         </SELECT_BRANCH>
     </SELECT>
 </COMPOUND>

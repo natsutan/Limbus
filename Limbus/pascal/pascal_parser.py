@@ -349,6 +349,7 @@ class CaseStatementParser(StatementParser):
         self.OF_SET = self.CONSTANT_START_SET + ['OF'] + self.STMT_FOLLOW_SET
         self.COMMA_SET = self.CONSTANT_START_SET + ['COMMA', 'COLON'] +self.STMT_START_SET + self.STMT_FOLLOW_SET
 
+    # CaseStatementParser
     def parse(self, token):
         token = self.next_token()
         select_node = iCodeNodeFactory().create('SELECT')
@@ -392,6 +393,9 @@ class CaseStatementParser(StatementParser):
         else:
             self.error_handler.flag(token, 'MISSING_COLON', self)
 
+        statement_parser = StatementParser(self)
+        branch_node.add_child(statement_parser.parse(token))
+
         return branch_node
 
     def parse_constant_list(self, token, constants_node, constants_set):
@@ -401,7 +405,6 @@ class CaseStatementParser(StatementParser):
 
             if token.value == 'COMMA':
                 token = self.next_token()
-
             elif token.value in self.CONSTANT_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
 

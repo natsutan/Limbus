@@ -6,5 +6,4 @@ BEGIN {CASE statements}
         4:       j := 4*i;
         5, 2, 3: j := 523*i;
     END;
-
 END.
