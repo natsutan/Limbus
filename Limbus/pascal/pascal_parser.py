@@ -57,7 +57,7 @@ class PascalParserTD(Parser):
             token = self.current_token()
 
         token = self.current_token()
-        if token.value == 'DOT':
+        if token.value != 'DOT':
             self.error_handler.flag(token, 'MISSING_PERIOD', self)
 
         if root_node:
