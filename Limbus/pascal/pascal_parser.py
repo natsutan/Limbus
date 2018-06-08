@@ -471,7 +471,7 @@ class CaseStatementParser(StatementParser):
 
 
 class ForStatementParser(StatementParser):
-    TO_DOWNTO_SET = ExpressionParser.EXPR_START_SET + ['PLUS', 'MINUS'] + StatementParser.STMT_FOLLOW_SET
+    TO_DOWNTO_SET = ExpressionParser.EXPR_START_SET + ['TO', 'DOWNTO'] + StatementParser.STMT_FOLLOW_SET
     TO_DOWNTO_SET_PTT = ExpressionParser.EXPR_START_SET_PTT
     DO_SET = StatementParser.STMT_START_SET + ['DO'] + StatementParser.STMT_FOLLOW_SET
 
@@ -498,7 +498,7 @@ class ForStatementParser(StatementParser):
         token = self.synchronize(ForStatementParser.TO_DOWNTO_SET, ptt_set=ForStatementParser.TO_DOWNTO_SET_PTT)
         direction = token.value
 
-        if direction == 'TO ' or direction == 'DOWNTO':
+        if direction == 'TO' or direction == 'DOWNTO':
             token = self.next_token()
         else:
             direction = 'TO'
@@ -511,6 +511,9 @@ class ForStatementParser(StatementParser):
 
         control_var_node = init_assign_node.get_children()[0]
         rel_op_node.add_child(copy.copy(compound_node))
+
+        expression_parser = ExpressionParser(self)
+        rel_op_node.add_child(expression_parser.parse(token))
 
         test_node.add_child(rel_op_node)
         loop_node.add_child(test_node)
