@@ -3,7 +3,9 @@ from pascal.pascal import Pascal
 
 #hello_ps = 'pascal_src/assignments.txt'
 #hello_ps = 'pascal_src/case.txt'
-hello_ps = 'pascal_src/if.txt'
+#hello_ps = 'pascal_src/if.txt'
+#hello_ps = 'pascal_src/iferrors.txt'
+hello_ps = 'pascal_src/loops.txt'
 
 
 

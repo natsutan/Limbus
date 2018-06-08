@@ -577,6 +577,27 @@ class IfStatementParser(StatementParser):
         return if_node
 
 
+class RepeatStatementParser(StatementParser):
+    THEN_SET = StatementParser.STMT_START_SET + ['THEN'] + StatementParser.STMT_FOLLOW_SET
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.next_token()
+        loop_node = iCodeNodeFactory().create('LOOP')
+        test_node = iCodeNodeFactory().create('TEST')
+
+        statement_parser = StatementParser(self)
+        statement_parser.parse_list(token, loop_node, 'UNTIL', 'MISSING_UNTIL')
+        token = self.current_token()
+
+        express_parser = ExpressionParser(self)
+        test_node.add_child(express_parser.parse(token))
+        loop_node.add_child(test_node)
+
+        return loop_node
+
 def set_line_number(node, token):
     if node:
         node.set_attribute('LINE', token.line_num)

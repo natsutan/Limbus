@@ -1,46 +1,41 @@
 <!--- ===== INTERMEDIATE CODE =====  -->
 <COMPOUND line="1">
-    <ASSIGN line="2">
-        <VARIABLE id="i" level="0" >
-        <INTEGER_CONSTANT value="3" >
-    </ASSIGN>
-    <ASSIGN line="2">
-        <VARIABLE id="j" level="0" >
-        <INTEGER_CONSTANT value="4" >
-    </ASSIGN>
-    <ASSIGN line="4">
-        <VARIABLE id="f" level="0" >
-        <NEGATE>
-            <INTEGER_CONSTANT value="200" >
-        </NEGATE>
-    </ASSIGN>
-    <IF line="7">
-        <LT>
-            <VARIABLE id="i" level="0" >
-            <VARIABLE id="j" level="0" >
-        </LT>
-        <ASSIGN line="7">
-            <VARIABLE id="t" level="0" >
-            <INTEGER_CONSTANT value="300" >
+    <COMPOUND line="2">
+        <ASSIGN line="3">
+            <VARIABLE id="number" level="0" >
+            <INTEGER_CONSTANT value="4" >
         </ASSIGN>
-    </IF>
-    <ASSIGN line="10">
-        <VARIABLE id="f" level="0" >
-        <NEGATE>
-            <INTEGER_CONSTANT value="1" >
-        </NEGATE>
-    </ASSIGN>
-    <IF line="17">
-        <EQ>
-            <VARIABLE id="i" level="0" >
-            <INTEGER_CONSTANT value="3" >
-        </EQ>
-        <ASSIGN line="17">
-            <VARIABLE id="f" level="0" >
-            <NEGATE>
-                <INTEGER_CONSTANT value="500" >
-            </NEGATE>
+        <ASSIGN line="4">
+            <VARIABLE id="root" level="0" >
+            <VARIABLE id="number" level="0" >
         </ASSIGN>
-    </IF>
+        <LOOP line="6">
+            <ASSIGN line="7">
+                <VARIABLE id="root" level="0" >
+                <FLOAT_DIVIDE>
+                    <ADD>
+                        <FLOAT_DIVIDE>
+                            <VARIABLE id="number" level="0" >
+                            <VARIABLE id="root" level="0" >
+                        </FLOAT_DIVIDE>
+                        <VARIABLE id="root" level="0" >
+                    </ADD>
+                    <INTEGER_CONSTANT value="2" >
+                </FLOAT_DIVIDE>
+            </ASSIGN>
+            <TEST>
+                <LT>
+                    <SUBTRACT>
+                        <MULTIPLY>
+                            <VARIABLE id="root" level="0" >
+                            <VARIABLE id="root" level="0" >
+                        </MULTIPLY>
+                        <VARIABLE id="number" level="0" >
+                    </SUBTRACT>
+                    <REAL_CONSTANT value="1e-06" >
+                </LT>
+            </TEST>
+        </LOOP>
+    </COMPOUND>
 </COMPOUND>
 
