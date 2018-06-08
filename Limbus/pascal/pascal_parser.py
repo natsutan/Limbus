@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import copy
 
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
@@ -104,9 +105,10 @@ class PascalParserTD(Parser):
 
 
 class StatementParser(PascalParserTD):
+    STMT_START_SET = ['BEGIN', 'CASE', 'FOR', 'IF', 'REPEAT', 'WHILE', 'IDENTIFIER', 'SEMICOLON']
+    STMT_FOLLOW_SET = ['SEMICOLON', 'END', 'ELSE', 'UNTIL', 'DOT']
+
     def __init__(self, parent):
-        self.STMT_START_SET = ['BEGIN', 'CASE', 'FOR', 'IF', 'REPEAT', 'WHILE', 'IDENTIFIER', 'SEMICOLON']
-        self.STMT_FOLLOW_SET = ['SEMICOLON', 'END', 'ELSE', 'UNTIL', 'DOT']
         super().__init__(parent)
 
     def parse(self, token):
@@ -131,7 +133,7 @@ class StatementParser(PascalParserTD):
 
 
     def parse_list(self, token, parent_node, terminator, err_code):
-        terminator_set = self.STMT_START_SET + [terminator]
+        terminator_set = StatementParser.STMT_START_SET + [terminator]
 
 
         while token.type != TokenType.EOF and token.value != terminator:
@@ -198,6 +200,8 @@ class CompoundStatementParser(StatementParser):
 
 
 class ExpressionParser(StatementParser):
+    EXPR_START_SET = ['PLUS', 'MINUS', 'NOT', 'LEFT_PAREN']
+    EXPR_START_SET_PTT = [PTT.IDENTIFIER, PTT.INTEGER, PTT.REAL, PTT.STRING]
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -346,8 +350,8 @@ class CaseStatementParser(StatementParser):
         super().__init__(parent)
         self.CONSTANT_START_SET = [ 'PLUS', 'MINUS']
         self.CONSTANT_START_SET_PTT = [PTT.IDENTIFIER, PTT.INTEGER, PTT.STRING]
-        self.OF_SET = self.CONSTANT_START_SET + ['OF'] + self.STMT_FOLLOW_SET
-        self.COMMA_SET = self.CONSTANT_START_SET + ['COMMA', 'COLON'] +self.STMT_START_SET + self.STMT_FOLLOW_SET
+        self.OF_SET = self.CONSTANT_START_SET + ['OF'] + StatementParser.STMT_FOLLOW_SET
+        self.COMMA_SET = self.CONSTANT_START_SET + ['COMMA', 'COLON'] +StatementParser.STMT_START_SET + StatementParser.STMT_FOLLOW_SET
 
     # CaseStatementParser
     def parse(self, token):
@@ -466,8 +470,79 @@ class CaseStatementParser(StatementParser):
         return constant_node
 
 
+class ForStatementParser(StatementParser):
+    TO_DOWNTO_SET = ExpressionParser.EXPR_START_SET + ['PLUS', 'MINUS'] + StatementParser.STMT_FOLLOW_SET
+    TO_DOWNTO_SET_PTT = ExpressionParser.EXPR_START_SET_PTT
+    DO_SET = StatementParser.STMT_START_SET + ['DO'] + StatementParser.STMT_FOLLOW_SET
 
+    def __init__(self, parent):
+        super().__init__(parent)
 
+    # CaseStatementParser
+    def parse(self, token):
+        token = self.next_token()
+        target_token = token
+
+        compound_node = iCodeNodeFactory().create('COMPOUND')
+        loop_node = iCodeNodeFactory().create('LOOP')
+        test_node = iCodeNodeFactory().create('TEST')
+
+        assignment_parser = AssignmentStatementParser(self)
+        init_assign_node = assignment_parser.parse(token)
+
+        set_line_number(init_assign_node, token)
+
+        compound_node.add_child(init_assign_node)
+        compound_node.add_child(loop_node)
+
+        token = self.synchronize(ForStatementParser.TO_DOWNTO_SET, ptt_set=ForStatementParser.TO_DOWNTO_SET_PTT)
+        direction = token.value
+
+        if direction == 'TO ' or direction == 'DOWNTO':
+            token = self.next_token()
+        else:
+            direction = 'TO'
+            self.error_handler.flag(token, 'MISSING_TO_DOWNTO', self)
+
+        if direction == 'TO':
+            rel_op_node = iCodeNodeFactory().create('GT')
+        else:
+            rel_op_node = iCodeNodeFactory().create('LT')
+
+        control_var_node = init_assign_node.get_children()[0]
+        rel_op_node.add_child(copy.copy(compound_node))
+
+        test_node.add_child(rel_op_node)
+        loop_node.add_child(test_node)
+
+        token = self.synchronize(ForStatementParser.DO_SET)
+        if token.value == 'DO':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_DO', self)
+
+        statement_parser = StatementParser(self)
+        loop_node.add_child(statement_parser.parse(token))
+
+        next_assign_node = iCodeNodeFactory().create('ASSIGN')
+        next_assign_node.add_child(copy.copy(compound_node))
+
+        if direction == 'TO':
+            arith_op_node = iCodeNodeFactory().create('ADD')
+        else:
+            arith_op_node = iCodeNodeFactory().create('SUBTRACT')
+
+        arith_op_node.add_child(copy.copy(control_var_node))
+        one_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
+        one_node.set_attribute('VALUE', 1)
+        arith_op_node.add_child(one_node)
+
+        next_assign_node.add_child(arith_op_node)
+        loop_node.add_child(next_assign_node)
+
+        set_line_number(next_assign_node, target_token)
+
+        return compound_node
 
 def set_line_number(node, token):
     if node:

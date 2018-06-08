@@ -2,9 +2,8 @@
 from pascal.pascal import Pascal
 
 #hello_ps = 'pascal_src/assignments.txt'
-hello_ps = 'pascal_src/case_test.txt'
-# hello_ps = 'pascal_src/assignerrors.txt'
-#hello_ps = 'pascal_src/assignments_test.txt'
+#hello_ps = 'pascal_src/case.txt'
+hello_ps = 'pascal_src/for.txt'
 
 
 
