@@ -16,7 +16,11 @@ class RunTimeErrorHandler:
         while node and node.get_attribute("LINE"):
             node = node.get_parent()
 
-        msg = Message('RUNTIME_ERROR', (error_code, node.get_attribute('LINE')))
+        if node != None:
+            msg = Message('RUNTIME_ERROR', (error_code, node.get_attribute('LINE')))
+        else:
+            msg = Message('RUNTIME_ERROR', (error_code, None))
+
         backend.send_message(msg)
 
         Executer.runtime_error += 1

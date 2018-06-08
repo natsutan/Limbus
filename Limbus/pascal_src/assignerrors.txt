@@ -17,5 +17,4 @@ BEGIN
     END
 
     dze fahrenheit/((ratio - ratio) := ;
-
 END.

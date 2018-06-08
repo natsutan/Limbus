@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from pascal.pascal import Pascal
 
-hello_ps = 'pascal_src/assignments.txt'
-# hello_ps = 'pascal_src/assignerrors.txt'
-# hello_ps = 'pascal_src/assignerrors.txt'
-#hello_ps = 'pascal_src/assignments_test.txt'
+#hello_ps = 'pascal_src/assignments.txt'
+#hello_ps = 'pascal_src/case.txt'
+#hello_ps = 'pascal_src/if.txt'
+#hello_ps = 'pascal_src/iferrors.txt'
+#hello_ps = 'pascal_src/loops.txt'
+#hello_ps = 'pascal_src/repeat.txt'
+hello_ps = 'pascal_src/while.txt'
 
 
 
