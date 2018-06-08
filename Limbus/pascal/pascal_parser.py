@@ -510,7 +510,7 @@ class ForStatementParser(StatementParser):
             rel_op_node = iCodeNodeFactory().create('LT')
 
         control_var_node = init_assign_node.get_children()[0]
-        rel_op_node.add_child(copy.copy(compound_node))
+        rel_op_node.add_child(copy.deepcopy(compound_node))
 
         expression_parser = ExpressionParser(self)
         rel_op_node.add_child(expression_parser.parse(token))
@@ -528,14 +528,14 @@ class ForStatementParser(StatementParser):
         loop_node.add_child(statement_parser.parse(token))
 
         next_assign_node = iCodeNodeFactory().create('ASSIGN')
-        next_assign_node.add_child(copy.copy(compound_node))
+        next_assign_node.add_child(copy.deepcopy(compound_node))
 
         if direction == 'TO':
             arith_op_node = iCodeNodeFactory().create('ADD')
         else:
             arith_op_node = iCodeNodeFactory().create('SUBTRACT')
 
-        arith_op_node.add_child(copy.copy(control_var_node))
+        arith_op_node.add_child(copy.deepcopy(control_var_node))
         one_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
         one_node.set_attribute('VALUE', 1)
         arith_op_node.add_child(one_node)
