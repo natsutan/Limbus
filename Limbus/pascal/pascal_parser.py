@@ -598,6 +598,37 @@ class RepeatStatementParser(StatementParser):
 
         return loop_node
 
+class WhileStatementParser(StatementParser):
+    DO_SET = StatementParser.STMT_START_SET + ['DO'] + StatementParser.STMT_FOLLOW_SET
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    # CaseStatementParser
+    def parse(self, token):
+        token = self.next_token()
+
+        loop_node = iCodeNodeFactory().create('LOOP')
+        break_node = iCodeNodeFactory().create('TEST')
+        not_node = iCodeNodeFactory().create('NOT')
+
+        loop_node.add_child(break_node)
+        break_node.add_child(not_node)
+
+        expression_parser = ExpressionParser(self)
+        not_node.add_child(expression_parser.parse(token))
+
+        token = self.synchronize(WhileStatementParser.DO_SET)
+        if token.value == 'DO':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_DO', self)
+
+        statement_parser = StatementParser(self)
+        loop_node.add_child(statement_parser.parse(token))
+
+        return loop_node
+
 def set_line_number(node, token):
     if node:
         node.set_attribute('LINE', token.line_num)
