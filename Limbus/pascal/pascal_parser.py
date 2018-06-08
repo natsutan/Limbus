@@ -547,6 +547,36 @@ class ForStatementParser(StatementParser):
 
         return compound_node
 
+class IfStatementParser(StatementParser):
+    THEN_SET = StatementParser.STMT_START_SET + ['THEN'] + StatementParser.STMT_FOLLOW_SET
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.next_token()
+
+        if_node = iCodeNodeFactory().create('IF')
+        expression_parser = ExpressionParser(self)
+        if_node.add_child(expression_parser.parse(token))
+
+        token = self.synchronize(IfStatementParser.THEN_SET)
+        if token.value == 'THEN':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_THEN', self)
+
+        statement_parser = StatementParser(self)
+        if_node.add_child(statement_parser.parse(token))
+        token = self.current_token()
+
+        if token.value == 'ELSE':
+            token = self.next_token()
+            if_node = if_node.add_child(statement_parser.parse(token))
+
+        return if_node
+
+
 def set_line_number(node, token):
     if node:
         node.set_attribute('LINE', token.line_num)
