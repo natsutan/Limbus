@@ -12,6 +12,7 @@
         <LOOP>
             <TEST>
                 <GT>
+                    
                     <VARIABLE id="k" level="0" >
                     <INTEGER_CONSTANT value="5" >
                 </GT>
