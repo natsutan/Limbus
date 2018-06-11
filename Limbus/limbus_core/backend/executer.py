@@ -133,6 +133,7 @@ class AssignmentExecutor(StatementExecutor):
             msg = Message('ASSIGN', (line_number, name, value))
             self.send_message(msg)
 
+
 class ExpressionExecutor(StatementExecutor):
 
     def __init__(self, parent):
@@ -269,8 +270,8 @@ class SelectExecutor(StatementExecutor):
         self.increment_exec_count()
         return None
 
-class LoopExecutor(StatementExecutor):
 
+class LoopExecutor(StatementExecutor):
     def __init__(self, parent):
         super().__init__(parent)
 

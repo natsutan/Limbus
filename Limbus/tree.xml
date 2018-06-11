@@ -1,43 +1,50 @@
 <!--- ===== INTERMEDIATE CODE =====  -->
 <COMPOUND line="1">
     <ASSIGN line="2">
-        <VARIABLE id="number" level="0" >
-        <INTEGER_CONSTANT value="4" >
+        <VARIABLE id="j" level="0" >
+        <INTEGER_CONSTANT value="1" >
     </ASSIGN>
-    <ASSIGN line="3">
-        <VARIABLE id="root" level="0" >
-        <VARIABLE id="number" level="0" >
-    </ASSIGN>
-    <LOOP line="5">
-        <ASSIGN line="6">
-            <VARIABLE id="partial" level="0" >
-            <ADD>
-                <FLOAT_DIVIDE>
-                    <VARIABLE id="number" level="0" >
-                    <VARIABLE id="root" level="0" >
-                </FLOAT_DIVIDE>
-                <VARIABLE id="root" level="0" >
-            </ADD>
+    <COMPOUND line="4">
+        <ASSIGN line="4">
+            <VARIABLE id="k" level="0" >
+            <VARIABLE id="j" level="0" >
         </ASSIGN>
-        <ASSIGN line="7">
-            <VARIABLE id="root" level="0" >
-            <FLOAT_DIVIDE>
-                <VARIABLE id="partial" level="0" >
-                <INTEGER_CONSTANT value="2" >
-            </FLOAT_DIVIDE>
-        </ASSIGN>
-        <TEST>
-            <LT>
-                <SUBTRACT>
-                    <MULTIPLY>
-                        <VARIABLE id="root" level="0" >
-                        <VARIABLE id="root" level="0" >
-                    </MULTIPLY>
-                    <VARIABLE id="number" level="0" >
-                </SUBTRACT>
-                <REAL_CONSTANT value="1e-06" >
-            </LT>
-        </TEST>
-    </LOOP>
+        <LOOP>
+            <TEST>
+                <GT>
+                    <VARIABLE id="k" level="0" >
+                    <INTEGER_CONSTANT value="5" >
+                </GT>
+            </TEST>
+            <ASSIGN line="4">
+                <VARIABLE id="n" level="0" >
+                <VARIABLE id="k" level="0" >
+            </ASSIGN>
+            <ASSIGN line="4">
+                <COMPOUND>
+                    <ASSIGN line="4">
+                        <VARIABLE id="k" level="0" >
+                        <VARIABLE id="j" level="0" >
+                    </ASSIGN>
+                    <LOOP>
+                        <TEST>
+                            <GT>
+                                <VARIABLE id="k" level="0" >
+                                <INTEGER_CONSTANT value="5" >
+                            </GT>
+                        </TEST>
+                        <ASSIGN line="4">
+                            <VARIABLE id="n" level="0" >
+                            <VARIABLE id="k" level="0" >
+                        </ASSIGN>
+                    </LOOP>
+                </COMPOUND>
+                <ADD>
+                    <VARIABLE id="k" level="0" >
+                    <INTEGER_CONSTANT value="1" >
+                </ADD>
+            </ASSIGN>
+        </LOOP>
+    </COMPOUND>
 </COMPOUND>
 

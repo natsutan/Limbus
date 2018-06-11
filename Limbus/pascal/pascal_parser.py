@@ -131,10 +131,8 @@ class StatementParser(PascalParserTD):
         set_line_number(statement_node, token)
         return statement_node
 
-
     def parse_list(self, token, parent_node, terminator, err_code):
         terminator_set = StatementParser.STMT_START_SET + [terminator]
-
 
         while token.type != TokenType.EOF and token.value != terminator:
             statement_node = self.parse(token)
@@ -510,7 +508,7 @@ class ForStatementParser(StatementParser):
             rel_op_node = iCodeNodeFactory().create('LT')
 
         control_var_node = init_assign_node.get_children()[0]
-        rel_op_node.add_child(copy.deepcopy(compound_node))
+        rel_op_node.add_child(copy.deepcopy(control_var_node))
 
         expression_parser = ExpressionParser(self)
         rel_op_node.add_child(expression_parser.parse(token))

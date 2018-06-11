@@ -2,7 +2,8 @@
 from pascal.pascal import Pascal
 
 #hello_ps = 'pascal_src/assignments.txt'
-hello_ps = 'pascal_src/repeat.txt'
+#hello_ps = 'pascal_src/repeat.txt'
+hello_ps = 'pascal_src/for_test.txt'
 
 
 
