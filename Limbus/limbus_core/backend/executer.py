@@ -71,6 +71,15 @@ class StatementExecutor(Executer):
         elif node_type == 'ASSIGN':
             assignment_exec = AssignmentExecutor(self)
             return assignment_exec.execute(node)
+        elif node_type == 'LOOP':
+            loop_exec = LoopExecutor(self)
+            return loop_exec.execute(node)
+        elif node_type == 'IF':
+            if_exec = IfExecutor(self)
+            return if_exec.execute(node)
+        elif node_type == 'SELECT':
+            select_exec = SelectExecutor(self)
+            return select_exec.execute(node)
         elif node_type == 'NO_OP':
             return None
 
@@ -260,5 +269,33 @@ class SelectExecutor(StatementExecutor):
         self.increment_exec_count()
         return None
 
+class LoopExecutor(StatementExecutor):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def execute(self, node):
+        exit_loop = False
+        expr_node = None
+        loop_children = node.get_children()
+
+        expression_exec = ExpressionExecutor(self)
+        statement_exec = StatementExecutor(self)
+
+        while not exit_loop:
+            self.increment_exec_count()
+            for child in loop_children:
+                child_type = child.get_type()
+                if child_type == 'TEST':
+                    if expr_node == None:
+                        expr_node = child.get_children()[0]
+                    exit_loop = expression_exec.execute(expr_node)
+                else:
+                    statement_exec.execute(child)
+
+                if exit_loop:
+                    break
+
+        return None
 
 
