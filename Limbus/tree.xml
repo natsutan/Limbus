@@ -1,46 +1,29 @@
 <!--- ===== INTERMEDIATE CODE =====  -->
 <COMPOUND line="1">
     <ASSIGN line="2">
-        <VARIABLE id="j" level="0" >
+        <VARIABLE id="j" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E4918D0> >
         <INTEGER_CONSTANT value="1" >
     </ASSIGN>
     <COMPOUND line="4">
         <ASSIGN line="4">
-            <VARIABLE id="k" level="0" >
-            <VARIABLE id="j" level="0" >
+            <VARIABLE id="k" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E491C18> >
+            <VARIABLE id="j" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E4918D0> >
         </ASSIGN>
         <LOOP>
             <TEST>
                 <GT>
-                    <VARIABLE id="k" level="0" >
+                    <VARIABLE id="k" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E491C18> >
                     <INTEGER_CONSTANT value="5" >
                 </GT>
             </TEST>
             <ASSIGN line="4">
-                <VARIABLE id="n" level="0" >
-                <VARIABLE id="k" level="0" >
+                <VARIABLE id="n" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E4A30F0> >
+                <VARIABLE id="k" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E491C18> >
             </ASSIGN>
             <ASSIGN line="4">
-                <COMPOUND>
-                    <ASSIGN line="4">
-                        <VARIABLE id="k" level="0" >
-                        <VARIABLE id="j" level="0" >
-                    </ASSIGN>
-                    <LOOP>
-                        <TEST>
-                            <GT>
-                                <VARIABLE id="k" level="0" >
-                                <INTEGER_CONSTANT value="5" >
-                            </GT>
-                        </TEST>
-                        <ASSIGN line="4">
-                            <VARIABLE id="n" level="0" >
-                            <VARIABLE id="k" level="0" >
-                        </ASSIGN>
-                    </LOOP>
-                </COMPOUND>
+                <VARIABLE id="k" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E4A3128> >
                 <ADD>
-                    <VARIABLE id="k" level="0" >
+                    <VARIABLE id="k" level="0" <limbus_core.intermidiate.symtabstack_impl.SymTabEntry object at 0x000001E26E491C18> >
                     <INTEGER_CONSTANT value="1" >
                 </ADD>
             </ASSIGN>

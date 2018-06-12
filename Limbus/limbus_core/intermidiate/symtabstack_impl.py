@@ -67,6 +67,8 @@ class SymTabEntry(SynTabEntryIF):
         self.line_numbers = []
         self.attribute = {}
 
+        print('Entry name = ', self.name, " ", self)
+
     def get_line_numbers(self):
         return self.line_numbers
 
