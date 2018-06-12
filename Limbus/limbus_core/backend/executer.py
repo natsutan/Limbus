@@ -121,7 +121,7 @@ class AssignmentExecutor(StatementExecutor):
         variable_id = variable_node.get_attribute('ID')
         variable_id.set_attribute('DATA_VALUE', value)
 
-        print("ASSIGN ", variable_id.name, " ", value, " ", variable_id)
+        #print("ASSIGN ", variable_id.name, " ", value, " ", variable_id)
 
         self._send_message(node, variable_id.get_name(), value)
 
@@ -147,7 +147,7 @@ class ExpressionExecutor(StatementExecutor):
 
         if node_type == 'VARIABLE':
             entry = node.get_attribute('ID')
-            print("Exe:entry:", entry.name, " ", entry.attribute, " ", entry)
+            # print("Exe:entry:", entry.name, " ", entry.attribute, " ", entry)
             val = entry.get_attribute('DATA_VALUE')
             return val
         elif node_type == 'INTEGER_CONSTANT':

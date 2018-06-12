@@ -167,7 +167,7 @@ class AssignmentStatementParser(StatementParser):
         if not target_id:
             target_id = Parser.symtab_stack.enter_local(target_name)
 
-        print("parse ", target_name, " id:", target_id, " ")
+        # print("parse ", target_name, " id:", target_id, " ")
 
         target_id.append_line_number(token.line_num)
         token = self.next_token()
@@ -510,8 +510,6 @@ class ForStatementParser(StatementParser):
             rel_op_node = iCodeNodeFactory().create('LT')
 
         control_var_node = init_assign_node.get_children()[0]
-        # todo
-        # rel_op_node.add_child(copy.deepcopy(control_var_node))
         rel_op_node.add_child(control_var_node)
 
         expression_parser = ExpressionParser(self)
@@ -530,15 +528,13 @@ class ForStatementParser(StatementParser):
         loop_node.add_child(statement_parser.parse(token))
 
         next_assign_node = iCodeNodeFactory().create('ASSIGN')
-        next_assign_node.add_child(copy.deepcopy(control_var_node))
+        next_assign_node.add_child(control_var_node)
 
         if direction == 'TO':
             arith_op_node = iCodeNodeFactory().create('ADD')
         else:
             arith_op_node = iCodeNodeFactory().create('SUBTRACT')
 
-        #todo
-       # arith_op_node.add_child(copy.deepcopy(control_var_node))
         arith_op_node.add_child(control_var_node)
         one_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
         one_node.set_attribute('VALUE', 1)

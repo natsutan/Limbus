@@ -82,9 +82,9 @@ class ParseTreePrinter:
             level = value.get_symtab().get_nesting_level()
             self.print_attribute("LEVEL", level)
 
-            # todo
-            self.append(" ")
-            self.append(str(value))
+            # ここのコメントを外すとオブジェクトのアドレスが表示される
+            #self.append(" ")
+            #self.append(str(value))
 
 
     def print_child_nodes(self, child_nodes):
