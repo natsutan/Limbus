@@ -254,24 +254,41 @@ class SelectExecutor(StatementExecutor):
         super().__init__(parent)
 
     def execute(self, node):
-        if node in StatementExecutor.jump_cache[node]:
-            jump_table = StatementExecutor.jump_cache[node]
+        if node in SelectExecutor.jump_cache:
+            jump_table = SelectExecutor.jump_cache[node]
         else:
             jump_table = self.create_jumptable(node)
-            StatementExecutor.jump_cache[node] = jump_table
+            SelectExecutor.jump_cache[node] = jump_table
 
         select_children = node.get_children()
         expr_node = select_children[0]
         expression_exec = ExpressionExecutor(self)
         select_value = expression_exec.execute(expr_node)
 
-        statement_node = jump_table[select_value]
-        if statement_node:
+        if select_value in jump_table:
+            statement_node = jump_table[select_value]
             statement_exec = StatementExecutor(self)
-            statement_exec.execute(node)
+            statement_exec.execute(statement_node)
 
         self.increment_exec_count()
         return None
+
+    def create_jumptable(self, node):
+        jump_table = {}
+
+        select_children = node.get_children()
+
+        for i in range(1, len(select_children)):
+            branch_node = select_children[i]
+            constants_node = branch_node.get_children()[0]
+            statement_node = branch_node.get_children()[1]
+
+            constants_list = constants_node.get_children()
+            for cn in constants_list:
+                value = cn.get_attribute('VALUE')
+                jump_table[value] = statement_node
+
+        return jump_table
 
 
 class LoopExecutor(StatementExecutor):
