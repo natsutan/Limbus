@@ -573,7 +573,8 @@ class IfStatementParser(StatementParser):
 
         if token.value == 'ELSE':
             token = self.next_token()
-            if_node = if_node.add_child(statement_parser.parse(token))
+            else_node = statement_parser.parse(token)
+            if_node.add_child(else_node)
 
         return if_node
 

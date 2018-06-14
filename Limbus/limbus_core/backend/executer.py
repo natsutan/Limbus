@@ -147,7 +147,7 @@ class ExpressionExecutor(StatementExecutor):
 
         if node_type == 'VARIABLE':
             entry = node.get_attribute('ID')
-            # print("Exe:entry:", entry.name, " ", entry.attribute, " ", entry)
+            #print("Exe:entry:", entry.name, " ", entry.attribute, " ", entry)
             val = entry.get_attribute('DATA_VALUE')
             return val
         elif node_type == 'INTEGER_CONSTANT':
@@ -320,3 +320,28 @@ class LoopExecutor(StatementExecutor):
         return None
 
 
+class IfExecutor(StatementExecutor):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def execute(self, node):
+        children = node.get_children()
+        expr_node = children[0]
+        then_stmt_node = children[1]
+        if len(children) > 2:
+            else_stmt_node = children[2]
+        else:
+            else_stmt_node = None
+
+        express_exec  = ExpressionExecutor(self)
+        statement_exec = StatementExecutor(self)
+
+        b = express_exec.execute(expr_node)
+
+        if b:
+            statement_exec.execute(then_stmt_node)
+        elif else_stmt_node:
+            statement_exec.execute(else_stmt_node)
+
+        self.increment_exec_count()
+        return None
