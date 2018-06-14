@@ -5,102 +5,165 @@
         <INTEGER_CONSTANT value="3" >
     </ASSIGN>
     <ASSIGN line="2">
-        <VARIABLE id="j" level="0" >
-        <INTEGER_CONSTANT value="4" >
+        <VARIABLE id="ch" level="0" >
+        <STRING_CONSTANT value="b" >
     </ASSIGN>
-    <IF line="4">
-        <EQ>
-            <VARIABLE id="i" level="0" >
-            <VARIABLE id="j" level="0" >
-        </EQ>
-        <ASSIGN line="4">
-            <VARIABLE id="t" level="0" >
-            <INTEGER_CONSTANT value="200" >
-        </ASSIGN>
-        <ASSIGN line="5">
-            <VARIABLE id="f" level="0" >
-            <NEGATE>
-                <INTEGER_CONSTANT value="200" >
-            </NEGATE>
-        </ASSIGN>
-    </IF>
-    <IF line="7">
-        <LT>
-            <VARIABLE id="i" level="0" >
-            <VARIABLE id="j" level="0" >
-        </LT>
-        <ASSIGN line="7">
-            <VARIABLE id="t" level="0" >
-            <INTEGER_CONSTANT value="300" >
-        </ASSIGN>
-    </IF>
-    <IF line="10">
-        <EQ>
+    <SELECT line="4">
+        <ADD>
             <VARIABLE id="i" level="0" >
             <INTEGER_CONSTANT value="1" >
-        </EQ>
-        <ASSIGN line="10">
-            <VARIABLE id="f" level="0" >
-            <INTEGER_CONSTANT value="10" >
-        </ASSIGN>
-        <IF line="11">
-            <EQ>
-                <VARIABLE id="i" level="0" >
-                <INTEGER_CONSTANT value="2" >
-            </EQ>
-            <ASSIGN line="11">
-                <VARIABLE id="f" level="0" >
-                <INTEGER_CONSTANT value="20" >
-            </ASSIGN>
-            <IF line="12">
-                <EQ>
-                    <VARIABLE id="i" level="0" >
-                    <INTEGER_CONSTANT value="3" >
-                </EQ>
-                <ASSIGN line="12">
-                    <VARIABLE id="t" level="0" >
-                    <INTEGER_CONSTANT value="30" >
-                </ASSIGN>
-                <IF line="13">
-                    <EQ>
-                        <VARIABLE id="i" level="0" >
-                        <INTEGER_CONSTANT value="4" >
-                    </EQ>
-                    <ASSIGN line="13">
-                        <VARIABLE id="f" level="0" >
-                        <INTEGER_CONSTANT value="40" >
-                    </ASSIGN>
-                    <ASSIGN line="14">
-                        <VARIABLE id="f" level="0" >
-                        <NEGATE>
-                            <INTEGER_CONSTANT value="1" >
-                        </NEGATE>
-                    </ASSIGN>
-                </IF>
-            </IF>
-        </IF>
-    </IF>
-    <IF line="17">
-        <EQ>
-            <VARIABLE id="i" level="0" >
-            <INTEGER_CONSTANT value="3" >
-        </EQ>
-        <IF line="17">
-            <EQ>
+        </ADD>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="1" >
+            </SELECT_CONSTANTS>
+            <ASSIGN line="5">
                 <VARIABLE id="j" level="0" >
+                <VARIABLE id="i" level="0" >
+            </ASSIGN>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="4" >
+            </SELECT_CONSTANTS>
+            <ASSIGN line="6">
+                <VARIABLE id="j" level="0" >
+                <MULTIPLY>
+                    <INTEGER_CONSTANT value="4" >
+                    <VARIABLE id="i" level="0" >
+                </MULTIPLY>
+            </ASSIGN>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <INTEGER_CONSTANT value="5" >
                 <INTEGER_CONSTANT value="2" >
-            </EQ>
-            <ASSIGN line="17">
-                <VARIABLE id="t" level="0" >
-                <INTEGER_CONSTANT value="500" >
+                <INTEGER_CONSTANT value="3" >
+            </SELECT_CONSTANTS>
+            <ASSIGN line="7">
+                <VARIABLE id="j" level="0" >
+                <MULTIPLY>
+                    <INTEGER_CONSTANT value="523" >
+                    <VARIABLE id="i" level="0" >
+                </MULTIPLY>
             </ASSIGN>
-            <ASSIGN line="17">
-                <VARIABLE id="f" level="0" >
-                <NEGATE>
-                    <INTEGER_CONSTANT value="500" >
-                </NEGATE>
+        </SELECT_BRANCH>
+    </SELECT>
+    <SELECT line="10">
+        <VARIABLE id="ch" level="0" >
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <STRING_CONSTANT value="c" >
+                <STRING_CONSTANT value="b" >
+            </SELECT_CONSTANTS>
+            <ASSIGN line="11">
+                <VARIABLE id="str" level="0" >
+                <STRING_CONSTANT value="p" >
             </ASSIGN>
-        </IF>
-    </IF>
+        </SELECT_BRANCH>
+        <SELECT_BRANCH>
+            <SELECT_CONSTANTS>
+                <STRING_CONSTANT value="a" >
+            </SELECT_CONSTANTS>
+            <ASSIGN line="12">
+                <VARIABLE id="str" level="0" >
+                <STRING_CONSTANT value="q" >
+            </ASSIGN>
+        </SELECT_BRANCH>
+    </SELECT>
+    <COMPOUND line="15">
+        <ASSIGN line="15">
+            <VARIABLE id="i" level="0" >
+            <NEGATE>
+                <INTEGER_CONSTANT value="5" >
+            </NEGATE>
+        </ASSIGN>
+        <LOOP>
+            <TEST>
+                <GT>
+                    <VARIABLE id="i" level="0" >
+                    <INTEGER_CONSTANT value="15" >
+                </GT>
+            </TEST>
+            <COMPOUND line="15">
+                <SELECT line="16">
+                    <VARIABLE id="i" level="0" >
+                    <SELECT_BRANCH>
+                        <SELECT_CONSTANTS>
+                            <INTEGER_CONSTANT value="2" >
+                        </SELECT_CONSTANTS>
+                        <ASSIGN line="17">
+                            <VARIABLE id="prime" level="0" >
+                            <VARIABLE id="i" level="0" >
+                        </ASSIGN>
+                    </SELECT_BRANCH>
+                    <SELECT_BRANCH>
+                        <SELECT_CONSTANTS>
+                            <INTEGER_CONSTANT value="-4" >
+                            <INTEGER_CONSTANT value="-2" >
+                            <INTEGER_CONSTANT value="0" >
+                            <INTEGER_CONSTANT value="4" >
+                            <INTEGER_CONSTANT value="6" >
+                            <INTEGER_CONSTANT value="8" >
+                            <INTEGER_CONSTANT value="10" >
+                            <INTEGER_CONSTANT value="12" >
+                        </SELECT_CONSTANTS>
+                        <ASSIGN line="18">
+                            <VARIABLE id="even" level="0" >
+                            <VARIABLE id="i" level="0" >
+                        </ASSIGN>
+                    </SELECT_BRANCH>
+                    <SELECT_BRANCH>
+                        <SELECT_CONSTANTS>
+                            <INTEGER_CONSTANT value="-3" >
+                            <INTEGER_CONSTANT value="-1" >
+                            <INTEGER_CONSTANT value="1" >
+                            <INTEGER_CONSTANT value="3" >
+                            <INTEGER_CONSTANT value="5" >
+                            <INTEGER_CONSTANT value="7" >
+                            <INTEGER_CONSTANT value="9" >
+                            <INTEGER_CONSTANT value="11" >
+                        </SELECT_CONSTANTS>
+                        <SELECT line="19">
+                            <VARIABLE id="i" level="0" >
+                            <SELECT_BRANCH>
+                                <SELECT_CONSTANTS>
+                                    <INTEGER_CONSTANT value="-3" >
+                                    <INTEGER_CONSTANT value="-1" >
+                                    <INTEGER_CONSTANT value="1" >
+                                    <INTEGER_CONSTANT value="9" >
+                                </SELECT_CONSTANTS>
+                                <ASSIGN line="20">
+                                    <VARIABLE id="odd" level="0" >
+                                    <VARIABLE id="i" level="0" >
+                                </ASSIGN>
+                            </SELECT_BRANCH>
+                            <SELECT_BRANCH>
+                                <SELECT_CONSTANTS>
+                                    <INTEGER_CONSTANT value="2" >
+                                    <INTEGER_CONSTANT value="3" >
+                                    <INTEGER_CONSTANT value="5" >
+                                    <INTEGER_CONSTANT value="7" >
+                                    <INTEGER_CONSTANT value="11" >
+                                </SELECT_CONSTANTS>
+                                <ASSIGN line="21">
+                                    <VARIABLE id="prime" level="0" >
+                                    <VARIABLE id="i" level="0" >
+                                </ASSIGN>
+                            </SELECT_BRANCH>
+                        </SELECT>
+                    </SELECT_BRANCH>
+
+                                </SELECT>
+            </COMPOUND>
+            <ASSIGN line="15">
+                <VARIABLE id="i" level="0" >
+                <ADD>
+                    <VARIABLE id="i" level="0" >
+                    <INTEGER_CONSTANT value="1" >
+                </ADD>
+            </ASSIGN>
+        </LOOP>
+    </COMPOUND>
 </COMPOUND>
 
