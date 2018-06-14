@@ -1,169 +1,166 @@
 <!--- ===== INTERMEDIATE CODE =====  -->
 <COMPOUND line="1">
-    <ASSIGN line="2">
-        <VARIABLE id="i" level="0" >
-        <INTEGER_CONSTANT value="3" >
-    </ASSIGN>
-    <ASSIGN line="2">
-        <VARIABLE id="ch" level="0" >
-        <STRING_CONSTANT value="b" >
-    </ASSIGN>
-    <SELECT line="4">
-        <ADD>
-            <VARIABLE id="i" level="0" >
-            <INTEGER_CONSTANT value="1" >
-        </ADD>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS>
-                <INTEGER_CONSTANT value="1" >
-            </SELECT_CONSTANTS>
-            <ASSIGN line="5">
-                <VARIABLE id="j" level="0" >
-                <VARIABLE id="i" level="0" >
-            </ASSIGN>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS>
-                <INTEGER_CONSTANT value="4" >
-            </SELECT_CONSTANTS>
-            <ASSIGN line="6">
-                <VARIABLE id="j" level="0" >
-                <MULTIPLY>
-                    <INTEGER_CONSTANT value="4" >
-                    <VARIABLE id="i" level="0" >
-                </MULTIPLY>
-            </ASSIGN>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS>
-                <INTEGER_CONSTANT value="5" >
-                <INTEGER_CONSTANT value="2" >
-                <INTEGER_CONSTANT value="3" >
-            </SELECT_CONSTANTS>
-            <ASSIGN line="7">
-                <VARIABLE id="j" level="0" >
-                <MULTIPLY>
-                    <INTEGER_CONSTANT value="523" >
-                    <VARIABLE id="i" level="0" >
-                </MULTIPLY>
-            </ASSIGN>
-        </SELECT_BRANCH>
-    </SELECT>
-    <SELECT line="10">
-        <VARIABLE id="ch" level="0" >
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS>
-                <STRING_CONSTANT value="c" >
-                <STRING_CONSTANT value="b" >
-            </SELECT_CONSTANTS>
-            <ASSIGN line="11">
-                <VARIABLE id="str" level="0" >
-                <STRING_CONSTANT value="p" >
-            </ASSIGN>
-        </SELECT_BRANCH>
-        <SELECT_BRANCH>
-            <SELECT_CONSTANTS>
-                <STRING_CONSTANT value="a" >
-            </SELECT_CONSTANTS>
-            <ASSIGN line="12">
-                <VARIABLE id="str" level="0" >
-                <STRING_CONSTANT value="q" >
-            </ASSIGN>
-        </SELECT_BRANCH>
-    </SELECT>
-    <COMPOUND line="15">
-        <ASSIGN line="15">
-            <VARIABLE id="i" level="0" >
-            <NEGATE>
-                <INTEGER_CONSTANT value="5" >
-            </NEGATE>
-        </ASSIGN>
-        <LOOP>
-            <TEST>
-                <GT>
-                    <VARIABLE id="i" level="0" >
-                    <INTEGER_CONSTANT value="15" >
-                </GT>
-            </TEST>
-            <COMPOUND line="15">
-                <SELECT line="16">
-                    <VARIABLE id="i" level="0" >
-                    <SELECT_BRANCH>
-                        <SELECT_CONSTANTS>
-                            <INTEGER_CONSTANT value="2" >
-                        </SELECT_CONSTANTS>
-                        <ASSIGN line="17">
-                            <VARIABLE id="prime" level="0" >
-                            <VARIABLE id="i" level="0" >
-                        </ASSIGN>
-                    </SELECT_BRANCH>
-                    <SELECT_BRANCH>
-                        <SELECT_CONSTANTS>
-                            <INTEGER_CONSTANT value="-4" >
-                            <INTEGER_CONSTANT value="-2" >
-                            <INTEGER_CONSTANT value="0" >
-                            <INTEGER_CONSTANT value="4" >
-                            <INTEGER_CONSTANT value="6" >
-                            <INTEGER_CONSTANT value="8" >
-                            <INTEGER_CONSTANT value="10" >
-                            <INTEGER_CONSTANT value="12" >
-                        </SELECT_CONSTANTS>
-                        <ASSIGN line="18">
-                            <VARIABLE id="even" level="0" >
-                            <VARIABLE id="i" level="0" >
-                        </ASSIGN>
-                    </SELECT_BRANCH>
-                    <SELECT_BRANCH>
-                        <SELECT_CONSTANTS>
-                            <INTEGER_CONSTANT value="-3" >
-                            <INTEGER_CONSTANT value="-1" >
-                            <INTEGER_CONSTANT value="1" >
-                            <INTEGER_CONSTANT value="3" >
-                            <INTEGER_CONSTANT value="5" >
-                            <INTEGER_CONSTANT value="7" >
-                            <INTEGER_CONSTANT value="9" >
-                            <INTEGER_CONSTANT value="11" >
-                        </SELECT_CONSTANTS>
-                        <SELECT line="19">
-                            <VARIABLE id="i" level="0" >
-                            <SELECT_BRANCH>
-                                <SELECT_CONSTANTS>
-                                    <INTEGER_CONSTANT value="-3" >
-                                    <INTEGER_CONSTANT value="-1" >
-                                    <INTEGER_CONSTANT value="1" >
-                                    <INTEGER_CONSTANT value="9" >
-                                </SELECT_CONSTANTS>
-                                <ASSIGN line="20">
-                                    <VARIABLE id="odd" level="0" >
-                                    <VARIABLE id="i" level="0" >
-                                </ASSIGN>
-                            </SELECT_BRANCH>
-                            <SELECT_BRANCH>
-                                <SELECT_CONSTANTS>
-                                    <INTEGER_CONSTANT value="2" >
-                                    <INTEGER_CONSTANT value="3" >
-                                    <INTEGER_CONSTANT value="5" >
-                                    <INTEGER_CONSTANT value="7" >
-                                    <INTEGER_CONSTANT value="11" >
-                                </SELECT_CONSTANTS>
-                                <ASSIGN line="21">
-                                    <VARIABLE id="prime" level="0" >
-                                    <VARIABLE id="i" level="0" >
-                                </ASSIGN>
-                            </SELECT_BRANCH>
-                        </SELECT>
-                    </SELECT_BRANCH>
-
-                                </SELECT>
-            </COMPOUND>
-            <ASSIGN line="15">
-                <VARIABLE id="i" level="0" >
+    <COMPOUND line="2">
+        <ASSIGN line="3">
+            <VARIABLE id="five" level="0" >
+            <ADD>
                 <ADD>
-                    <VARIABLE id="i" level="0" >
-                    <INTEGER_CONSTANT value="1" >
+                    <SUBTRACT>
+                        <ADD>
+                            <NEGATE>
+                                <INTEGER_CONSTANT value="1" >
+                            </NEGATE>
+                            <INTEGER_CONSTANT value="2" >
+                        </ADD>
+                        <INTEGER_CONSTANT value="3" >
+                    </SUBTRACT>
+                    <INTEGER_CONSTANT value="4" >
                 </ADD>
-            </ASSIGN>
-        </LOOP>
+                <INTEGER_CONSTANT value="3" >
+            </ADD>
+        </ASSIGN>
+        <ASSIGN line="4">
+            <VARIABLE id="ratio" level="0" >
+            <FLOAT_DIVIDE>
+                <VARIABLE id="five" level="0" >
+                <REAL_CONSTANT value="9.0" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+        <ASSIGN line="6">
+            <VARIABLE id="fahrenheit" level="0" >
+            <INTEGER_CONSTANT value="72" >
+        </ASSIGN>
+        <ASSIGN line="7">
+            <VARIABLE id="centigrade" level="0" >
+            <MULTIPLY>
+                <SUBTRACT>
+                    <VARIABLE id="fahrenheit" level="0" >
+                    <INTEGER_CONSTANT value="32" >
+                </SUBTRACT>
+                <VARIABLE id="ratio" level="0" >
+            </MULTIPLY>
+        </ASSIGN>
+        <ASSIGN line="9">
+            <VARIABLE id="centigrade" level="0" >
+            <INTEGER_CONSTANT value="25" >
+        </ASSIGN>
+        <ASSIGN line="10">
+            <VARIABLE id="fahrenheit" level="0" >
+            <ADD>
+                <FLOAT_DIVIDE>
+                    <VARIABLE id="centigrade" level="0" >
+                    <VARIABLE id="ratio" level="0" >
+                </FLOAT_DIVIDE>
+                <INTEGER_CONSTANT value="32" >
+            </ADD>
+        </ASSIGN>
+        <ASSIGN line="12">
+            <VARIABLE id="centigrade" level="0" >
+            <INTEGER_CONSTANT value="25" >
+        </ASSIGN>
+        <ASSIGN line="13">
+            <VARIABLE id="fahrenheit" level="0" >
+            <ADD>
+                <INTEGER_CONSTANT value="32" >
+                <FLOAT_DIVIDE>
+                    <VARIABLE id="centigrade" level="0" >
+                    <VARIABLE id="ratio" level="0" >
+                </FLOAT_DIVIDE>
+            </ADD>
+        </ASSIGN>
     </COMPOUND>
+    <ASSIGN line="17">
+        <VARIABLE id="dze" level="0" >
+        <FLOAT_DIVIDE>
+            <VARIABLE id="fahrenheit" level="0" >
+            <SUBTRACT>
+                <VARIABLE id="ratio" level="0" >
+                <VARIABLE id="ratio" level="0" >
+            </SUBTRACT>
+        </FLOAT_DIVIDE>
+    </ASSIGN>
+    <COMPOUND line="19">
+        <ASSIGN line="20">
+            <VARIABLE id="number" level="0" >
+            <INTEGER_CONSTANT value="2" >
+        </ASSIGN>
+        <ASSIGN line="21">
+            <VARIABLE id="root" level="0" >
+            <VARIABLE id="number" level="0" >
+        </ASSIGN>
+        <ASSIGN line="22">
+            <VARIABLE id="root" level="0" >
+            <FLOAT_DIVIDE>
+                <ADD>
+                    <FLOAT_DIVIDE>
+                        <VARIABLE id="number" level="0" >
+                        <VARIABLE id="root" level="0" >
+                    </FLOAT_DIVIDE>
+                    <VARIABLE id="root" level="0" >
+                </ADD>
+                <INTEGER_CONSTANT value="2" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+        <ASSIGN line="23">
+            <VARIABLE id="root" level="0" >
+            <FLOAT_DIVIDE>
+                <ADD>
+                    <FLOAT_DIVIDE>
+                        <VARIABLE id="number" level="0" >
+                        <VARIABLE id="root" level="0" >
+                    </FLOAT_DIVIDE>
+                    <VARIABLE id="root" level="0" >
+                </ADD>
+                <INTEGER_CONSTANT value="2" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+        <ASSIGN line="24">
+            <VARIABLE id="root" level="0" >
+            <FLOAT_DIVIDE>
+                <ADD>
+                    <FLOAT_DIVIDE>
+                        <VARIABLE id="number" level="0" >
+                        <VARIABLE id="root" level="0" >
+                    </FLOAT_DIVIDE>
+                    <VARIABLE id="root" level="0" >
+                </ADD>
+                <INTEGER_CONSTANT value="2" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+        <ASSIGN line="25">
+            <VARIABLE id="root" level="0" >
+            <FLOAT_DIVIDE>
+                <ADD>
+                    <FLOAT_DIVIDE>
+                        <VARIABLE id="number" level="0" >
+                        <VARIABLE id="root" level="0" >
+                    </FLOAT_DIVIDE>
+                    <VARIABLE id="root" level="0" >
+                </ADD>
+                <INTEGER_CONSTANT value="2" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+        <ASSIGN line="26">
+            <VARIABLE id="root" level="0" >
+            <FLOAT_DIVIDE>
+                <ADD>
+                    <FLOAT_DIVIDE>
+                        <VARIABLE id="number" level="0" >
+                        <VARIABLE id="root" level="0" >
+                    </FLOAT_DIVIDE>
+                    <VARIABLE id="root" level="0" >
+                </ADD>
+                <INTEGER_CONSTANT value="2" >
+            </FLOAT_DIVIDE>
+        </ASSIGN>
+    </COMPOUND>
+    <ASSIGN line="29">
+        <VARIABLE id="ch" level="0" >
+        <STRING_CONSTANT value="x" >
+    </ASSIGN>
+    <ASSIGN line="30">
+        <VARIABLE id="str" level="0" >
+        <STRING_CONSTANT value="hello, world" >
+    </ASSIGN>
 </COMPOUND>
 
