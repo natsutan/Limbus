@@ -1,5 +1,5 @@
 BEGIN {CASE statements}
-    i := 3; ch := 'b';
+    i := 3;  ch := 'b';
 
     CASE i+1 OF
         1:       j := i;

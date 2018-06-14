@@ -2,66 +2,105 @@
 <COMPOUND line="1">
     <ASSIGN line="2">
         <VARIABLE id="i" level="0" >
-        <INTEGER_CONSTANT value="0" >
+        <INTEGER_CONSTANT value="3" >
     </ASSIGN>
     <ASSIGN line="2">
         <VARIABLE id="j" level="0" >
-        <INTEGER_CONSTANT value="0" >
+        <INTEGER_CONSTANT value="4" >
     </ASSIGN>
-    <LOOP line="4">
-        <TEST>
-            <NOT>
-                <GT>
-                    <VARIABLE id="i" level="0" >
-                    <VARIABLE id="j" level="0" >
-                </GT>
-            </NOT>
-        </TEST>
-        <ASSIGN line="4">
-            <VARIABLE id="k" level="0" >
+    <IF line="4">
+        <EQ>
             <VARIABLE id="i" level="0" >
+            <VARIABLE id="j" level="0" >
+        </EQ>
+        <ASSIGN line="4">
+            <VARIABLE id="t" level="0" >
+            <INTEGER_CONSTANT value="200" >
         </ASSIGN>
-    </LOOP>
-    <COMPOUND line="6">
+        <ASSIGN line="5">
+            <VARIABLE id="f" level="0" >
+            <NEGATE>
+                <INTEGER_CONSTANT value="200" >
+            </NEGATE>
+        </ASSIGN>
+    </IF>
+    <IF line="7">
+        <LT>
+            <VARIABLE id="i" level="0" >
+            <VARIABLE id="j" level="0" >
+        </LT>
         <ASSIGN line="7">
-            <VARIABLE id="number" level="0" >
-            <INTEGER_CONSTANT value="2" >
+            <VARIABLE id="t" level="0" >
+            <INTEGER_CONSTANT value="300" >
         </ASSIGN>
-        <ASSIGN line="8">
-            <VARIABLE id="root" level="0" >
-            <VARIABLE id="number" level="0" >
+    </IF>
+    <IF line="10">
+        <EQ>
+            <VARIABLE id="i" level="0" >
+            <INTEGER_CONSTANT value="1" >
+        </EQ>
+        <ASSIGN line="10">
+            <VARIABLE id="f" level="0" >
+            <INTEGER_CONSTANT value="10" >
         </ASSIGN>
-        <LOOP line="10">
-            <TEST>
-                <NOT>
-                    <GT>
-                        <SUBTRACT>
-                            <MULTIPLY>
-                                <VARIABLE id="root" level="0" >
-                                <VARIABLE id="root" level="0" >
-                            </MULTIPLY>
-                            <VARIABLE id="number" level="0" >
-                        </SUBTRACT>
-                        <REAL_CONSTANT value="1e-06" >
-                    </GT>
-                </NOT>
-            </TEST>
-            <COMPOUND line="10">
-                <ASSIGN line="11">
-                    <VARIABLE id="root" level="0" >
-                    <FLOAT_DIVIDE>
-                        <ADD>
-                            <FLOAT_DIVIDE>
-                                <VARIABLE id="number" level="0" >
-                                <VARIABLE id="root" level="0" >
-                            </FLOAT_DIVIDE>
-                            <VARIABLE id="root" level="0" >
-                        </ADD>
-                        <INTEGER_CONSTANT value="2" >
-                    </FLOAT_DIVIDE>
+        <IF line="11">
+            <EQ>
+                <VARIABLE id="i" level="0" >
+                <INTEGER_CONSTANT value="2" >
+            </EQ>
+            <ASSIGN line="11">
+                <VARIABLE id="f" level="0" >
+                <INTEGER_CONSTANT value="20" >
+            </ASSIGN>
+            <IF line="12">
+                <EQ>
+                    <VARIABLE id="i" level="0" >
+                    <INTEGER_CONSTANT value="3" >
+                </EQ>
+                <ASSIGN line="12">
+                    <VARIABLE id="t" level="0" >
+                    <INTEGER_CONSTANT value="30" >
                 </ASSIGN>
-            </COMPOUND>
-        </LOOP>
-    </COMPOUND>
+                <IF line="13">
+                    <EQ>
+                        <VARIABLE id="i" level="0" >
+                        <INTEGER_CONSTANT value="4" >
+                    </EQ>
+                    <ASSIGN line="13">
+                        <VARIABLE id="f" level="0" >
+                        <INTEGER_CONSTANT value="40" >
+                    </ASSIGN>
+                    <ASSIGN line="14">
+                        <VARIABLE id="f" level="0" >
+                        <NEGATE>
+                            <INTEGER_CONSTANT value="1" >
+                        </NEGATE>
+                    </ASSIGN>
+                </IF>
+            </IF>
+        </IF>
+    </IF>
+    <IF line="17">
+        <EQ>
+            <VARIABLE id="i" level="0" >
+            <INTEGER_CONSTANT value="3" >
+        </EQ>
+        <IF line="17">
+            <EQ>
+                <VARIABLE id="j" level="0" >
+                <INTEGER_CONSTANT value="2" >
+            </EQ>
+            <ASSIGN line="17">
+                <VARIABLE id="t" level="0" >
+                <INTEGER_CONSTANT value="500" >
+            </ASSIGN>
+            <ASSIGN line="17">
+                <VARIABLE id="f" level="0" >
+                <NEGATE>
+                    <INTEGER_CONSTANT value="500" >
+                </NEGATE>
+            </ASSIGN>
+        </IF>
+    </IF>
 </COMPOUND>
 

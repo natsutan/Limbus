@@ -1,0 +1,6 @@
+BEGIN {FOR statements}
+    j := 1;
+
+    FOR k := j TO 5 DO n := k;
+
+END.
