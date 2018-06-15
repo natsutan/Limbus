@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 
-class TypeSpec(metaclass=ABCMeta):
+class TypeSpecIF(metaclass=ABCMeta):
     @abstractmethod
     def get_form(self):
         raise NotImplementedError()
@@ -30,9 +30,9 @@ class TypeSpec(metaclass=ABCMeta):
     def base_type(self):
         raise NotImplementedError()
 
-class TypeForm(metaclass=ABCMeta):
+class TypeFormIF(metaclass=ABCMeta):
     pass
 
-class TypeKey(metaclass=ABCMeta):
+class TypeKeyIF(metaclass=ABCMeta):
     pass
 
