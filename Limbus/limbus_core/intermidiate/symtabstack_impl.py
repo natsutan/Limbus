@@ -59,9 +59,8 @@ class SymTabStack(SymTabStackIF):
         return symtab
 
     def pop(self):
-        symtab = self.stack[self.current_nesting_level]
-        del self.stack[-1]
         self.current_nesting_level -= 1
+        symtab = self.stack.pop()
         return symtab
 
 
