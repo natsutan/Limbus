@@ -85,3 +85,20 @@ class SynTabEntryIF(metaclass=ABCMeta):
     @abstractmethod
     def get_attribute(self, key):
         raise NotImplementedError()
+
+    @abstractmethod
+    def set_definition(self, definition):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_definition(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_typespec(self, typespec):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_typespec(self):
+        raise NotImplementedError()
+

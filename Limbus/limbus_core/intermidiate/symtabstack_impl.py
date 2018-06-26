@@ -92,6 +92,8 @@ class SymTabEntry(SynTabEntryIF):
         self.symtab = symtab
         self.line_numbers = []
         self.attribute = {}
+        self.typespec = None
+        self.definition = None
 
         print('Entry name = ', self.name, " ", self)
 
@@ -113,3 +115,14 @@ class SymTabEntry(SynTabEntryIF):
     def get_attribute(self, key):
         return self.attribute[key]
 
+    def set_definition(self, definition):
+        self.definition = definition
+
+    def get_definition(self):
+        return self.definition
+
+    def set_typespec(self, typespec):
+        self.typespec = typespec
+
+    def get_typespec(self):
+        return self.typespec
