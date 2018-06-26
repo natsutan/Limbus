@@ -18,6 +18,13 @@ class SymTabStack(SymTabStackIF):
         self.stack = []
         self.current_nesting_level = 0
         self.add_symtab(self.current_nesting_level)
+        self.program_id = None
+
+    def set_program_id(self, pid):
+        self.program_id = pid
+
+    def get_program_id(self):
+        return self.program_id
 
     def get_current_nesting_level(self):
         return self.current_nesting_level
@@ -35,7 +42,27 @@ class SymTabStack(SymTabStackIF):
         return self.stack[self.current_nesting_level].lookup(name)
 
     def lookup(self, name):
-        return self.lookup_local(name)
+        entry = None
+        for i in range(self.current_nesting_level, 0, -1):
+            entry = self.stack[i].lookup(name)
+            if entry:
+                break
+
+        return entry
+
+    def push(self, symtab):
+        self.current_nesting_level += 1
+        if symtab == None:
+            symtab = SymTab(self.current_nesting_level)
+
+        self.stack.append(symtab)
+        return symtab
+
+    def pop(self):
+        symtab = self.stack[self.current_nesting_level]
+        del self.stack[-1]
+        self.current_nesting_level -= 1
+        return symtab
 
 
 class SymTab(SymTabIF):

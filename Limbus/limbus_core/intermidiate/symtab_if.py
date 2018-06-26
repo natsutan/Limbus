@@ -3,6 +3,13 @@ from abc import ABCMeta, abstractmethod
 
 
 class SymTabStackIF(metaclass=ABCMeta):
+    @abstractmethod
+    def set_program_id(self, pid):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_program_id(self):
+        raise NotImplementedError()
 
     @abstractmethod
     def get_current_nesting_level(self):
@@ -24,8 +31,18 @@ class SymTabStackIF(metaclass=ABCMeta):
     def lookup(self, name):
         raise NotImplementedError()
 
+    @abstractmethod
+    def push(self, symtab):
+        raise NotImplementedError()
 
-class SymTabIF(metaclass=ABCMeta):
+    @abstractmethod
+    def pop(self):
+        raise NotImplementedError()
+
+
+
+
+class SymTabIF(metaclass=AB CMeta):
 
     @abstractmethod
     def get_nesting_level(self):
