@@ -5,6 +5,8 @@ import copy
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
+from limbus_core.intermidiate.type_impl import Predefined, Definition
+from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 from pascal.pascal_error import PascalErrorType, PascalError
 from pascal.pascal_token import *
@@ -38,6 +40,8 @@ class PascalErrorHandler:
 class PascalParserTD(Parser):
     def __init__(self, scanner):
         self.error_handler = PascalErrorHandler()
+        self.routine_id = None
+        self.predefined = Predefined()
         if isinstance(scanner, Parser):
             super().__init__(scanner.get_scanner())
         else:
@@ -45,7 +49,20 @@ class PascalParserTD(Parser):
 
         self.iCode = iCodeFactory().create()
 
+    def get_routine_id(self):
+        return self.routine_id
+
     def parse(self):
+        self.predefined.initialize(Parser.symtab_stack)
+        self.routine_id = Parser.symtab_stack.enter_local('dummy_program_name')
+        self.routine_id.set_definitation(Definition.PROGRAM)
+        Parser.symtab_stack.set_program_id(self.routine_id)
+
+        self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push())
+        self.routine_id.set_attribute(SymTabKey.ROUTINE_ICODE, Parser.iCode)
+
+        # natu
+
         token = self.next_token()
         root_node = None
 
@@ -102,6 +119,58 @@ class PascalParserTD(Parser):
                 token = self.next_token()
 
         return token
+
+
+class BlockParser(PascalParserTD):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token, routine_id):
+        declaration_parser = DeclarationsParser(self)
+        statement_parser = StatementParser(self)
+
+        declaration_parser.parse(token)
+
+        token = self.synchronize(StatementParser.STMT_START_SET)
+        root_node = None
+
+        if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
+            root_node = statement_parser.parse(token)
+        else:
+            self.error_handler.flag(token, 'MISSING_BEGIN', self)
+            if token.value in StatementParser.STMT_START_SET:
+                root_node = iCodeNodeFactory().create('COMPOUND')
+                statement_parser.parse_list(token, root_node, 'END', 'MISSING_END')
+
+        return root_node
+
+class DeclarationsParser(PascalParserTD):
+    DECLARATION_START_SET = ['CONST', 'TYPE', 'VAR', 'PROCEDURE', 'FUNCTION', 'BEGIN']
+    TYPE_START_SET = copy.deepcopy(DECLARATION_START_SET)
+    TYPE_START_SET.remove('CONST')
+    VAR_START_SET = copy.deepcopy(TYPE_START_SET)
+    VAR_START_SET.remove('TYPE')
+    ROUTINE_START_SET = copy.deepcopy(VAR_START_SET)
+    ROUTINE_START_SET.remove('VAR')
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.synchronize(DeclarationsParser.DECLARATION_START_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'CONST':
+            token = self.next_token()
+            constant_definition_parser = ConstantDefinitionsParser(self)
+            constant_definition_parser.parse(token)
+
+        token = self.synchronize(self.TYPE_START_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'TYPE':
+            token = self.next_token()
+            variable_declarations_parser = VariableDeclarationsParser(self)
+            variable_declarations_parser.set_defination(Definition.VARIABLE)
+            variable_declarations_parser.parse(token)
+
+        token = self.synchronize(DeclarationsParser.ROUTINE_START_SET)
 
 
 class StatementParser(PascalParserTD):
@@ -630,6 +699,145 @@ class WhileStatementParser(StatementParser):
         loop_node.add_child(statement_parser.parse(token))
 
         return loop_node
+
+
+class ConstantDefinitionsParser(DeclarationsParser):
+    IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.TYPE_START_SET)
+    IDENTIFIER_SET.append('IDENTIFIER')
+    CONSTANT_START_SET = ['IDENTIFIER', 'INTEGER', 'REAL', 'PLUS', 'MINUS', 'STRING', 'SEMICOLON']
+    EQUALS_SET = copy.deepcopy(CONSTANT_START_SET)
+    EQUALS_SET.append('EQUALS')
+    EQUALS_SET.append('SEMICOLON')
+    NEXT_START_SET = copy.deepcopy(DeclarationsParser.TYPE_START_SET)
+    NEXT_START_SET.append('SEMICOLON')
+    NEXT_START_SET.append('IDENTIFIER')
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
+        while token.value == 'IDENTIFIER':
+            name = token.get_text().lower()
+            constant_id = Parser.symtab_stack.lookup_locak(name)
+
+            if constant_id == None:
+                constant_id = Parser.symtab_stack.enter_local(name)
+                constant_id.append_line_number(token.get_line_number())
+            else:
+                self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
+                constant_id = None
+
+            token = self.next_token()
+            token = self.synchronize(ConstantDefinitionsParser.EQUALS_SET)
+
+            if token.value == 'EQUALS':
+                token = self.next_token()
+            else:
+                self.error_handler.flag(token, 'MISSING_EQUALS', self)
+
+            constant_token = token
+            value = self.parsr_constant(token)
+
+            if constant_id != None:
+                constant_id.set_definition(Definition.CONSTANT)
+                constant_id.set_attribute('CONSTANT_VALUE', value)
+
+                if constant_token.value == 'IDENTIFIER':
+                    constant_type = self.get_constant_type(constant_token)
+                else:
+                    constant_type = self.get_constant_type(value)
+                constant_id.set_typespec(constant_type)
+
+            token = self.current_token()
+            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+               while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+                   token = self.next_token()
+            elif token.value in ConstantDefinitionsParser.NEXT_START_SET:
+                self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
+
+            token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
+
+    def parse_constant(self, token):
+        sign = None
+
+        token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET)
+        if token.ptype == PTT.RESERVED:
+            if token.value == 'PLUS' or token.value == 'MINUS':
+                sign = token.value
+                token = self.next_token()
+
+        if token.ptype == PTT.RESERVED and token.value == 'IDENTIFIER':
+            return self.parse_identifier_constant(token, sign)
+        elif token.ptype == PTT.RESERVED and token.value == 'INTEGER':
+            value = int(token.value)
+            self.next_token()
+            if sign == 'MINUS':
+                return -value
+            else:
+                return value
+        elif token.ptype == PTT.RESERVED and token.value == 'REAL':
+            value = float(token.value)
+            self.next_token()
+            if sign == 'MINUS':
+                return -value
+            else:
+                return value
+        elif token.ptype == PTT.RESERVED and token.value == 'STRING':
+            if sign != None:
+                self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+            self.next_token()
+            return str(token.value)
+        else:
+            self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+            return None
+
+    def parse_identifier_constant(self, token, sign):
+        name = token.get_text().lower()
+        id = Parser.symtab_stack.lookup(name)
+
+        self.next_token()
+
+        if id == None:
+            self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+            return None
+
+        definition = id.get_definition()
+
+        if definition == Definition.CONSTANT:
+            value = id.get_attribute('CONSTANT_VALUE')
+            id.append_line_number(token.get_line())
+
+            if isinstance(value, int):
+                if sign == 'MINUS':
+                    return -int(value)
+                else:
+                    return value
+            elif isinstance(value, float):
+                if sign == 'MINUS':
+                    return -float(value)
+                else:
+                    return value
+            elif isinstance(value, str):
+                if sign != None:
+                    self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+                return value
+            else:
+                return None
+        elif definition == Definition.ENUMERATION_CONSTANT:
+            value = id.get_attribute('CONSTANT_VALUE')
+            id.append_line_number(token.get_line())
+            if sign != None:
+                self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+            return value
+        elif definition == None:
+            self.error_handler.flag(token, 'NOT_CONSTANT_IDENTIFIER', self)
+            return None
+        else:
+            self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+            return None
+
+getConstantType
 
 def set_line_number(node, token):
     if node:
