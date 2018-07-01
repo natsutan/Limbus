@@ -964,7 +964,35 @@ class SimpleTypeParser(TypeSpecificationParser):
             return subrange_parser.parse(token)
 
 
-VariableDeclarationsParser
+class VariableDeclarationsParser(DeclarationsParser):
+    IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
+    IDENTIFIER_SET.append('IDENTIFIER')
+    IDENTIFIER_SET.append('END')
+    IDENTIFIER_SET.append('SEMICOLON')
+    NEXT_START_SET = copy.deepcopy(DeclarationsParser.ROUTINE_START_SET)
+    NEXT_START_SET.append('IDENTIFIER')
+    NEXT_START_SET.append('SEMICOLON')
+
+    def __init__(self, parent):
+        self.definition = None
+        super().__init__(parent)
+
+    def set_definition(self, definition):
+        self.definition = definition
+
+    def parse(self, token):
+        token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
+
+        while token.ptype == PTT.IDENTIFIER:
+            self.parse_identifier_sublist(token)
+            token = self.current_token()
+
+            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON'
+                tokne = self.next_token()
+            else:
+                
+
+
 RecordTypeParser
 SubrangeTypeParser
 EnumerationTypeParser
