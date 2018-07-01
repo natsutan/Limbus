@@ -5,7 +5,7 @@ import copy
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
-from limbus_core.intermidiate.type_impl import Predefined, Definition
+from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 from pascal.pascal_error import PascalErrorType, PascalError
@@ -61,31 +61,27 @@ class PascalParserTD(Parser):
         self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push())
         self.routine_id.set_attribute(SymTabKey.ROUTINE_ICODE, Parser.iCode)
 
-        # natu
+        block_parser = BlockParser(self)
 
-        token = self.next_token()
-        root_node = None
+        try:
+            token = self.next_token()
+            root_node = block_parser.parse(token, self.routine_id)
+            Parser.iCode.set_root(root_node)
+            Parser.symtab_stack.pop()
 
-        if token.ptype == PTT.RESERVED and token.value == 'BEGIN':
-            statement_parser = StatementParser(self)
-            root_node = statement_parser.parse(token)
             token = self.current_token()
-        else:
-            self.error_handler.flag(token, 'MISSING BEGIN', self)
+            if token.ptype == PTT.RESERVED and token.value == 'DOT':
+                self.error_handler.flag(token, 'MISSING_PERIOD', self)
             token = self.current_token()
 
-        token = self.current_token()
-        if token.value != 'DOT':
-            self.error_handler.flag(token, 'MISSING_PERIOD', self)
+            line_number = token.line_num
+            err_cnt = self.get_error_count()
 
-        if root_node:
-            self.iCode.set_root(root_node)
+            msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
+            self.send_message(msg)
 
-        line_number = token.line_num
-        err_cnt = self.get_error_count()
-
-        msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
-        self.send_message(msg)
+        except FileNotFoundError:
+            self.error_handler.abort_translation('IO_ERROR', self)
 
     def get_error_count(self):
         return self.error_handler.get_error_count()
@@ -144,6 +140,7 @@ class BlockParser(PascalParserTD):
 
         return root_node
 
+
 class DeclarationsParser(PascalParserTD):
     DECLARATION_START_SET = ['CONST', 'TYPE', 'VAR', 'PROCEDURE', 'FUNCTION', 'BEGIN']
     TYPE_START_SET = copy.deepcopy(DECLARATION_START_SET)
@@ -165,6 +162,13 @@ class DeclarationsParser(PascalParserTD):
 
         token = self.synchronize(self.TYPE_START_SET)
         if token.ptype == PTT.RESERVED and token.value == 'TYPE':
+            token = self.next_token()
+            type_defination_parser = TypeDefinitionsParser(self)
+            type_defination_parser.parse(token)
+
+        token = self.synchronize(self.VAR_START_SET)
+
+        if token.ptype == PTT.RESERVED and token.value == 'VAR':
             token = self.next_token()
             variable_declarations_parser = VariableDeclarationsParser(self)
             variable_declarations_parser.set_defination(Definition.VARIABLE)
@@ -721,7 +725,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
             name = token.get_text().lower()
             constant_id = Parser.symtab_stack.lookup_locak(name)
 
-            if constant_id == None:
+            if not constant_id:
                 constant_id = Parser.symtab_stack.enter_local(name)
                 constant_id.append_line_number(token.get_line_number())
             else:
@@ -739,7 +743,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
             constant_token = token
             value = self.parsr_constant(token)
 
-            if constant_id != None:
+            if not constant_id:
                 constant_id.set_definition(Definition.CONSTANT)
                 constant_id.set_attribute('CONSTANT_VALUE', value)
 
@@ -751,8 +755,8 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
             token = self.current_token()
             if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
-               while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
-                   token = self.next_token()
+                while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+                    token = self.next_token()
             elif token.value in ConstantDefinitionsParser.NEXT_START_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
@@ -784,7 +788,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
             else:
                 return value
         elif token.ptype == PTT.RESERVED and token.value == 'STRING':
-            if sign != None:
+            if sign:
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             self.next_token()
             return str(token.value)
@@ -798,7 +802,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
         self.next_token()
 
-        if id == None:
+        if not id:
             self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
             return None
 
@@ -819,7 +823,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
                 else:
                     return value
             elif isinstance(value, str):
-                if sign != None:
+                if sign:
                     self.error_handler.flag(token, 'INVALID_CONSTANT', self)
                 return value
             else:
@@ -827,18 +831,170 @@ class ConstantDefinitionsParser(DeclarationsParser):
         elif definition == Definition.ENUMERATION_CONSTANT:
             value = id.get_attribute('CONSTANT_VALUE')
             id.append_line_number(token.get_line())
-            if sign != None:
+            if sign:
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             return value
-        elif definition == None:
+        elif not definition:
             self.error_handler.flag(token, 'NOT_CONSTANT_IDENTIFIER', self)
             return None
         else:
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             return None
 
-getConstantType
+
+class TypeDefinitionsParser(DeclarationsParser):
+    IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
+    EQUALS_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
+    EQUALS_SET.append('EQUALS')
+    EQUALS_SET.append('SEMICOLON')
+    FOLLOW_SET = ['SEMICOLON']
+    NEXT_START_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
+    NEXT_START_SET.append('SEMICOLON')
+    NEXT_START_SET.append('IDENTIFIER')
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.synchronize(TypeDefinitionsParser.IDENTIFIER_SET)
+
+        while token.ptype == PTT.RESERVED and token.value == 'IDENTIFIER':
+            name = token.get_text().lower()
+            type_id = Parser.symtab_stack.lookup(name)
+
+            if not type_id:
+                type_id = Parser.symtab_stack.enter_local(name)
+                type_id.append_line_number(token.get_line_number())
+            else:
+                self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
+
+            token = self.next_token()
+            token = self.synchronize(TypeDefinitionsParser.EQUALS_SET)
+            if token.ptype == PTT.RESERVED and token.value == 'EQUALS':
+                token = self.next_token()
+            else:
+                self.error_handler.flag(token, 'MISSING_EQUALS', self)
+
+            type_specification_parser = TypeSpecificationParser(self)
+            type = type_specification_parser.parse(token)
+
+            if type_id:
+                type_id.set_definition(type)
+
+            if type != None and type_id != None:
+                if type.get_identifier() == None:
+                    type.set_identifier(type_id)
+                type_id.set_identifier(type)
+            else:
+                token = self.synchronize(TypeDefinitionsParser.FOLLOW_SET)
+
+            token = self.curretnt_token()
+            token_type = token.get_type()
+
+            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+                while token.get_type() != 'SEMICOLON':
+                    token = self.next_token()
+            elif token_type in TypeDefinitionsParser.IDENTIFIER_SET:
+                self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
+
+class TypeSpecificationParser(PascalParserTD):
+    TYPE_START_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+    TYPE_START_SET.append('ARRAY')
+    TYPE_START_SET.append('RECORD')
+    TYPE_START_SET.append('SEMICOLON')
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.synchronize(TypeDefinitionsParser.TYPE_START_SET)
+        type = token.get_type()
+        if type == 'ARRAY':
+            array_type_parser = ArrayTypeParser(self)
+            return array_type_parser.parse(token)
+        elif type == 'RECORD':
+            record_type_parser = RecordTypeParser(self)
+            return record_type_parser.parse(token)
+        else:
+            simple_type_parser = SimpleTypeParser(self)
+            return simple_type_parser.parse(token)
+
+
+class SimpleTypeParser(TypeSpecificationParser):
+    SIMPLE_TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
+    SIMPLE_TYPE_START_SET.append('LEFT_PAREN')
+    SIMPLE_TYPE_START_SET.append('COMMA')
+    SIMPLE_TYPE_START_SET.append('SEMICOLON')
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        token = self.synchronize(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+        type = token.get_type()
+        if token.ptype == PTT.IDENTIFIER:
+            name = token.get_text().lower()
+            id = Parser.symtab_stack.lookup(name)
+            if id:
+                definition = id.get_definition()
+                if definition == Definition.TYPE:
+                    id.append_line_number(token.get_line_number())
+                    token = self.next_token()
+                    return id.get_typespec()
+                elif definition != Definition.CONSTANT and definition != Definition.ENUMERATION_CONSTANT:
+                    self.error_handler.flag(token, 'NOT_TYPE_IDENTIFIER', self)
+                    token = self.next_token()
+                    return None
+                else:
+                    subrange_parser = SubrangeTypeParser(self)
+                    return subrange_parser.parse(token)
+            else:
+                # id == None
+                self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+                token = self.next_token()
+                return None
+        elif token.ptype == PTT.RESERVED and token.value == 'LEFT_PAREN':
+            enumration_parser = EnumerationTypeParser(self)
+            return enumration_parser.parse(token)
+        elif token.ptype == PTT.RESERVED and (token.value == 'COMMA' or token.value == 'SEMICOLON'):
+            self.error_handler.flag(token, 'INVALID_TYPE', self)
+            return None
+        else:
+            subrange_parser = SubrangeTypeParser(self)
+            return subrange_parser.parse(token)
+
+
+VariableDeclarationsParser
+RecordTypeParser
+SubrangeTypeParser
+EnumerationTypeParser
 
 def set_line_number(node, token):
     if node:
         node.set_attribute('LINE', token.line_num)
+
+
+def get_content_type(value):
+    if isinstance(value, Token):
+        name = value.get_text().lower()
+        id = Parser.symtab_stack.lookup(name)
+        if not id:
+            return None
+
+        defination = id.get_definition()
+        if defination == Definition.CONSTANT or defination == Definition.ENUMERATION_CONSTANT:
+            return id.get_typespec()
+        return None
+
+    else:
+        content_type = None
+        if isinstance(value, int):
+            content_type = Predefined.integer_type
+        elif isinstance(value, float):
+            content_type = Predefined.real_type
+        elif isinstance(value, str):
+            if len(value) == 1:
+                content_type = Predefined.char_type
+            else:
+                content_type = TypeSpec(value)
+        return content_type
