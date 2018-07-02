@@ -723,7 +723,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
         token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
         while token.value == 'IDENTIFIER':
             name = token.get_text().lower()
-            constant_id = Parser.symtab_stack.lookup_locak(name)
+            constant_id = Parser.symtab_stack.lookup_local(name)
 
             if not constant_id:
                 constant_id = Parser.symtab_stack.enter_local(name)
@@ -972,6 +972,10 @@ class VariableDeclarationsParser(DeclarationsParser):
     NEXT_START_SET = copy.deepcopy(DeclarationsParser.ROUTINE_START_SET)
     NEXT_START_SET.append('IDENTIFIER')
     NEXT_START_SET.append('SEMICOLON')
+    IDENTIFIER_START_SET = ['IDENTIFIER', 'COMMA']
+    IDENTIFIER_FOLLOW_SET = ['COLON', 'SEMICOLON'] + DeclarationsParser.VAR_START_SET
+    COMMA_SET = ['COMMA', 'COLON', 'IDENTIFIER', 'SEMICOLON']
+    COLON_SET = ['COLON', 'SEMICOLON']
 
     def __init__(self, parent):
         self.definition = None
@@ -987,15 +991,193 @@ class VariableDeclarationsParser(DeclarationsParser):
             self.parse_identifier_sublist(token)
             token = self.current_token()
 
-            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON'
-                tokne = self.next_token()
-            else:
+            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+                while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+                    token = self.next_token()
+            elif token.value in VariableDeclarationsParser.NEXT_START_SET:
+                self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
+
+            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
                 
+    def parse_identifier_sublist(self, token):
+        sublist = []
+        first = True
+
+        while self.sublist_loop(token, first):
+            first = False
+            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
+            id = self.parse_identifier(token)
+            if not id:
+                sublist.append(id)
+
+            token = self.synchronize(VariableDeclarationsParser.COMMA_SET)
+            token_type = token.get_type()
+
+            if token.ptype == PTT.RESERVED and token.value == 'COMMA':
+                token = self.next_token()
+
+                if token.value in VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET:
+                    self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
+            elif token.value in VariableDeclarationsParser.IDENTIFIER_START_SET:
+                self.error_handler.flag(token, 'MISSING_COMMA', self)
+
+        type = self.parse_type_spec(token)
+        for e in sublist:
+            e.set_type_spec(type)
+
+        return sublist
+
+    def sublist_loop(self, token, first):
+        """
+        最初の一回とTokenの状況でループするかどうかの判断を行う。
+        """
+        if first:
+            return True
+        if token.value in VariableDeclarationsParser.IDENTIFIER_SET:
+            return False
+        else:
+            return True
+
+    def parse_identifier(self, token):
+        id = None
+        if token.ptype == PTT.IDENTIFIER:
+            name = token.get_text()
+            id = Parser.symtab_stack.lookup_local(name)
+            if not id:
+                id = Parser.symtab_stack.enter_local(name)
+                id.set_definition(self.definition)
+                id.append_line_number(token.get_line_number())
+            else:
+                self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
+
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
+
+        return id
+
+    def parse_type_spec(self, token):
+        token = self.synchronize(VariableDeclarationsParser.COLON_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'COLON':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_COLON', self)
+
+        type_spec_parser = TypeSpecificationParser(self)
+        type = type_spec_parser.parse(token)
+
+        return type
 
 
-RecordTypeParser
-SubrangeTypeParser
-EnumerationTypeParser
+class RecordTypeParser(TypeSpecificationParser):
+    END_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
+    END_SET.append('END')
+    END_SET.append('SEMICOLON')
+
+    def __init__(self, parent):
+        self.definition = None
+        super().__init__(parent)
+
+    def parse(self, token):
+        record_type = TypeSpec('RECORD')
+        token = self.next_token()
+        record_type.set_attribute(TypeKey.RECORD_SYMTAB, Parser.symtab_stack.push(None))
+
+        var_decl_parser = VariableDeclarationsParser(self)
+        var_decl_parser.set_definition(Definition.FIELD)
+        var_decl_parser.parse(token)
+
+        Parser.symtab_stack.pop()
+
+        token = self.synchronize(self.END_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'END':
+            token = self.next_token()
+        else:
+            self.error_handler.falg(token, 'MISSING_END', self)
+
+        return record_type
+
+class SubrangeTypeParser(TypeSpecificationParser):
+    def __init__(self, parent):
+        self.definition = None
+        super().__init__(parent)
+
+    def parse(self, token):
+        subrange_type = TypeSpec('SUBRANGE')
+        min_val = None
+        max_val = None
+
+        constant_token = copy.deepcopy(token)
+        constant_parser = ConstantDefinitionsParser(self)
+        min_val = constant_parser.parse_constant(token)
+
+        if constant_token.ptype == PTT.IDENTIFIER:
+            min_type = constant_parser.get_constant_type(constant_token)
+        else:
+            min_type = constant_parser.get_constant_type(min_val)
+        min_val = self.check_value_type(constant_token, min_val, min_type)
+
+        token = self.current_token()
+        saw_dot_dot = False
+
+        if token.ptype == PTT.IDENTIFIER and token.value == 'DOT_DOT':
+            token = self.next_token()
+            saw_dot_dot = True
+
+        token_type = token.get_type()
+
+        if token_type in ConstantDefinitionsParser.CONSTANT_START_SET:
+            if not saw_dot_dot:
+                self.error_handler.flag(token, 'MISSING_DOT_DOT', self)
+            token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET)
+            constant_token = copy.deepcopy(token)
+            max_val = constant_parser.parse_constant(token)
+
+            if constant_token.ptype == PTT.IDENTIFIER:
+                max_type = constant_parser.get_constant_type(constant_token)
+            else:
+                max_type = constant_parser.get_constant_type(max_val)
+
+            max_val = self.check_value_type(constant_token, max_val, max_type)
+
+            if min_type == None or max_type == None:
+                self.error_handler.flag(token, 'INVALID_SUBRANGE_TYPE', self)
+            elif min_type != max_type:
+                self.error_handler.flag(token, 'INVALID_SUBRANGE_TYPE', self)
+            elif min_val != None and max_val != None and min_val >= max_val:
+                self.error_handler.flag(token, 'MIN_GT_MAX', self)
+        else:
+            self.error_handler.flag(token, 'MIN_GT_MAX', self)
+
+        subrange_type.set_attribute(TypeKey.SUBRANGE_BASE_TYPE, min_type)
+        subrange_type.set_attribute(TypeKey.SUBRANGE_MIN_VALUE, min_val)
+        subrange_type.set_attribute(TypeKey.SUBRANGE_MAX_VALUE, max_type)
+
+        return subrange_type
+
+    def check_value_type(self, val, type):
+        if type == None:
+            return val
+        if type == Predefined.integer_type:
+            return val
+        elif type == Predefined.char_type:
+            ch = val[0]
+            return int(ch)
+        elif type.get_form() == TypeForm.ENUMERATION:
+            return value
+        else:
+            self.error_handler.flag(token, 'INVALID_SUBRANGE_TYPE', self)
+            return val
+
+
+class EnumerationTypeParser(TypeSpecificationParser):
+    def __init__(self, parent):
+        self.definition = None
+        super().__init__(parent)
+
+    def parse(self, token):
+
+
 
 def set_line_number(node, token):
     if node:
