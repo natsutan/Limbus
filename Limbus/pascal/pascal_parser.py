@@ -1171,12 +1171,69 @@ class SubrangeTypeParser(TypeSpecificationParser):
 
 
 class EnumerationTypeParser(TypeSpecificationParser):
+    ENUM_CONSTANT_START_SET = ['IDENTIFIER', 'COMMA']
+    ENUM_DEFINITION_FOLLOW_SET = ['RIGHT_PAREN', 'SEMICOLON'] + DeclarationsParser.VAR_START_SET
+
     def __init__(self, parent):
         self.definition = None
         super().__init__(parent)
 
     def parse(self, token):
+        enum_type = TypeSpec('ENUMERATION')
+        value = -1
+        constants = []
 
+        token = self.next_token()
+        first = True
+
+        while self.enum_loop(token, first):
+            first = False
+            token = self.synchronize(self.ENUM_CONSTANT_START_SET)
+            value += 1
+            self.parse_enum_identifier(token, value, enum_type, constants)
+            token = self.current_token()
+
+            if token.ptype == PTT.RESERVED and token.value == 'COMMA':
+                token = self.next_token()
+
+                if token.get_type() in self.ENUM_DEFINITION_FOLLOW_SET:
+                    self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
+            else:
+                self.error_handler.flag(token, 'MISSING_COMMA', self)
+
+        if token.ptype == PTT.RESERVED and token.value == 'RIGHT_PAREN':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'ENUMERATION_CONSTANTS', self)
+
+        enum_type.add_attribute(Definition.ENUMERATION_CONSTANT, constants)
+        return enum_type
+
+    def enum_loop(self, token, first):
+        if first:
+            return True
+        if token.get_value() in self.ENUM_CONSTANT_START_SET:
+            return False
+        else:
+            return True
+
+    def parse_enum_identifier(self, token, value, enum_type, constants):
+        if token.ptype == PTT.IDENTIFIER:
+            name = token.get_text().lower()
+            const_id = Parser.symtab_stack.lookup_local(name)
+
+            if const_id:
+                self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
+            else:
+                const_id = Parser.symtab_stack.enter_local(name)
+                const_id,set_definition(Definition.ENUMERATION_CONSTANT)
+                const_id.set_type_spec(enum_type)
+                const_id.set_attribute('CONSTANT_VALUE', value)
+                const_id.append_line_number(token.get_line_number())
+                constants.add(const_id)
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
 
 
 def set_line_number(node, token):
