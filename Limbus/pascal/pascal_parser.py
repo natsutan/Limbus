@@ -55,10 +55,10 @@ class PascalParserTD(Parser):
     def parse(self):
         self.predefined.initialize(Parser.symtab_stack)
         self.routine_id = Parser.symtab_stack.enter_local('dummy_program_name')
-        self.routine_id.set_definitition(Definition.PROGRAM)
+        self.routine_id.set_definition(Definition.PROGRAM)
         Parser.symtab_stack.set_program_id(self.routine_id)
 
-        self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push())
+        self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push(None))
         self.routine_id.set_attribute(SymTabKey.ROUTINE_ICODE, Parser.iCode)
 
         block_parser = BlockParser(self)
@@ -66,6 +66,10 @@ class PascalParserTD(Parser):
         try:
             token = self.next_token()
             root_node = block_parser.parse(token, self.routine_id)
+
+            if root_node == None:
+                self.error_handler.abort_translation('PARSE_ERROR', self)
+
             Parser.iCode.set_root(root_node)
             Parser.symtab_stack.pop()
 
@@ -98,6 +102,9 @@ class PascalParserTD(Parser):
     def synchronize(self, syncset, ptt_set = []):
         token = self.current_token()
 
+        if token.type == TokenType.EOF:
+            return token
+
         if token.ptype in ptt_set:
             sync = True
         elif (token.ptype == PTT.IDENTIFIER) and ('IDENTIFIER' in syncset):
@@ -129,6 +136,9 @@ class BlockParser(PascalParserTD):
 
         token = self.synchronize(StatementParser.STMT_START_SET)
         root_node = None
+        if token.type == TokenType.EOF:
+            self.error_handler.flag(token, 'UNEXPECTED EOF', self)
+            return None
 
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
             root_node = statement_parser.parse(token)
@@ -171,7 +181,7 @@ class DeclarationsParser(PascalParserTD):
         if token.ptype == PTT.RESERVED and token.value == 'VAR':
             token = self.next_token()
             variable_declarations_parser = VariableDeclarationsParser(self)
-            variable_declarations_parser.set_defination(Definition.VARIABLE)
+            variable_declarations_parser.set_definition(Definition.VARIABLE)
             variable_declarations_parser.parse(token)
 
         token = self.synchronize(DeclarationsParser.ROUTINE_START_SET)
@@ -727,7 +737,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
             if not constant_id:
                 constant_id = Parser.symtab_stack.enter_local(name)
-                constant_id.append_line_number(token.get_line_number())
+                constant_id.append_line_number(token.line_num)
             else:
                 self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
                 constant_id = None
@@ -810,7 +820,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
         if definition == Definition.CONSTANT:
             value = id.get_attribute('CONSTANT_VALUE')
-            id.append_line_number(token.get_line())
+            id.append_line_number(token.line_num)
 
             if isinstance(value, int):
                 if sign == 'MINUS':
@@ -830,7 +840,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
                 return None
         elif definition == Definition.ENUMERATION_CONSTANT:
             value = id.get_attribute('CONSTANT_VALUE')
-            id.append_line_number(token.get_line())
+            id.append_line_number(token.line_num)
             if sign:
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             return value
@@ -864,7 +874,7 @@ class TypeDefinitionsParser(DeclarationsParser):
 
             if not type_id:
                 type_id = Parser.symtab_stack.enter_local(name)
-                type_id.append_line_number(token.get_line_number())
+                type_id.append_line_number(token.line_num)
             else:
                 self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
 
@@ -875,8 +885,8 @@ class TypeDefinitionsParser(DeclarationsParser):
             else:
                 self.error_handler.flag(token, 'MISSING_EQUALS', self)
 
-            type_specification_parser = TypeSpecificationParser(self)
-            type = type_specification_parser.parse(token)
+            typespecification_parser = TypeSpecificationParser(self)
+            type = typespecification_parser.parse(token)
 
             if type_id:
                 type_id.set_definition(type)
@@ -918,7 +928,7 @@ class TypeSpecificationParser(PascalParserTD):
 
     def parse(self, token):
         token = self.synchronize(TypeDefinitionsParser.TYPE_START_SET)
-        type = token.get_type()
+        type = token.value
         if type == 'ARRAY':
             array_type_parser = ArrayTypeParser(self)
             return array_type_parser.parse(token)
@@ -940,14 +950,17 @@ class SimpleTypeParser(TypeSpecificationParser):
 
     def parse(self, token):
         token = self.synchronize(SimpleTypeParser.SIMPLE_TYPE_START_SET)
-        type = token.get_type()
+        if token.type == TokenType.EOF:
+            self.error_handler.flag(token, 'UNEXPECTED_EOF', self)
+            return
+
         if token.ptype == PTT.IDENTIFIER:
             name = token.get_text().lower()
             id = Parser.symtab_stack.lookup(name)
             if id:
                 definition = id.get_definition()
                 if definition == Definition.TYPE:
-                    id.append_line_number(token.get_line_number())
+                    id.append_line_number(token.line_num)
                     token = self.next_token()
                     return id.get_typespec()
                 elif definition != Definition.CONSTANT and definition != Definition.ENUMERATION_CONSTANT:
@@ -1000,6 +1013,10 @@ class VariableDeclarationsParser(DeclarationsParser):
         while token.ptype == PTT.IDENTIFIER:
             self.parse_identifier_sublist(token)
             token = self.current_token()
+            if token.type == TokenType.EOF:
+                self.error_handler.flag(token, 'UNEXPECTED EOF', self)
+                return
+
 
             if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
                 while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
@@ -1017,11 +1034,10 @@ class VariableDeclarationsParser(DeclarationsParser):
             first = False
             token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
             id = self.parse_identifier(token)
-            if not id:
+            if id:
                 sublist.append(id)
 
             token = self.synchronize(VariableDeclarationsParser.COMMA_SET)
-            token_type = token.get_type()
 
             if token.ptype == PTT.RESERVED and token.value == 'COMMA':
                 token = self.next_token()
@@ -1031,9 +1047,9 @@ class VariableDeclarationsParser(DeclarationsParser):
             elif token.value in VariableDeclarationsParser.IDENTIFIER_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
 
-        type = self.parse_type_spec(token)
+        type = self.parse_typespec(token)
         for e in sublist:
-            e.set_type_spec(type)
+            e.set_typespec(type)
 
         return sublist
 
@@ -1051,12 +1067,12 @@ class VariableDeclarationsParser(DeclarationsParser):
     def parse_identifier(self, token):
         id = None
         if token.ptype == PTT.IDENTIFIER:
-            name = token.get_text()
+            name = token.value
             id = Parser.symtab_stack.lookup_local(name)
             if not id:
                 id = Parser.symtab_stack.enter_local(name)
                 id.set_definition(self.definition)
-                id.append_line_number(token.get_line_number())
+                id.append_line_number(token.line_num)
             else:
                 self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
 
@@ -1066,17 +1082,20 @@ class VariableDeclarationsParser(DeclarationsParser):
 
         return id
 
-    def parse_type_spec(self, token):
+    def parse_typespec(self, token):
         token = self.synchronize(VariableDeclarationsParser.COLON_SET)
         if token.ptype == PTT.RESERVED and token.value == 'COLON':
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'MISSING_COLON', self)
 
-        type_spec_parser = TypeSpecificationParser(self)
-        type = type_spec_parser.parse(token)
+        typespec_parser = TypeSpecificationParser(self)
+        type = typespec_parser.parse(token)
 
         return type
+
+    def set_definition(self, definitation):
+        self.definition = definitation
 
 
 class RecordTypeParser(TypeSpecificationParser):
@@ -1237,9 +1256,9 @@ class EnumerationTypeParser(TypeSpecificationParser):
             else:
                 const_id = Parser.symtab_stack.enter_local(name)
                 const_id,set_definition(Definition.ENUMERATION_CONSTANT)
-                const_id.set_type_spec(enum_type)
+                const_id.set_typespec(enum_type)
                 const_id.set_attribute('CONSTANT_VALUE', value)
-                const_id.append_line_number(token.get_line_number())
+                const_id.append_line_number(token.line_num)
                 constants.add(const_id)
             token = self.next_token()
         else:
@@ -1341,8 +1360,8 @@ class ArrayTypeParser(TypeSpecificationParser):
         array_type.set_attribute('ARRAY_ELEMENT_COUNT', count)
 
     def parse_element_type(self, token):
-        type_spec_parser = TypeSpecificationParser(self)
-        return type_spec_parser.parse(token)
+        typespec_parser = TypeSpecificationParser(self)
+        return typespec_parser.parse(token)
 
 
 
