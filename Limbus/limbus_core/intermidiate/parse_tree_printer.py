@@ -61,7 +61,7 @@ class ParseTreePrinter:
         save_indentation = self.indentation
         self.indentation = self.indentation + self.indent
 
-            for k, v in node.get_all_attributes().items():
+        for k, v in node.get_all_attributes().items():
             self.print_attribute(k, v)
 
         self.indentation = save_indentation

@@ -55,7 +55,7 @@ class PascalParserTD(Parser):
     def parse(self):
         self.predefined.initialize(Parser.symtab_stack)
         self.routine_id = Parser.symtab_stack.enter_local('dummy_program_name')
-        self.routine_id.set_definitation(Definition.PROGRAM)
+        self.routine_id.set_definitition(Definition.PROGRAM)
         Parser.symtab_stack.set_program_id(self.routine_id)
 
         self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push())
@@ -897,11 +897,21 @@ class TypeDefinitionsParser(DeclarationsParser):
             elif token_type in TypeDefinitionsParser.IDENTIFIER_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
+
+
+
+
 class TypeSpecificationParser(PascalParserTD):
-    TYPE_START_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+
+
+    TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
+    TYPE_START_SET.append('LEFT_PAREN')
+    TYPE_START_SET.append('COMMA')
+    TYPE_START_SET.append('SEMICOLON')
     TYPE_START_SET.append('ARRAY')
     TYPE_START_SET.append('RECORD')
     TYPE_START_SET.append('SEMICOLON')
+
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -918,7 +928,6 @@ class TypeSpecificationParser(PascalParserTD):
         else:
             simple_type_parser = SimpleTypeParser(self)
             return simple_type_parser.parse(token)
-
 
 class SimpleTypeParser(TypeSpecificationParser):
     SIMPLE_TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
@@ -962,6 +971,7 @@ class SimpleTypeParser(TypeSpecificationParser):
         else:
             subrange_parser = SubrangeTypeParser(self)
             return subrange_parser.parse(token)
+
 
 
 class VariableDeclarationsParser(DeclarationsParser):

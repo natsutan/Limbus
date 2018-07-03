@@ -39,10 +39,7 @@ class SymTabStackIF(metaclass=ABCMeta):
     def pop(self):
         raise NotImplementedError()
 
-
-
-
-class SymTabIF(metaclass=AB CMeta):
+class SymTabIF(metaclass=ABCMeta):
 
     @abstractmethod
     def get_nesting_level(self):

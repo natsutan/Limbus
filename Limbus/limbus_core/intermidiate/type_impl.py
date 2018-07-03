@@ -5,23 +5,23 @@ from .type_if import TypeFormIF, TypeKeyIF, TypeSpecIF
 from .symtabstack_impl import SymTabKey
 
 
-class TypeForm(Enum, TypeFormIF):
-    SCALAR = auto()
-    ENUMERATION = auto()
-    SUBRANGE = auto()
-    ARRAY = auto()
-    RECORD = auto()
+class TypeForm(TypeFormIF):
+    SCALAR = 0
+    ENUMERATION = 1
+    SUBRANGE = 2
+    ARRAY = 3
+    RECORD = 4
 
 
-class TypeKey(Enum, TypeKeyIF):
-    ENUMERATION_CONSTANTS = auto()
-    SUBRANGE_BASE_TYPE = auto()
-    SUBRANGE_MIN_VALUE = auto()
-    SUBRANGE_MAX_VALUE = auto()
-    ARRAY_INDEX_TYPE = auto()
-    ARRAY_ELEMENT_TYPE = auto()
-    ARRAY_ELEMENT_COUNT = auto()
-    RECORD_SYMTAB = auto()
+class TypeKey(TypeKeyIF):
+    ENUMERATION_CONSTANTS = 0
+    SUBRANGE_BASE_TYPE = 1
+    SUBRANGE_MIN_VALUE = 2
+    SUBRANGE_MAX_VALUE = 3
+    ARRAY_INDEX_TYPE = 4
+    ARRAY_ELEMENT_TYPE = 5
+    ARRAY_ELEMENT_COUNT = 6
+    RECORD_SYMTAB = 7
 
 
 class Definition(Enum):
@@ -88,12 +88,12 @@ class Predefined:
         Predefined.false_id = symtab_stack.enter_local('false')
         Predefined.false_id.set_definition(Definition.ENUMERATION_CONSTANT)
         Predefined.false_id.set_typespec(Predefined.boolean_type)
-        Predefined.false_id.set_attribute(SymTabKey.CONSTANT, 0)
+        Predefined.false_id.set_attribute('CONSTANT_VALUE', 0)
 
         Predefined.true_id = symtab_stack.enter_local('true')
         Predefined.true_id.set_definition(Definition.ENUMERATION_CONSTANT)
         Predefined.true_id.set_typespec(Predefined.boolean_type)
-        Predefined.true_id.set_attribute(SymTabKey.CONSTANT, 1)
+        Predefined.true_id.set_attribute('CONSTANT_VALUE', 1)
 
         constants = [Predefined.false_id, Predefined.true_id]
         Predefined.boolean_type.set_attribute(Definition.ENUMERATION_CONSTANT, constants)
