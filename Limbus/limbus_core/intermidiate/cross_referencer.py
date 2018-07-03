@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
+from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 class CrossReferencer:
     def __init__(self):
@@ -17,20 +18,20 @@ class CrossReferencer:
 
     def print(self, symtab_stack):
         print("====== CROSS-REFERENCE TABLE ======")
-        program_id = symtab_stack.get_programid()
+        program_id = symtab_stack.get_program_id()
         self.print_routine(program_id)
 
     def print_routine(self, routine_id):
         definiton = routine_id.get_definition()
         print("\n***" + str(definiton) + " " + routine_id.get_name() + " ***")
         self.print_column_headings()
-        symtab = routine_id.get_attribute('ROUTINE_SYMTAB')
+        symtab = routine_id.get_attribute(SymTabKey.ROUTINE_SYMTAB)
         new_record_types = []
         self.print_symtab(symtab, new_record_types)
         if len(new_record_types) > 0:
             self.print_records(new_record_types)
 
-        routine_ids = routine_id.get_attribute('ROUTINE_ROUTINES')
+        routine_ids = routine_id.get_attribute(SymTabKey.ROUTINE_ROUTINES)
         if routine_ids:
             for rid in routine_ids:
                 self.print_routine(rid)

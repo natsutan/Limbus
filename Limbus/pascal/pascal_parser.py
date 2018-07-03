@@ -47,7 +47,6 @@ class PascalParserTD(Parser):
         else:
             super().__init__(scanner)
 
-        self.iCode = iCodeFactory().create()
 
     def get_routine_id(self):
         return self.routine_id
@@ -69,6 +68,7 @@ class PascalParserTD(Parser):
 
             if root_node == None:
                 self.error_handler.abort_translation('PARSE_ERROR', self)
+                return
 
             Parser.iCode.set_root(root_node)
             Parser.symtab_stack.pop()

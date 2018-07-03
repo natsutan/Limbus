@@ -113,7 +113,10 @@ class SymTabEntry(SynTabEntryIF):
         self.attribute[key] = value
 
     def get_attribute(self, key):
-        return self.attribute[key]
+        if key in self.attribute:
+            return self.attribute[key]
+        else:
+            return None
 
     def set_definition(self, definition):
         self.definition = definition

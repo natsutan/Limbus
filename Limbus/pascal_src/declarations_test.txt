@@ -1,0 +1,5 @@
+CONST
+    ten = 10;
+
+BEGIN
+END.
