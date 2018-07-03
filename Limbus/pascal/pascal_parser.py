@@ -5,7 +5,7 @@ import copy
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
-from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec
+from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 from pascal.pascal_error import PascalErrorType, PascalError
@@ -1234,6 +1234,106 @@ class EnumerationTypeParser(TypeSpecificationParser):
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
+
+class ArrayTypeParser(TypeSpecificationParser):
+    LEFT_BRACKET_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+    LEFT_BRACKET_SET.append('LEFT_BRACKET')
+    LEFT_BRACKET_SET.append('RIGHT_BRACKET')
+    RIGHT_BRACKET_SET = ['RIGHT_BRACKET', 'OF', 'SEMICOLON']
+    OF_SET = copy.deepcopy(TypeSpecificationParser.TYPE_START_SET)
+    OF_SET.append('OF')
+    OF_SET.append('SEMICOLON')
+    INDEX_START_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+    INDEX_START_SET.append('COMMA')
+    INDEX_END_SET = ['RIGHT_BRACKET', 'OF', 'SEMICOLON']
+    INDEX_FOLLOW_SET = copy.deepcopy(INDEX_START_SET) + INDEX_END_SET
+
+    def __init__(self, parent):
+        self.definition = None
+        super().__init__(parent)
+
+    def parse(self, token):
+        array_type = TypeSpec('ARRAY')
+        token = self.next_token()
+
+        token = self.synchronize(self.LEFT_BRACKET_SET)
+        if token.value != 'LEFT_BRACKET':
+            self.error_handler.flag(tokne, 'MISSING_LEFT_BRACKET', self)
+
+        element_type = self.parse_index_type_list(token, array_type)
+        token = self.synchronize(self.RIGHT_BRACKET_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'RIGHT_BRACKET':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_RIGHT_BRACKET', self)
+
+        token = self.synchronize(self.OF_SET)
+        if token.ptype == PTT.RESERVED and token.value == 'OF':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_OF', self)
+
+        element_type.set_attribute('ARRAY_ELEMENT_TYPE', self.parse_element_type(token))
+        return array_type
+
+
+    def parse_index_type_list(self, token, array_type):
+        element_type =  array_type
+        another_index = False
+        token = self.next_token()
+        first  = True
+
+        while first or another_index:
+            first = False
+            another_index = False
+
+            token = self.synchronize(self.INDEX_START_SET)
+            self.parse_element_type(token)
+
+            token = self.synchronize(self.INDEX_FOLLOW_SET)
+            if token.value != 'COMMA' and token.value == 'RIGHT_BRACKET':
+                if token.value in self.INDEX_START_SET:
+                    self.error_handler.flag(token, 'MISSING_COMMA', self)
+                    another_index = True
+            elif token.value == 'COMMA':
+                new_element_type = TypeSpec('ARRAY')
+                element_type.set_attribute('ARRAY_ELEMENT_TYPE', new_element_type)
+                element_type = new_element_type
+
+                token = self.next_token()
+                another_index = True
+
+        return element_type
+
+
+    def parse_index_type(self, token, array_type):
+        simple_parser = SimpleTypeParser(self)
+        index_type = simple_parser.parse(token)
+        array_type.set_attribute('ARRAY_INDEX_TYPE', index_type)
+
+        if not index_type:
+            return
+
+        form = index_type.get_form()
+        count = 0
+
+        if form == TypeForm.SUBRANGE:
+            min_val = index_type.get_attribute('SUBRANGE_MIN_VALUE')
+            max_val = index_type.get_attribute('SUBRANGE_MAX_VALUE')
+
+            if min_val != None and max_val != None:
+                count = max_val - min_val
+        elif form == TypeForm.ENUMERATION:
+            constants = index_type.get_attribute('ENUMERATION_CONSTANTS')
+            count = len(constants)
+        else:
+            self.error_handler.flag(token, 'INVALID_INDEX_TYPE', self)
+        array_type.set_attribute('ARRAY_ELEMENT_COUNT', count)
+
+    def parse_element_type(self, token):
+        type_spec_parser = TypeSpecificationParser(self)
+        return type_spec_parser.parse(token)
+
 
 
 def set_line_number(node, token):
