@@ -754,14 +754,14 @@ class ConstantDefinitionsParser(DeclarationsParser):
             constant_token = copy.copy(token)
             value = self.parse_constant(token)
 
-            if not constant_id:
+            if constant_id:
                 constant_id.set_definition(Definition.CONSTANT)
                 constant_id.set_attribute('CONSTANT_VALUE', value)
 
                 if constant_token.ptype == PTT.IDENTIFIER:
-                    constant_type = self.get_constant_type(constant_token)
+                    constant_type = self.get_constant_type_token(constant_token)
                 else:
-                    constant_type = self.get_constant_type(value)
+                    constant_type = self.get_constant_type_value(value)
                 constant_id.set_typespec(constant_type)
 
             token = self.current_token()
@@ -777,10 +777,9 @@ class ConstantDefinitionsParser(DeclarationsParser):
         sign = None
 
         token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET, ptt_set=self.CONSTANT_START_SET_PTT)
-        if token.ptype == PTT.RESERVED:
-            if token.value == 'PLUS' or token.value == 'MINUS':
-                sign = token.value
-                token = self.next_token()
+        if token.value == 'PLUS' or token.value == 'MINUS':
+            sign = token.value
+            token = self.next_token()
 
         if token.ptype == PTT.IDENTIFIER:
             return self.parse_identifier_constant(token, sign)
@@ -851,6 +850,13 @@ class ConstantDefinitionsParser(DeclarationsParser):
         else:
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             return None
+
+    # natu
+    def get_constant_type_value(self, value):
+        pass
+
+    def get_constant_type_token(self, identifier):
+        pass
 
 
 class TypeDefinitionsParser(DeclarationsParser):

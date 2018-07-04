@@ -1,5 +1,5 @@
 CONST
-    ten = 10;
-
+    epsilon = 10;
+    limit = -epsilon;
 BEGIN
 END.
