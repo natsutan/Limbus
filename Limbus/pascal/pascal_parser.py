@@ -731,8 +731,8 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
     def parse(self, token):
         token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
-        while token.value == 'IDENTIFIER':
-            name = token.get_text().lower()
+        while token.ptype == PTT.IDENTIFIER:
+            name = token.value.lower()
             constant_id = Parser.symtab_stack.lookup_local(name)
 
             if not constant_id:
@@ -751,7 +751,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
                 self.error_handler.flag(token, 'MISSING_EQUALS', self)
 
             constant_token = token
-            value = self.parsr_constant(token)
+            value = self.parse_constant(token)
 
             if not constant_id:
                 constant_id.set_definition(Definition.CONSTANT)
@@ -807,7 +807,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
             return None
 
     def parse_identifier_constant(self, token, sign):
-        name = token.get_text().lower()
+        name = token.value.lower()
         id = Parser.symtab_stack.lookup(name)
 
         self.next_token()
@@ -869,7 +869,7 @@ class TypeDefinitionsParser(DeclarationsParser):
         token = self.synchronize(TypeDefinitionsParser.IDENTIFIER_SET)
 
         while token.ptype == PTT.RESERVED and token.value == 'IDENTIFIER':
-            name = token.get_text().lower()
+            name = token.value.lower()
             type_id = Parser.symtab_stack.lookup(name)
 
             if not type_id:
@@ -955,7 +955,7 @@ class SimpleTypeParser(TypeSpecificationParser):
             return
 
         if token.ptype == PTT.IDENTIFIER:
-            name = token.get_text().lower()
+            name = token.value.lower()
             id = Parser.symtab_stack.lookup(name)
             if id:
                 definition = id.get_definition()
@@ -1248,7 +1248,7 @@ class EnumerationTypeParser(TypeSpecificationParser):
 
     def parse_enum_identifier(self, token, value, enum_type, constants):
         if token.ptype == PTT.IDENTIFIER:
-            name = token.get_text().lower()
+            name = token.value.lower()
             const_id = Parser.symtab_stack.lookup_local(name)
 
             if const_id:
@@ -1372,7 +1372,7 @@ def set_line_number(node, token):
 
 def get_content_type(value):
     if isinstance(value, Token):
-        name = value.get_text().lower()
+        name = value.value.lower()
         id = Parser.symtab_stack.lookup(name)
         if not id:
             return None
