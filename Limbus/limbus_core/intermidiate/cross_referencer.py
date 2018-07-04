@@ -72,7 +72,15 @@ class CrossReferencer:
             self.print_entry(entry, record_types)
 
     def print_entry(self, entry, record_types):
+        if not entry:
+            print("WARN:entry is None. in print_entry()")
+            return
+
         definition = entry.get_definition()
+        if not definition:
+            print('WARN:definition is None. in print_entry()')
+            return
+
         nesting_level = entry.get_symtab().get_nesting_level()
         print(self.INDENT + "Defined as: " + definition.get_text())
         print(self.INDENT + "scope nesting level: " + str(nesting_level))
