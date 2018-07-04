@@ -718,7 +718,8 @@ class WhileStatementParser(StatementParser):
 class ConstantDefinitionsParser(DeclarationsParser):
     IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.TYPE_START_SET)
     IDENTIFIER_SET.append('IDENTIFIER')
-    CONSTANT_START_SET = ['IDENTIFIER', 'INTEGER', 'REAL', 'PLUS', 'MINUS', 'STRING', 'SEMICOLON']
+    CONSTANT_START_SET = ['PLUS', 'MINUS', 'SEMICOLON']
+    CONSTANT_START_SET_PTT = [PTT.IDENTIFIER, PTT.INTEGER, PTT.REAL, PTT.STRING]
     EQUALS_SET = copy.deepcopy(CONSTANT_START_SET)
     EQUALS_SET.append('EQUALS')
     EQUALS_SET.append('SEMICOLON')
@@ -750,22 +751,22 @@ class ConstantDefinitionsParser(DeclarationsParser):
             else:
                 self.error_handler.flag(token, 'MISSING_EQUALS', self)
 
-            constant_token = token
+            constant_token = copy.copy(token)
             value = self.parse_constant(token)
 
             if not constant_id:
                 constant_id.set_definition(Definition.CONSTANT)
                 constant_id.set_attribute('CONSTANT_VALUE', value)
 
-                if constant_token.value == 'IDENTIFIER':
+                if constant_token.ptype == PTT.IDENTIFIER:
                     constant_type = self.get_constant_type(constant_token)
                 else:
                     constant_type = self.get_constant_type(value)
                 constant_id.set_typespec(constant_type)
 
             token = self.current_token()
-            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
-                while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+            if token.value == 'SEMICOLON':
+                while token.value == 'SEMICOLON':
                     token = self.next_token()
             elif token.value in ConstantDefinitionsParser.NEXT_START_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
@@ -775,32 +776,32 @@ class ConstantDefinitionsParser(DeclarationsParser):
     def parse_constant(self, token):
         sign = None
 
-        token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET)
+        token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET, ptt_set=self.CONSTANT_START_SET_PTT)
         if token.ptype == PTT.RESERVED:
             if token.value == 'PLUS' or token.value == 'MINUS':
                 sign = token.value
                 token = self.next_token()
 
-        if token.ptype == PTT.RESERVED and token.value == 'IDENTIFIER':
+        if token.ptype == PTT.IDENTIFIER:
             return self.parse_identifier_constant(token, sign)
-        elif token.ptype == PTT.RESERVED and token.value == 'INTEGER':
+        elif token.ptype == PTT.INTEGER:
             value = int(token.value)
-            self.next_token()
+            token = self.next_token()
             if sign == 'MINUS':
                 return -value
             else:
                 return value
-        elif token.ptype == PTT.RESERVED and token.value == 'REAL':
+        elif token.ptype == PTT.REAL:
             value = float(token.value)
-            self.next_token()
+            tokne = self.next_token()
             if sign == 'MINUS':
                 return -value
             else:
                 return value
-        elif token.ptype == PTT.RESERVED and token.value == 'STRING':
+        elif token.ptype == PTT.STRING:
             if sign:
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
-            self.next_token()
+            token = self.next_token()
             return str(token.value)
         else:
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
@@ -908,12 +909,7 @@ class TypeDefinitionsParser(DeclarationsParser):
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
 
-
-
-
 class TypeSpecificationParser(PascalParserTD):
-
-
     TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
     TYPE_START_SET.append('LEFT_PAREN')
     TYPE_START_SET.append('COMMA')
