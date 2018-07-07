@@ -1,5 +1,8 @@
 CONST
-    epsilon = 10;
-    limit = -epsilon;
+    ten = 10;
+TYPE
+    range1 = 0..ten;
+    range2 = 'a'..'q';
+    range3 = range1;
 BEGIN
 END.

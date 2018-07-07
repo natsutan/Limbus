@@ -47,7 +47,6 @@ class PascalParserTD(Parser):
         else:
             super().__init__(scanner)
 
-
     def get_routine_id(self):
         return self.routine_id
 
@@ -99,7 +98,7 @@ class PascalParserTD(Parser):
     def get_line(self):
         return self.scanner.source.line
 
-    def synchronize(self, syncset, ptt_set = []):
+    def synchronize(self, syncset, ptt_set=[]):
         token = self.current_token()
 
         if token.type == TokenType.EOF:
@@ -177,6 +176,9 @@ class DeclarationsParser(PascalParserTD):
             type_defination_parser.parse(token)
 
         token = self.synchronize(self.VAR_START_SET)
+        if token.type == TokenType.EOF:
+            self.error_handler.flag(token, 'UNEXPECTED_EOF', self)
+            return
 
         if token.ptype == PTT.RESERVED and token.value == 'VAR':
             token = self.next_token()
@@ -877,6 +879,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
 
 class TypeDefinitionsParser(DeclarationsParser):
     IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
+    IDENTIFIER_SET_PTT = [PTT.IDENTIFIER]
     EQUALS_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
     EQUALS_SET.append('EQUALS')
     EQUALS_SET.append('SEMICOLON')
@@ -889,9 +892,9 @@ class TypeDefinitionsParser(DeclarationsParser):
         super().__init__(parent)
 
     def parse(self, token):
-        token = self.synchronize(TypeDefinitionsParser.IDENTIFIER_SET)
+        token = self.synchronize(self.IDENTIFIER_SET, ptt_set=self.IDENTIFIER_SET_PTT)
 
-        while token.ptype == PTT.RESERVED and token.value == 'IDENTIFIER':
+        while token.ptype == PTT.IDENTIFIER:
             name = token.value.lower()
             type_id = Parser.symtab_stack.lookup(name)
 
@@ -921,14 +924,18 @@ class TypeDefinitionsParser(DeclarationsParser):
             else:
                 token = self.synchronize(TypeDefinitionsParser.FOLLOW_SET)
 
-            token = self.curretnt_token()
-            token_type = token.get_type()
+            token = self.current_token()
 
+            if token.type == TokenType.EOF:
+                self.error_handler.flag(token, 'UNEXPECTED_EOF', self)
+                return
             if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
                 while token.get_type() != 'SEMICOLON':
                     token = self.next_token()
-            elif token_type in TypeDefinitionsParser.IDENTIFIER_SET:
+            elif token.value in TypeDefinitionsParser.IDENTIFIER_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
+
+            token = self.synchronize(self.IDENTIFIER_SET, ptt_set=self.IDENTIFIER_SET_PTT)
 
 
 class TypeSpecificationParser(PascalParserTD):
