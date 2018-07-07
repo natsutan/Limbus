@@ -38,6 +38,15 @@ class Definition(Enum):
     FUNCTION = auto()
     UNDEFINED = auto()
 
+    def __init__(self, text):
+        if isinstance(text, str):
+            self.text = text
+        else:
+            self.text = str(text)
+
+    def get_text(self):
+        return self.text
+
 
 class Predefined:
     integer_type = None

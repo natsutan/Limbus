@@ -851,12 +851,28 @@ class ConstantDefinitionsParser(DeclarationsParser):
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
             return None
 
-    # natu
     def get_constant_type_value(self, value):
-        pass
+        if isinstance(value, int):
+            return Predefined.integer_type
+        elif isinstance(value, float):
+            return Predefined.real_type
+        elif isinstance(value, str):
+            if len(value) == 1:
+                return Predefined.char_type
+            else:
+                return TypeSpec(value)
+        return None
 
     def get_constant_type_token(self, identifier):
-        pass
+        name = identifier.value.lower()
+        id = Parser.symtab_stack.lookup(name)
+
+        if not id:
+            return None
+        definition = id.get_definition()
+        if definition == Definition.CONSTANT or definition == Definition.ENUMERATION_CONSTANT:
+            return id.get_typespec()
+        return None
 
 
 class TypeDefinitionsParser(DeclarationsParser):

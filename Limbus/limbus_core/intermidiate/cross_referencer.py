@@ -111,10 +111,10 @@ class CrossReferencer:
             form = type.get_form()
             typeid = type.get_identifier()
             if typeid:
-                type_name = type.get_name()
+                type_name = typeid.get_name()
             else:
                 type_name = "<unnamed>"
-            print(self.INDENT + "Type form = " + form + ", type id = " + type_name)
+            print(self.INDENT + "Type form = " + str(form) + ", type id = " + type_name)
 
 
     def print_type_detail(self, type, record_type):
