@@ -82,6 +82,10 @@ class CrossReferencer:
             return
 
         nesting_level = entry.get_symtab().get_nesting_level()
+        if not isinstance(definition, Definition):
+            print('WARN:Varible definition is not Class Definition. in print_entry()')
+            return
+
         print(self.INDENT + "Defined as: " + definition.get_text())
         print(self.INDENT + "scope nesting level: " + str(nesting_level))
 

@@ -5,7 +5,7 @@ import copy
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
-from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
+from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm, TypeKey
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 from pascal.pascal_error import PascalErrorType, PascalError
@@ -906,7 +906,7 @@ class TypeDefinitionsParser(DeclarationsParser):
 
             token = self.next_token()
             token = self.synchronize(TypeDefinitionsParser.EQUALS_SET)
-            if token.ptype == PTT.RESERVED and token.value == 'EQUALS':
+            if token.ptype == PascalSpecialSymbol.EQUALS:
                 token = self.next_token()
             else:
                 self.error_handler.flag(token, 'MISSING_EQUALS', self)
@@ -920,7 +920,7 @@ class TypeDefinitionsParser(DeclarationsParser):
             if type != None and type_id != None:
                 if type.get_identifier() == None:
                     type.set_identifier(type_id)
-                type_id.set_identifier(type)
+                type_id.set_typespec(type)
             else:
                 token = self.synchronize(TypeDefinitionsParser.FOLLOW_SET)
 
@@ -946,13 +946,13 @@ class TypeSpecificationParser(PascalParserTD):
     TYPE_START_SET.append('ARRAY')
     TYPE_START_SET.append('RECORD')
     TYPE_START_SET.append('SEMICOLON')
-
+    TYPE_START_SET_PTT = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET_PTT)
 
     def __init__(self, parent):
         super().__init__(parent)
 
     def parse(self, token):
-        token = self.synchronize(TypeDefinitionsParser.TYPE_START_SET)
+        token = self.synchronize(self.TYPE_START_SET, ptt_set=self.TYPE_START_SET_PTT)
         type = token.value
         if type == 'ARRAY':
             array_type_parser = ArrayTypeParser(self)
@@ -969,12 +969,13 @@ class SimpleTypeParser(TypeSpecificationParser):
     SIMPLE_TYPE_START_SET.append('LEFT_PAREN')
     SIMPLE_TYPE_START_SET.append('COMMA')
     SIMPLE_TYPE_START_SET.append('SEMICOLON')
+    SIMPLE_TYPE_START_SET_PTT = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET_PTT)
 
     def __init__(self, parent):
         super().__init__(parent)
 
     def parse(self, token):
-        token = self.synchronize(SimpleTypeParser.SIMPLE_TYPE_START_SET)
+        token = self.synchronize(self.SIMPLE_TYPE_START_SET,ptt_set=self.SIMPLE_TYPE_START_SET_PTT)
         if token.type == TokenType.EOF:
             self.error_handler.flag(token, 'UNEXPECTED_EOF', self)
             return
@@ -1161,14 +1162,14 @@ class SubrangeTypeParser(TypeSpecificationParser):
         min_val = None
         max_val = None
 
-        constant_token = copy.deepcopy(token)
+        constant_token = copy.copy(token)
         constant_parser = ConstantDefinitionsParser(self)
         min_val = constant_parser.parse_constant(token)
 
         if constant_token.ptype == PTT.IDENTIFIER:
-            min_type = constant_parser.get_constant_type(constant_token)
+            min_type = constant_parser.get_constant_type_token(constant_token)
         else:
-            min_type = constant_parser.get_constant_type(min_val)
+            min_type = constant_parser.get_constant_type_value(min_val)
         min_val = self.check_value_type(constant_token, min_val, min_type)
 
         token = self.current_token()
@@ -1178,9 +1179,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
             token = self.next_token()
             saw_dot_dot = True
 
-        token_type = token.get_type()
-
-        if token_type in ConstantDefinitionsParser.CONSTANT_START_SET:
+        if token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
             if not saw_dot_dot:
                 self.error_handler.flag(token, 'MISSING_DOT_DOT', self)
             token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET)
@@ -1205,11 +1204,11 @@ class SubrangeTypeParser(TypeSpecificationParser):
 
         subrange_type.set_attribute(TypeKey.SUBRANGE_BASE_TYPE, min_type)
         subrange_type.set_attribute(TypeKey.SUBRANGE_MIN_VALUE, min_val)
-        subrange_type.set_attribute(TypeKey.SUBRANGE_MAX_VALUE, max_type)
+        subrange_type.set_attribute(TypeKey.SUBRANGE_MAX_VALUE, max_val)
 
         return subrange_type
 
-    def check_value_type(self, val, type):
+    def check_value_type(self, token,  val, type):
         if type == None:
             return val
         if type == Predefined.integer_type:
