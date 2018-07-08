@@ -732,6 +732,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
     def __init__(self, parent):
         super().__init__(parent)
 
+    # ConstantDefinitionsParser
     def parse(self, token):
         token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
         while token.ptype == PTT.IDENTIFIER:
@@ -915,7 +916,7 @@ class TypeDefinitionsParser(DeclarationsParser):
             type = typespecification_parser.parse(token)
 
             if type_id:
-                type_id.set_definition(type)
+                type_id.set_definition(Definition.TYPE)
 
             if type != None and type_id != None:
                 if type.get_identifier() == None:
@@ -929,8 +930,8 @@ class TypeDefinitionsParser(DeclarationsParser):
             if token.type == TokenType.EOF:
                 self.error_handler.flag(token, 'UNEXPECTED_EOF', self)
                 return
-            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
-                while token.get_type() != 'SEMICOLON':
+            if token.value == 'SEMICOLON':
+                while token.value == 'SEMICOLON':
                     token = self.next_token()
             elif token.value in TypeDefinitionsParser.IDENTIFIER_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
@@ -1157,6 +1158,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
         self.definition = None
         super().__init__(parent)
 
+    # SubrangeTypeParser
     def parse(self, token):
         subrange_type = TypeSpec('SUBRANGE')
         min_val = None
@@ -1175,21 +1177,21 @@ class SubrangeTypeParser(TypeSpecificationParser):
         token = self.current_token()
         saw_dot_dot = False
 
-        if token.ptype == PTT.IDENTIFIER and token.value == 'DOT_DOT':
+        if token.value == 'DOT_DOT':
             token = self.next_token()
             saw_dot_dot = True
 
-        if token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
+        if token.ptype == PTT.IDENTIFIER or token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
             if not saw_dot_dot:
                 self.error_handler.flag(token, 'MISSING_DOT_DOT', self)
-            token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET)
-            constant_token = copy.deepcopy(token)
+            token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET, ptt_set=ConstantDefinitionsParser.CONSTANT_START_SET_PTT)
+            constant_token = copy.copy(token)
             max_val = constant_parser.parse_constant(token)
 
             if constant_token.ptype == PTT.IDENTIFIER:
-                max_type = constant_parser.get_constant_type(constant_token)
+                max_type = constant_parser.get_constant_type_token(constant_token)
             else:
-                max_type = constant_parser.get_constant_type(max_val)
+                max_type = constant_parser.get_constant_type_value(max_val)
 
             max_val = self.check_value_type(constant_token, max_val, max_type)
 
