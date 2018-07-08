@@ -1135,7 +1135,7 @@ class RecordTypeParser(TypeSpecificationParser):
         super().__init__(parent)
 
     def parse(self, token):
-        record_type = TypeSpec('RECORD')
+        record_type = TypeSpec(TypeForm.RECORD)
         token = self.next_token()
         record_type.set_attribute(TypeKey.RECORD_SYMTAB, Parser.symtab_stack.push(None))
 
@@ -1160,7 +1160,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
 
     # SubrangeTypeParser
     def parse(self, token):
-        subrange_type = TypeSpec('SUBRANGE')
+        subrange_type = TypeSpec(TypeForm.SUBRANGE)
         min_val = None
         max_val = None
 
@@ -1234,7 +1234,7 @@ class EnumerationTypeParser(TypeSpecificationParser):
         super().__init__(parent)
 
     def parse(self, token):
-        enum_type = TypeSpec('ENUMERATION')
+        enum_type = TypeSpec(TypeForm.ENUMERATION)
         value = -1
         constants = []
 
@@ -1308,7 +1308,7 @@ class ArrayTypeParser(TypeSpecificationParser):
         super().__init__(parent)
 
     def parse(self, token):
-        array_type = TypeSpec('ARRAY')
+        array_type = TypeSpec(TypeForm.ARRAY)
         token = self.next_token()
 
         token = self.synchronize(self.LEFT_BRACKET_SET)
@@ -1351,7 +1351,7 @@ class ArrayTypeParser(TypeSpecificationParser):
                     self.error_handler.flag(token, 'MISSING_COMMA', self)
                     another_index = True
             elif token.value == 'COMMA':
-                new_element_type = TypeSpec('ARRAY')
+                new_element_type = TypeSpec(TypeForm.ARRAY)
                 element_type.set_attribute('ARRAY_ELEMENT_TYPE', new_element_type)
                 element_type = new_element_type
 

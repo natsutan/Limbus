@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
+from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm, TypeKey
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 
 class CrossReferencer:
@@ -133,9 +133,9 @@ class CrossReferencer:
                 value = const_id.get_attribute('CONSTANT_VALUE')
                 print(self.INDENT + (self.ENUM_CONST_FORMAT % (name, str(value))))
         elif form == TypeForm.SUBRANGE:
-            min_val = type.get_attribute('SUBRANGE_MIN_VALUE')
-            max_val = type.get_attribute('SUBRANGE_MAX_VALUE')
-            base_type_spec = type.get_attribute('SUBRANGE_BASE_TYPE')
+            min_val = type.get_attribute(TypeKey.SUBRANGE_MIN_VALUE)
+            max_val = type.get_attribute(TypeKey.SUBRANGE_MAX_VALUE)
+            base_type_spec = type.get_attribute(TypeKey.SUBRANGE_BASE_TYPE)
 
             print(self.INDENT + '---BASE TYPE ---')
             self.print_type(base_type_spec)
