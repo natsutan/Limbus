@@ -795,7 +795,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
                 return value
         elif token.ptype == PTT.REAL:
             value = float(token.value)
-            tokne = self.next_token()
+            self.next_token()
             if sign == 'MINUS':
                 return -value
             else:
@@ -803,7 +803,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
         elif token.ptype == PTT.STRING:
             if sign:
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
-            token = self.next_token()
+            self.next_token()
             return str(token.value)
         else:
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
@@ -1181,7 +1181,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
             token = self.next_token()
             saw_dot_dot = True
 
-        if token.ptype == PTT.IDENTIFIER or token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
+        if token.ptype == PTT.IDENTIFIER or token.ptype == PTT.STRING or token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
             if not saw_dot_dot:
                 self.error_handler.flag(token, 'MISSING_DOT_DOT', self)
             token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET, ptt_set=ConstantDefinitionsParser.CONSTANT_START_SET_PTT)
@@ -1217,7 +1217,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
             return val
         elif type == Predefined.char_type:
             ch = val[0]
-            return int(ch)
+            return ord(ch)
         elif type.get_form() == TypeForm.ENUMERATION:
             return value
         else:
