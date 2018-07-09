@@ -1002,7 +1002,7 @@ class SimpleTypeParser(TypeSpecificationParser):
                 self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
                 token = self.next_token()
                 return None
-        elif token.ptype == PTT.RESERVED and token.value == 'LEFT_PAREN':
+        elif token.ptype == PascalSpecialSymbol.LEFT_PAREN:
             enumration_parser = EnumerationTypeParser(self)
             return enumration_parser.parse(token)
         elif token.ptype == PTT.RESERVED and (token.value == 'COMMA' or token.value == 'SEMICOLON'):
@@ -1261,13 +1261,13 @@ class EnumerationTypeParser(TypeSpecificationParser):
         else:
             self.error_handler.flag(token, 'ENUMERATION_CONSTANTS', self)
 
-        enum_type.add_attribute(Definition.ENUMERATION_CONSTANT, constants)
+        enum_type.set_attribute(Definition.ENUMERATION_CONSTANT, constants)
         return enum_type
 
     def enum_loop(self, token, first):
         if first:
             return True
-        if token.get_value() in self.ENUM_CONSTANT_START_SET:
+        if token.value in self.ENUM_CONSTANT_START_SET:
             return False
         else:
             return True
@@ -1281,11 +1281,11 @@ class EnumerationTypeParser(TypeSpecificationParser):
                 self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
             else:
                 const_id = Parser.symtab_stack.enter_local(name)
-                const_id,set_definition(Definition.ENUMERATION_CONSTANT)
+                const_id.set_definition(Definition.ENUMERATION_CONSTANT)
                 const_id.set_typespec(enum_type)
                 const_id.set_attribute('CONSTANT_VALUE', value)
                 const_id.append_line_number(token.line_num)
-                constants.add(const_id)
+                constants.append(const_id)
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)

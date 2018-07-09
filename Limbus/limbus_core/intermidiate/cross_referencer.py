@@ -126,6 +126,10 @@ class CrossReferencer:
         
         if form == TypeForm.ENUMERATION:
             constant_ids = type.get_attribute('ENUMERATION_CONSTANTS')
+            if not constant_ids:
+                print("WARN constant_ids is None")
+                return
+
             print(self.INDENT + "--- Enumeration constants ---")
 
             for const_id in constant_ids:
@@ -136,6 +140,10 @@ class CrossReferencer:
             min_val = type.get_attribute(TypeKey.SUBRANGE_MIN_VALUE)
             max_val = type.get_attribute(TypeKey.SUBRANGE_MAX_VALUE)
             base_type_spec = type.get_attribute(TypeKey.SUBRANGE_BASE_TYPE)
+
+            if not base_type_spec:
+                print("WARN base_type_spec is None in print_type_detail")
+                return
 
             print(self.INDENT + '---BASE TYPE ---')
             self.print_type(base_type_spec)

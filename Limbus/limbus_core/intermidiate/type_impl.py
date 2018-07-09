@@ -138,7 +138,10 @@ class TypeSpec(TypeSpecIF):
         self.attributes[key] = value
 
     def get_attribute(self, key):
-        return self.attributes[key]
+        if key in self.attributes:
+            return self.attributes[key]
+        else:
+            return None
 
     def is_pascal_string(self):
         if self.form == TypeForm.ARRAY:

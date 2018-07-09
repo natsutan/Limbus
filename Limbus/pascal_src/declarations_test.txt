@@ -1,4 +1,4 @@
 TYPE
-    range2 = 'a'..'q';
+    enum1 = (a, b, c, d, e);
 BEGIN
 END.
