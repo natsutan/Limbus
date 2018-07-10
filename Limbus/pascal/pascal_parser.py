@@ -1248,15 +1248,16 @@ class EnumerationTypeParser(TypeSpecificationParser):
             self.parse_enum_identifier(token, value, enum_type, constants)
             token = self.current_token()
 
-            if token.ptype == PTT.RESERVED and token.value == 'COMMA':
+            if token.ptype == PascalSpecialSymbol.COMMA:
                 token = self.next_token()
 
-                if token.get_type() in self.ENUM_DEFINITION_FOLLOW_SET:
+                if token.value in self.ENUM_DEFINITION_FOLLOW_SET:
                     self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
-            else:
+#            elif token.value in self.ENUM_CONSTANT_START_SET:
+            elif token.ptype == PTT.IDENTIFIER:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
 
-        if token.ptype == PTT.RESERVED and token.value == 'RIGHT_PAREN':
+        if token.ptype == PascalSpecialSymbol.RIGHT_PAREN:
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'ENUMERATION_CONSTANTS', self)
@@ -1267,7 +1268,7 @@ class EnumerationTypeParser(TypeSpecificationParser):
     def enum_loop(self, token, first):
         if first:
             return True
-        if token.value in self.ENUM_CONSTANT_START_SET:
+        if token.value in self.ENUM_DEFINITION_FOLLOW_SET:
             return False
         else:
             return True

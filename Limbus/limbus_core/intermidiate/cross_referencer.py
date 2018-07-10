@@ -125,7 +125,7 @@ class CrossReferencer:
         form = type.get_form()
         
         if form == TypeForm.ENUMERATION:
-            constant_ids = type.get_attribute('ENUMERATION_CONSTANTS')
+            constant_ids = type.get_attribute(Definition.ENUMERATION_CONSTANT)
             if not constant_ids:
                 print("WARN constant_ids is None")
                 return
