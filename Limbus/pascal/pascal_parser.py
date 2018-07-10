@@ -1182,7 +1182,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
             token = self.next_token()
             saw_dot_dot = True
 
-        if token.ptype == PTT.IDENTIFIER or token.ptype == PTT.STRING or token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
+        if token.ptype == PTT.IDENTIFIER or token.ptype == PTT.STRING or token.ptype == PTT.INTEGER or token.value in ConstantDefinitionsParser.CONSTANT_START_SET:
             if not saw_dot_dot:
                 self.error_handler.flag(token, 'MISSING_DOT_DOT', self)
             token = self.synchronize(ConstantDefinitionsParser.CONSTANT_START_SET, ptt_set=ConstantDefinitionsParser.CONSTANT_START_SET_PTT)
