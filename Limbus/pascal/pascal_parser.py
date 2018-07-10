@@ -14,17 +14,18 @@ from pascal.pascal_parser import *
 
 
 class PascalErrorHandler:
+    error_cnt = 0
+    MAX_ERROR = 5
     def __init__(self):
-        self.MAX_ERROR = 25
-        self.error_cnt = 0
+        pass
 
     def flag(self, token, error_code, parser):
         line = parser.get_line()
         msg = Message(MessageType.SYNTAX_ERROR, (token, error_code, line))
         parser.send_message(msg)
 
-        self.error_cnt = self.error_cnt + 1
-        if self.error_cnt > self.MAX_ERROR:
+        PascalErrorHandler.error_cnt = PascalErrorHandler.error_cnt + 1
+        if PascalErrorHandler.error_cnt > PascalErrorHandler.MAX_ERROR:
             self.abort_translation('TOO_MANY_ERRORS', parser)
 
     def abort_translation(self, err_code, parser):
@@ -1219,7 +1220,7 @@ class SubrangeTypeParser(TypeSpecificationParser):
             ch = val[0]
             return ord(ch)
         elif type.get_form() == TypeForm.ENUMERATION:
-            return value
+            return val
         else:
             self.error_handler.flag(token, 'INVALID_SUBRANGE_TYPE', self)
             return val
