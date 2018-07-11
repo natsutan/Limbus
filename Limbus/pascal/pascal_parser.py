@@ -1067,7 +1067,7 @@ class VariableDeclarationsParser(DeclarationsParser):
 
             token = self.synchronize(VariableDeclarationsParser.COMMA_SET)
 
-            if token.ptype == PTT.RESERVED and token.value == 'COMMA':
+            if token.ptype == PascalSpecialSymbol.COMMA:
                 token = self.next_token()
 
                 if token.value in VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET:
