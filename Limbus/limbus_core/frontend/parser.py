@@ -2,11 +2,12 @@
 from abc import ABCMeta, abstractmethod
 from .. message import MessageProducer, MessageHandler
 from .. intermidiate.symtabstack_impl import SymTabStack
-
+from limbus_core.intermidiate.iCode_factory import iCodeFactory
 
 class Parser(MessageProducer, metaclass=ABCMeta):
     symtab_stack = SymTabStack()
-    iCode = None
+    iCode = iCodeFactory().create()
+
 
     def __init__(self, scanner):
         self.symTab = None

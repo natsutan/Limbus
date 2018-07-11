@@ -18,6 +18,13 @@ class SymTabStack(SymTabStackIF):
         self.stack = []
         self.current_nesting_level = 0
         self.add_symtab(self.current_nesting_level)
+        self.program_id = None
+
+    def set_program_id(self, pid):
+        self.program_id = pid
+
+    def get_program_id(self):
+        return self.program_id
 
     def get_current_nesting_level(self):
         return self.current_nesting_level
@@ -35,7 +42,26 @@ class SymTabStack(SymTabStackIF):
         return self.stack[self.current_nesting_level].lookup(name)
 
     def lookup(self, name):
-        return self.lookup_local(name)
+        entry = None
+        for i in range(self.current_nesting_level, -1, -1):
+            entry = self.stack[i].lookup(name)
+            if entry:
+                break
+
+        return entry
+
+    def push(self, symtab):
+        self.current_nesting_level += 1
+        if symtab == None:
+            symtab = SymTab(self.current_nesting_level)
+
+        self.stack.append(symtab)
+        return symtab
+
+    def pop(self):
+        self.current_nesting_level -= 1
+        symtab = self.stack.pop()
+        return symtab
 
 
 class SymTab(SymTabIF):
@@ -66,6 +92,8 @@ class SymTabEntry(SynTabEntryIF):
         self.symtab = symtab
         self.line_numbers = []
         self.attribute = {}
+        self.typespec = None
+        self.definition = None
 
         print('Entry name = ', self.name, " ", self)
 
@@ -85,5 +113,19 @@ class SymTabEntry(SynTabEntryIF):
         self.attribute[key] = value
 
     def get_attribute(self, key):
-        return self.attribute[key]
+        if key in self.attribute:
+            return self.attribute[key]
+        else:
+            return None
 
+    def set_definition(self, definition):
+        self.definition = definition
+
+    def get_definition(self):
+        return self.definition
+
+    def set_typespec(self, typespec):
+        self.typespec = typespec
+
+    def get_typespec(self):
+        return self.typespec
