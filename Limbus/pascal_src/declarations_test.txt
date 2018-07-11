@@ -1,6 +1,9 @@
 TYPE
-
-    ar2 = ARRAY [(alpha, beta, gamma)] OF integer;
-
+    rec1 = RECORD
+               i : integer;
+               r : real;
+               b1, b2 : boolean;
+               c : char
+           END;
 BEGIN
 END.

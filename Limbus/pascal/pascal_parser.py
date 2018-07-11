@@ -1046,8 +1046,8 @@ class VariableDeclarationsParser(DeclarationsParser):
                 return
 
 
-            if token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
-                while token.ptype == PTT.RESERVED and token.value == 'SEMICOLON':
+            if token.ptype == PascalSpecialSymbol.SEMICOLON:
+                while token.ptype == PascalSpecialSymbol.SEMICOLON:
                     token = self.next_token()
             elif token.value in VariableDeclarationsParser.NEXT_START_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
@@ -1087,7 +1087,7 @@ class VariableDeclarationsParser(DeclarationsParser):
         """
         if first:
             return True
-        if token.value in VariableDeclarationsParser.IDENTIFIER_SET:
+        if token.value in VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET:
             return False
         else:
             return True
@@ -1112,7 +1112,7 @@ class VariableDeclarationsParser(DeclarationsParser):
 
     def parse_typespec(self, token):
         token = self.synchronize(VariableDeclarationsParser.COLON_SET)
-        if token.ptype == PTT.RESERVED and token.value == 'COLON':
+        if token.ptype == PascalSpecialSymbol.COLON:
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'MISSING_COLON', self)
@@ -1150,7 +1150,7 @@ class RecordTypeParser(TypeSpecificationParser):
         if token.ptype == PTT.RESERVED and token.value == 'END':
             token = self.next_token()
         else:
-            self.error_handler.falg(token, 'MISSING_END', self)
+            self.error_handler.flag(token, 'MISSING_END', self)
 
         return record_type
 
