@@ -1296,12 +1296,14 @@ class ArrayTypeParser(TypeSpecificationParser):
     LEFT_BRACKET_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
     LEFT_BRACKET_SET.append('LEFT_BRACKET')
     LEFT_BRACKET_SET.append('RIGHT_BRACKET')
+    LEFT_BRACKET_SET_PTT = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET_PTT)
     RIGHT_BRACKET_SET = ['RIGHT_BRACKET', 'OF', 'SEMICOLON']
     OF_SET = copy.deepcopy(TypeSpecificationParser.TYPE_START_SET)
     OF_SET.append('OF')
     OF_SET.append('SEMICOLON')
     INDEX_START_SET = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET)
     INDEX_START_SET.append('COMMA')
+    INDEX_START_SET_PTT = copy.deepcopy(SimpleTypeParser.SIMPLE_TYPE_START_SET_PTT)
     INDEX_END_SET = ['RIGHT_BRACKET', 'OF', 'SEMICOLON']
     INDEX_FOLLOW_SET = copy.deepcopy(INDEX_START_SET) + INDEX_END_SET
 
@@ -1310,16 +1312,17 @@ class ArrayTypeParser(TypeSpecificationParser):
         super().__init__(parent)
 
     def parse(self, token):
+        # ARRAY
         array_type = TypeSpec(TypeForm.ARRAY)
         token = self.next_token()
 
-        token = self.synchronize(self.LEFT_BRACKET_SET)
+        token = self.synchronize(self.LEFT_BRACKET_SET, ptt_set=self.LEFT_BRACKET_SET_PTT)
         if token.value != 'LEFT_BRACKET':
             self.error_handler.flag(tokne, 'MISSING_LEFT_BRACKET', self)
 
         element_type = self.parse_index_type_list(token, array_type)
         token = self.synchronize(self.RIGHT_BRACKET_SET)
-        if token.ptype == PTT.RESERVED and token.value == 'RIGHT_BRACKET':
+        if token.ptype == PascalSpecialSymbol.RIGHT_BRACKET:
             token = self.next_token()
         else:
             self.error_handler.flag(token, 'MISSING_RIGHT_BRACKET', self)
@@ -1344,8 +1347,8 @@ class ArrayTypeParser(TypeSpecificationParser):
             first = False
             another_index = False
 
-            token = self.synchronize(self.INDEX_START_SET)
-            self.parse_element_type(token)
+            token = self.synchronize(self.INDEX_START_SET, ptt_set=self.INDEX_START_SET_PTT)
+            self.parse_index_type(token, element_type)
 
             token = self.synchronize(self.INDEX_FOLLOW_SET)
             if token.value != 'COMMA' and token.value == 'RIGHT_BRACKET':

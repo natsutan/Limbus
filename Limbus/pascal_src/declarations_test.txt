@@ -1,4 +1,5 @@
 TYPE
+    range1 = 0..10;
     ar1 = ARRAY [range1] OF integer;
 BEGIN
 END.

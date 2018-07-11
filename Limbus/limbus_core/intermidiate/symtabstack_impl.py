@@ -43,7 +43,7 @@ class SymTabStack(SymTabStackIF):
 
     def lookup(self, name):
         entry = None
-        for i in range(self.current_nesting_level, 0, -1):
+        for i in range(self.current_nesting_level, -1, -1):
             entry = self.stack[i].lookup(name)
             if entry:
                 break
