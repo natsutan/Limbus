@@ -1,5 +1,6 @@
 TYPE
-    range1 = 0..10;
-    ar1 = ARRAY [range1] OF integer;
+
+    ar2 = ARRAY [(alpha, beta, gamma)] OF integer;
+
 BEGIN
 END.

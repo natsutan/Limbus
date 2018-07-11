@@ -1384,7 +1384,7 @@ class ArrayTypeParser(TypeSpecificationParser):
             if min_val != None and max_val != None:
                 count = max_val - min_val
         elif form == TypeForm.ENUMERATION:
-            constants = index_type.get_attribute('ENUMERATION_CONSTANTS')
+            constants = index_type.get_attribute(Definition.ENUMERATION_CONSTANT)
             count = len(constants)
         else:
             self.error_handler.flag(token, 'INVALID_INDEX_TYPE', self)

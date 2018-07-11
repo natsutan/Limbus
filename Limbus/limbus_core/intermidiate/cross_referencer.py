@@ -160,7 +160,7 @@ class CrossReferencer:
             print(self.INDENT + "--- INDEX TYPE ---")
             self.print_type(index_type)
             if not index_type.get_identifier():
-                self.print_type_detail(type, record_type)
+                self.print_type_detail(index_type, record_type)
 
             print(self.INDENT + "--- ELEMENT TYPE ---")
             self.print_type(element_type)
