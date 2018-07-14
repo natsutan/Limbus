@@ -85,6 +85,14 @@ class iCodeNodeIF(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
+    def set_typespec(self, typespec):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_typespec(self):
+        raise NotImplementedError()
+
+    @abstractmethod
     def copy(self):
         raise NotImplementedError()
 

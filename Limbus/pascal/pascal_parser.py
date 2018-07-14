@@ -273,7 +273,7 @@ class AssignmentStatementParser(StatementParser):
         else:
             expr_type = Predefined.undefined_type
 
-        if not TypeChecker.are_assignment_compatible(target_type, expr_type):
+        if not TypeChecker().are_assignment_compatible(target_type, expr_type):
             self.error_handler.flag(token , 'INCOMPATIBLE_TYPES', self)
 
         assigin_node.set_typespec(target_type)
@@ -287,7 +287,7 @@ class VariableParser(StatementParser):
         super().__init__(parent)
 
     def parse(self, token):
-        name = token.get_text().lower()
+        name = token.text.lower()
         variable_id = Parser.symtab_stack.lookup(name)
 
         if not variable_id:
@@ -298,13 +298,12 @@ class VariableParser(StatementParser):
 
         return self.parse_variable_id(token, variable_id)
 
-    def parse_varibale_id(self, token, variable_id):
+    def parse_variable_id(self, token, variable_id):
         defn_code = variable_id.get_definition()
         if defn_code != Definition.VARIABLE and defn_code != Definition.VALUE_PARM and defn_code != Definition.VAR_PARM:
             self.error_handler.flag(token, 'INVALID_IDENTIFIER_USAGE', self)
 
-        variable_id.append_line_nubmer(token.get_line_number())
-        variable_node = iCodeNodeFactory.create(iCodeNodeType.VARIABLE)
+        variable_node = iCodeNodeFactory().create('VARIABLE')
         variable_node.set_attribute('ID', variable_id)
         token = self.next_token()
 
@@ -316,7 +315,7 @@ class VariableParser(StatementParser):
             else:
                 sub_fld_node = self.parsr_field(variable_type)
 
-            token = self.currnet_token()
+            token = self.current_token()
             variable_type = sub_fld_node.get_typespec()
             variable_node.add_child(sub_fld_node)
 
@@ -325,7 +324,7 @@ class VariableParser(StatementParser):
 
     def parse_subscripts(self, variable_type):
         expression_parer = ExpressionParser(self)
-        subscript_node = iCodeNodeFactory.create('SUBSCRIPTS')
+        subscript_node = iCodeNodeFactory().create('SUBSCRIPTS')
 
         first = True
         while first or token.ptype == PascalSpecialSymbol.COMMA:
@@ -374,7 +373,7 @@ class VariableParser(StatementParser):
 
             if not filedid:
                 variable_type = filedid.get_typespec()
-                filedid.append_line_number(token.get_line_number())
+                filedid.append_line_number(token.line_num)
                 field_node.get_attribute('ID', filedid)
             else:
                 self.error_handler.flag(token, 'INVALID_FIELD', self)
