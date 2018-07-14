@@ -5,8 +5,10 @@ import copy
 from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
+from limbus_core.intermidiate.iCode_if import iCodeNodeType
 from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm, TypeKey
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
+from limbus_core.intermidiate.type_checker import TypeChecker
 
 from pascal.pascal_error import PascalErrorType, PascalError
 from pascal.pascal_token import *
@@ -248,19 +250,14 @@ class AssignmentStatementParser(StatementParser):
 
     def parse(self, token):
         assigin_node = iCodeNodeFactory().create('ASSIGN')
-        target_name = token.value.lower()
-        target_id = Parser.symtab_stack.lookup(target_name)
-        if not target_id:
-            target_id = Parser.symtab_stack.enter_local(target_name)
+        variable_parser = VariableParser(self)
+        target_node = variable_parser.parse(token)
+        if target_node:
+            target_type = target_node.get_typespec()
+        else:
+            target_type = Predefined.undefined_type
 
-        # print("parse ", target_name, " id:", target_id, " ")
-
-        target_id.append_line_number(token.line_num)
-        token = self.next_token()
-        variable_node = iCodeNodeFactory().create('VARIABLE')
-        variable_node.set_attribute('ID', target_id)
-
-        assigin_node.add_child(variable_node)
+        assigin_node.add_child(target_node)
 
         if token.value == 'COLON_EQUALS':
             token = self.next_token()
@@ -268,10 +265,125 @@ class AssignmentStatementParser(StatementParser):
             self.error_handler.flag(token, 'MISSING_COLON_EQUALS', self)
 
         expression_parser = ExpressionParser(self)
-        assigin_node.add_child(expression_parser.parse(token))
+        expr_node = expression_parser.parse(token)
+        assigin_node.add_child(expr_node)
 
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if not TypeChecker.are_assignment_compatible(target_type, expr_type):
+            self.error_handler.flag(token , 'INCOMPATIBLE_TYPES', self)
+
+        assigin_node.set_typespec(target_type)
         return assigin_node
 
+class VariableParser(StatementParser):
+    SUBSCRIPT_FIELD_START_SET = ['LEFT_BRACKET', 'DOT']
+    RIGHT_BRACKET_SET = ['RIGHT_BRACKET', 'EQUALS', 'SEMICOLON']
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        name = token.get_text().lower()
+        variable_id = Parser.symtab_stack.lookup(name)
+
+        if not variable_id:
+            self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+            variable_id = Parser.symtab_stack.enter_local(name)
+            variable_id.set_definition('UNDEFINED')
+            variable_id.set_typespec(Predefined.undefined_type)
+
+        return self.parse_variable_id(token, variable_id)
+
+    def parse_varibale_id(self, token, variable_id):
+        defn_code = variable_id.get_definition()
+        if defn_code != Definition.VARIABLE and defn_code != Definition.VALUE_PARM and defn_code != Definition.VAR_PARM:
+            self.error_handler.flag(token, 'INVALID_IDENTIFIER_USAGE', self)
+
+        variable_id.append_line_nubmer(token.get_line_number())
+        variable_node = iCodeNodeFactory.create(iCodeNodeType.VARIABLE)
+        variable_node.set_attribute('ID', variable_id)
+        token = self.next_token()
+
+        variable_type = variable_id.get_typespec()
+
+        while token.value in self.SUBSCRIPT_FIELD_START_SET:
+            if token.ptype == PascalSpecialSymbol.LEFT_BRACKET:
+                sub_fld_node = self.parse_subscripts(variable_type)
+            else:
+                sub_fld_node = self.parsr_field(variable_type)
+
+            token = self.currnet_token()
+            variable_type = sub_fld_node.get_typespec()
+            variable_node.add_child(sub_fld_node)
+
+        variable_node.set_typespec(variable_type)
+        return variable_node
+
+    def parse_subscripts(self, variable_type):
+        expression_parer = ExpressionParser(self)
+        subscript_node = iCodeNodeFactory.create('SUBSCRIPTS')
+
+        first = True
+        while first or token.ptype == PascalSpecialSymbol.COMMA:
+            first = False
+            token = self.next_token()
+            if variable_type.get_form() == TypeForm.ARRAY:
+                expr_node = expressionParser.parse(token)
+                if expr_node:
+                    expr_type = expr_node.get_typespec()
+                else:
+                    expr_type = Predefined.undefined_type
+
+                index_type = variable_type.get_attribute(TypeKey.ARRAY_INDEX_TYPE)
+                if not TypeChecker.are_assignment_compatible(index_type, expr_type):
+                    self.error_handler(token, 'INCOMPATIBLE_TYPES', self)
+
+                subscript_node.add_child(expr_node)
+
+                variable_type = variable_type.get_attibute(TypeKey.ARRAY_ELEMENT_TYPE)
+            else:
+                self.error_handler.flag(token, 'TOO_MANY_SUBSCRIPTS', self)
+                expression_parer.parse(token)
+
+            token = self.current_token()
+
+        token = self.synchronize(self.RIGHT_BRACKET_SET)
+        if token.ptype == PascalSpecialSymbol.RIGHT_BRACKET:
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_RIGHT_BRACKET', self)
+
+        subscript_node.set_typespec(variable_type)
+        return subscript_node
+
+    def parser_field(self, variable_type):
+        field_node = iCodeNodeFactory.create('FIELD')
+
+        token = self.next_token()
+        token_type = token.get_type()
+        variable_form = variable_type.get_form()
+
+        if token.ptype == PTT.IDENTIFIER and variable_form == TypeForm.RECORD:
+            sym_tab = variable_type.get_attribute('RECORD_SYMTAB')
+            field_name = token.get_text().lower()
+            filedid = symtab.lookup(field_name)
+
+            if not filedid:
+                variable_type = filedid.get_typespec()
+                filedid.append_line_number(token.get_line_number())
+                field_node.get_attribute('ID', filedid)
+            else:
+                self.error_handler.flag(token, 'INVALID_FIELD', self)
+        else:
+            self.error_handler.flag(token, 'INVALID_FIELD', self)
+
+        token = self.next_token()
+        field_node.set_typespec(variable_type)
+        return field_node
 
 class CompoundStatementParser(StatementParser):
     def __init__(self, parent):
