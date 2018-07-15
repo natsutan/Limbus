@@ -368,7 +368,7 @@ class VariableParser(StatementParser):
 
         if token.ptype == PTT.IDENTIFIER and variable_form == TypeForm.RECORD:
             sym_tab = variable_type.get_attribute('RECORD_SYMTAB')
-            field_name = token.get_text().lower()
+            field_name = token.txt.lower()
             filedid = symtab.lookup(field_name)
 
             if not filedid:
@@ -556,7 +556,15 @@ class CaseStatementParser(StatementParser):
         select_node = iCodeNodeFactory().create('SELECT')
 
         expression_parser = ExpressionParser(self)
-        select_node.add_child(expression_parser.parse(token))
+        expr_node = expression_parser.parse(token)
+        select_node.add_child(expr_node)
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if (not TypeChecker().is_integer(expr_type)) and (not TypeChecker().is_char(expr_type)) and expr_type.get_form() != TypeForm.ENUMERATION:
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', this)
 
         token = self.synchronize(self.OF_SET)
         if token.value == 'OF':
@@ -581,12 +589,12 @@ class CaseStatementParser(StatementParser):
 
         return select_node
 
-    def parse_branch(self, token, constant_set):
+    def parse_branch(self, token, expr_type, constant_set):
         branch_node = iCodeNodeFactory().create('SELECT_BRANCH')
         constants_node = iCodeNodeFactory().create('SELECT_CONSTANTS')
         branch_node.add_child(constants_node)
 
-        self.parse_constant_list(token, constants_node, constant_set)
+        self.parse_constant_list(token, expr_type, constants_node, constant_set)
         token = self.current_token()
 
         if token.value == 'COLON':
@@ -599,9 +607,9 @@ class CaseStatementParser(StatementParser):
 
         return branch_node
 
-    def parse_constant_list(self, token, constants_node, constants_set):
+    def parse_constant_list(self, token, expr_type, constants_node, constants_set):
         while token.value in self.CONSTANT_START_SET or token.ptype in self.CONSTANT_START_SET_PTT:
-            constants_node.add_child(self.parse_constant(token, constants_set))
+            constants_node.add_child(self.parse_constant(token, expr_type, constants_set))
             token = self.synchronize(self.COMMA_SET)
 
             if token.value == 'COMMA':
@@ -609,9 +617,10 @@ class CaseStatementParser(StatementParser):
             elif token.value in self.CONSTANT_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
 
-    def parse_constant(self, token, constants_set):
+    def parse_constant(self, token, expr_type, constants_set):
         sign = None
         constant_node = None
+        constant_type = None
 
         token = self.synchronize(self.CONSTANT_START_SET, ptt_set = self.CONSTANT_START_SET_PTT)
         token_type = token.value
@@ -622,10 +631,14 @@ class CaseStatementParser(StatementParser):
 
         if token.ptype == PTT.IDENTIFIER:
             constant_node = self.parse_identifier_constant(token, sign)
+            if not constant_node:
+                constant_type = constant_node.get_typespec()
         elif token.ptype == PTT.INTEGER:
             constant_node = self.parse_integer_constant(token.text, sign)
+            constant_type = Predefined.integer_type
         elif token.ptype == PTT.STRING:
             constant_node = self.parse_character_constant(token, token.value, sign)
+            constant_type = Predefined.char_type
         else:
             self.error_handler.flag(token, 'INVALID_CONSTANT', self)
 
@@ -636,12 +649,43 @@ class CaseStatementParser(StatementParser):
             else:
                 constants_set.append(value)
 
+        if not TypeChecker().are_comparison_compatible(expr_type, constant_type):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+
         token = self.next_token()
+        constant_node.set_typespec(constant_type)
         return constant_node
 
     def parse_identifier_constant(self, token, sign):
-        self.error_handler.flag(token, 'INVALID_CONSTANT', self)
-        return None
+        const_node = None
+        const_type = None
+
+        name = token.text.lower()
+        id = Parser.symtab_stack.lookup(name)
+
+        if not id:
+            id = Parser.symtab_stack.enter_local(name)
+            id.set_definition(Definition.UNDEFINED)
+            id.set_typespec(Predefined.undefined_type)
+            self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+            return None
+
+        defn_code = id.get_definition()
+        if defn_code == Definition.CONSTANT or defn_code == Definition.ENUMERATION_CONSTANT:
+            const_value = id.get_attribute('CONSTANT_VALUE')
+            const_type = id.get_typespec()
+
+            if sign and (not TypeChecker().is_integer(const_type)):
+                self.error_handler.flag(token, 'INVALID_CONSTANT', self)
+
+            const_node = iCodeFactory().create('INTEGER_CONSTANT')
+            const_node.set_attribute('VALUE', const_value)
+
+        id.append_line_number(token.line_num)
+        if not const_node:
+            const_node.set_typespec(const_type)
+
+        return const_node
 
     def parse_integer_constant(self, value, sign):
         constant_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
