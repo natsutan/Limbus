@@ -11,12 +11,14 @@ class TypeChecker:
     def are_both_integer(self, type1, type2):
         return self.is_integer(type1) and self.is_integer(type2)
 
-
     def is_real(self, type):
         if type:
             return type.base_type() == Predefined.real_type
         else:
             return False
+
+    def is_integer_or_real(self, type):
+        return self.is_integer(type) or self.is_real(type)
 
     def is_at_least_one_real(self, type1, type2):
         t1_int = self.is_integer(type1)

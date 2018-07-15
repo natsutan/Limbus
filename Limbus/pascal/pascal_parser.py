@@ -425,6 +425,11 @@ class ExpressionParser(StatementParser):
 
     def parse_expression(self, token):
         root_node = self.parse_simple_expression(token)
+        if root_node:
+            result_type = root_node.get_typespec()
+        else:
+            result_type = Predefined.undefined_type
+
         token = self.current_token()
         token_type = token.value
 
@@ -434,38 +439,84 @@ class ExpressionParser(StatementParser):
             opnode.add_child(root_node)
 
             token = self.next_token()
-            opnode.add_child(self.parse_simple_expression(token))
+            sim_expr_node = self.parse_simple_expression(token)
+            opnode.add_child(sim_expr_node)
             root_node = opnode
+
+            if sim_expr_node:
+                sim_expr_type = sim_expr_node.get_typespec()
+            else:
+                sim_expr_type = Predefined.undefined_type
+
+            if TypeChecker().are_comparison_compatible(result_type, sim_expr_type):
+                result_type = Predefined.boolean_type
+            else:
+                self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+
+            if root_node:
+                root_node.set_typespec(result_type)
 
         return root_node
 
     def parse_simple_expression(self, token):
+        sign_token = None
         sign_type = None
 
         token_type = token.value
         if token_type == 'PLUS' or token_type == 'MINUS':
             sign_type = token_type
+            sign_token = copy.copy(token)
             token = self.next_token()
 
         root_node = self.parse_term(token)
+        if root_node:
+            result_type = root_node.get_typespec()
+        else:
+            result_type = Predefined.undefined_type
+        if sign_type and (not TypeChecker.is_integer_or_real(result_type)):
+            self.error_handler.flag(sign_token, 'INCOMPATIBLE_TYPES', self)
 
         if sign_type == 'MINUS':
             negate_node = iCodeNodeFactory().create('NEGATE')
             negate_node.add_child(root_node)
+            negate_node.set_typespec(root_node.get_typespec())
             root_node = negate_node
 
         token = self.current_token()
         token_type = token.value
 
         while token_type in self.add_ops:
-            node_type = self.op_map[token_type]
+            operator = token_type
+            node_type = self.op_map[operator]
             op_node = iCodeNodeFactory().create(node_type)
             op_node.add_child(root_node)
 
             token = self.next_token()
-            op_node.add_child(self.parse_term(token))
+            term_node = self.parse_term(token)
+            op_node.add_child(term_node)
+
+            if term_node:
+                term_type = term_node.get_typespec()
+            else:
+                term_type = Predefined.undefined_type
 
             root_node = op_node
+
+            if operator == 'PLUS' or operator == 'MINUS':
+                if TypeChecker().are_both_integer(result_type, term_type):
+                    result_type = Predefined.integer_type
+                elif TypeChecker().is_at_least_one_real(result_type, term_type):
+                    result_type = Predefined.real_type
+                else:
+                    self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+            elif operator == 'OP':
+                if TypeChecker().are_both_boolean(result_type, term_type):
+                    result_type = Predefined.boolean_type
+                else:
+                    self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+
+            root_node.set_typespec(result_type)
+
             token = self.current_token()
             token_type = token.value
 
@@ -473,19 +524,54 @@ class ExpressionParser(StatementParser):
 
     def parse_term(self, token):
         root_node = self.parse_factor(token)
+        if root_node:
+            result_type = root_node.get_typespec()
+        else:
+            result_type = Predefined.undefined_type
+
         token = self.current_token()
         token_type = token.value
 
         while token_type in self.mul_ops:
-            node_type = self.op_map[token_type]
+            operator = token_type
+            node_type = self.op_map[operator]
             op_node = iCodeNodeFactory().create(node_type)
             op_node.add_child(root_node)
 
             token = self.next_token()
-            op_node.add_child(self.parse_factor(token))
+            factor_node = self.parse_factor(token)
+            op_node.add_child(factor_node)
+            if factor_node:
+                factor_type = factor_node.get_typespec()
+            else:
+                factor_type = Predefined.undefined_type
 
             root_node = op_node
 
+            if operator == 'START':
+                if TypeChecker().are_both_integer(result_type, factor_type):
+                    result_type = Predefined.undefined_type
+                elif TypeChecker().is_at_least_one_real(result_type, factor_type):
+                    result_type = Predefined.real_type
+                else:
+                    self.error_handler.flag(self, 'INCOMPATIBLE_TYPES', self)
+            elif operator == 'SLASH':
+                if TypeChecker().are_both_integer(result_type, factor_type):
+                    result_type = Predefined.real_type
+                else:
+                    self.error_handler.flag(self, 'INCOMPATIBLE_TYPES', self)
+            elif operator == 'DIV' or operator == 'MOD':
+                if TypeChecker().are_both_integer(result_type, factor_type):
+                    result_type = Predefined.real_type
+                else:
+                    self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+            elif operator == 'AND':
+                if TypeChecker().are_both_boolean(result_type, factor_type):
+                    result_type = Predefined.boolean_type
+                else:
+                    self.error_handler(token,  'INCOMPATIBLE_TYPES', self)
+
+            root_node.set_typespec(result_type)
             token = self.current_token()
             token_type = token.value
 
@@ -495,52 +581,107 @@ class ExpressionParser(StatementParser):
         ptype = token.ptype
         root_node = None
         if ptype == PTT.IDENTIFIER:
-            name = token.value.lower()
-            id = Parser.symtab_stack.lookup(name)
-            if not id:
-                self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
-                id = Parser.symtab_stack.enter_local(name)
-
-            root_node = iCodeNodeFactory().create('VARIABLE')
-            root_node.set_attribute('ID', id)
-            id.append_line_number(token.line_num)
-            token = self.next_token()
-
+            return self.parse_identifier(token)
         elif ptype == PTT.INTEGER:
             root_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
             root_node.set_attribute('VALUE', token.value)
+            root_node.set_typespec(Predefined.integer_type)
             token = self.next_token()
 
         elif ptype == PTT.REAL:
             root_node = iCodeNodeFactory().create('REAL_CONSTANT')
             root_node.set_attribute('VALUE', token.value)
+            root_node.set_typespec(Predefined.real_type)
             token = self.next_token()
 
         elif ptype == PTT.STRING:
             root_node = iCodeNodeFactory().create('STRING_CONSTANT')
             root_node.set_attribute('VALUE', token.value)
+            if len(token.value) == 1:
+                result_type = Predefined.char_type
+            else:
+                result_type = TypeSpec(value)
+            root_node.set_typespec(result_type)
             token = self.next_token()
 
         elif token.value == 'NOT':
             token = self.next_token()
             root_node = iCodeNodeFactory().create('NOT')
-            root_node.set_attributes(self.parser_factor(token))
+            factor_node = self.parser_factor(token)
+            root_node.set_attributes(factor_node)
+            if factor_node:
+                factor_type = factor_node.get_typespec()
+            else:
+                factor_type = Predefined.undefined_type
+            if TypeChecker().is_bool(factor_type):
+                self.error_handler(token, 'INCOMPATIBLE_TYPES', self)
+            root_node.set_typespec(Predefined.boolean_type)
 
         elif token.value == 'LEFT_PAREN':
             token = self.next_token()
             root_node = self.parse_expression(token)
+            if root_node:
+                result_type = root_node.get_typespec()
+            else:
+                result_type = Predefined.undefined_type
 
             token = self.current_token()
             if token.value == 'RIGHT_PAREN':
                 token = self.next_token()
             else:
                 self.error_handler.flag(token, 'MISSING_RIGHT_PAREN', self)
+            root_node.set_typespec(result_type)
 
         else:
             self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
 
         return root_node
 
+    def parse_identifier(self, token):
+        root_node = None
+        name = token.value.lower()
+        id = Parser.symtab_stack.lookup(name)
+
+        if not id:
+            self.error_handler.flag(token, 'IDENTIFIER_UNDEFINED', self)
+            id = Parser.symtab_stack.enter_local(name)
+            id.set_definition(Definition.UNDEFINED)
+            id.set_typespec(Predefined.undefined_type)
+
+        defn_code = id.get_definition()
+
+        if defn_code == Definition.CONSTANT:
+            value = id.get_attribute('CONSTANT_VALUE')
+            type = id.get_typespec()
+
+            if isinstance(int, value):
+                root_node = iCodeFactory().create('INTEGER_CONSTANT')
+                root_node.set_attribute('VALUE', value)
+            elif isinstance(float, value):
+                root_node = iCodeFactory().create('REAL_CONSTANT')
+                root_node.set_attribute('VALUE', value)
+            elif isinstance(str, value):
+                root_node = iCodeFactory().create('STRING_CONSTANT')
+                root_node.set_attribute('VALUE', value)
+
+            id.append_line_number(token.line_num)
+            token = self.next_token()
+
+            if root_node:
+                root_node.set_typespec(type)
+
+        elif defn_code == Definition.ENUMERATION_CONSTANT:
+            value = id.get_attribute('CONSTANT_VALUE')
+            type = id.get_typespec()
+
+            root_node = iCodeFactory().create('INTEGER_CONSTANT')
+            root_node.set_attribute('VALUE', value)
+
+            id.append_line_number(token.line_num)
+            token = self.next_token()
+            root_node.set_typespec(type)
+
+        return root_node
 
 class CaseStatementParser(StatementParser):
     def __init__(self, parent):
