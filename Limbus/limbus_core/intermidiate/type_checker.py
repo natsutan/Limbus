@@ -60,7 +60,7 @@ class TypeChecker:
         return compatible
 
     def are_comparison_compatible(self, type1, type2):
-        if type1 == None and type2 == None:
+        if type1 == None or type2 == None:
             return False
 
         t1 = type1.base_type()

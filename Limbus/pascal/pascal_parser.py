@@ -724,7 +724,7 @@ class CaseStatementParser(StatementParser):
 
         constain_set = []
         while token.type != TokenType.EOF and token.value != 'END':
-            select_node.add_child(self. parse_branch(token, constain_set))
+            select_node.add_child(self. parse_branch(token, expr_type, constain_set))
             token = self.current_token()
             token_type = token.value
             if token_type == 'SEMICOLON':
@@ -781,7 +781,7 @@ class CaseStatementParser(StatementParser):
 
         if token.ptype == PTT.IDENTIFIER:
             constant_node = self.parse_identifier_constant(token, sign)
-            if not constant_node:
+            if constant_node:
                 constant_type = constant_node.get_typespec()
         elif token.ptype == PTT.INTEGER:
             constant_node = self.parse_integer_constant(token.text, sign)
@@ -801,6 +801,8 @@ class CaseStatementParser(StatementParser):
 
         if not TypeChecker().are_comparison_compatible(expr_type, constant_type):
             self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+            token = self.next_token()
+            return None
 
         token = self.next_token()
         constant_node.set_typespec(constant_type)
@@ -832,7 +834,7 @@ class CaseStatementParser(StatementParser):
             const_node.set_attribute('VALUE', const_value)
 
         id.append_line_number(token.line_num)
-        if not const_node:
+        if const_node:
             const_node.set_typespec(const_type)
 
         return const_node
