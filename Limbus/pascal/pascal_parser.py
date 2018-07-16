@@ -613,7 +613,8 @@ class ExpressionParser(StatementParser):
                 factor_type = factor_node.get_typespec()
             else:
                 factor_type = Predefined.undefined_type
-            if TypeChecker().is_bool(factor_type):
+
+            if not TypeChecker().is_bool(factor_type):
                 self.error_handler(token, 'INCOMPATIBLE_TYPES', self)
             root_node.set_typespec(Predefined.boolean_type)
 
@@ -911,7 +912,7 @@ class ForStatementParser(StatementParser):
         else:
             expr_type = Predefined.undefined_type
 
-        if TypeChecker().are_assignment_compatible(control_type, expr_type):
+        if not TypeChecker().are_assignment_compatible(control_type, expr_type):
             self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         test_node.add_child(rel_op_node)
@@ -1006,8 +1007,17 @@ class RepeatStatementParser(StatementParser):
         token = self.current_token()
 
         express_parser = ExpressionParser(self)
-        test_node.add_child(express_parser.parse(token))
+        expr_node = express_parser.parse(token)
+        test_node.add_child(expr_node)
         loop_node.add_child(test_node)
+
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if not TypeChecker().is_bool(expr_type):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         return loop_node
 
