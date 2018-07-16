@@ -279,7 +279,7 @@ class VariableParser(StatementParser):
             if token.ptype == PascalSpecialSymbol.LEFT_BRACKET:
                 sub_fld_node = self.parse_subscripts(variable_type)
             else:
-                sub_fld_node = self.parsr_field(variable_type)
+                sub_fld_node = self.parse_field(variable_type)
 
             token = self.current_token()
             variable_type = sub_fld_node.get_typespec()
@@ -326,22 +326,21 @@ class VariableParser(StatementParser):
         subscript_node.set_typespec(variable_type)
         return subscript_node
 
-    def parser_field(self, variable_type):
-        field_node = iCodeNodeFactory.create('FIELD')
+    def parse_field(self, variable_type):
+        field_node = iCodeNodeFactory().create('FIELD')
 
         token = self.next_token()
-        token_type = token.get_type()
         variable_form = variable_type.get_form()
 
         if token.ptype == PTT.IDENTIFIER and variable_form == TypeForm.RECORD:
-            sym_tab = variable_type.get_attribute('RECORD_SYMTAB')
-            field_name = token.txt.lower()
+            symtab = variable_type.get_attribute('RECORD_SYMTAB')
+            field_name = token.value.lower()
             filedid = symtab.lookup(field_name)
 
-            if not filedid:
+            if filedid:
                 variable_type = filedid.get_typespec()
                 filedid.append_line_number(token.line_num)
-                field_node.get_attribute('ID', filedid)
+                field_node.set_attribute('ID', filedid)
             else:
                 self.error_handler.flag(token, 'INVALID_FIELD', self)
         else:

@@ -1,9 +1,14 @@
 CONST
 TYPE
-    range1 = 0..10;
-    arr1 = ARRAY [range1] OF real;
+        rec7 = RECORD
+               i : integer;
+               r : real;
+               b1, b2 : boolean;
+               c : char
+           END;
 VAR
-    var1 : arr1;
+
+    var7 : rec7;
 BEGIN
-    var1[5] := 3.14;
+     var7.i  := 10;
 END.
