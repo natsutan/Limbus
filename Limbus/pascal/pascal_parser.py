@@ -6,7 +6,7 @@ from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
 from limbus_core.intermidiate.iCode_if import iCodeNodeType
-from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm, TypeKey
+from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
 from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 from limbus_core.intermidiate.type_checker import TypeChecker
 
@@ -244,40 +244,6 @@ class StatementParser(PascalParserTD):
             self.error_handler.flag(token, err_code, self)
 
 
-class AssignmentStatementParser(StatementParser):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-    def parse(self, token):
-        assigin_node = iCodeNodeFactory().create('ASSIGN')
-        variable_parser = VariableParser(self)
-        target_node = variable_parser.parse(token)
-        if target_node:
-            target_type = target_node.get_typespec()
-        else:
-            target_type = Predefined.undefined_type
-
-        assigin_node.add_child(target_node)
-
-        if token.value == 'COLON_EQUALS':
-            token = self.next_token()
-        else:
-            self.error_handler.flag(token, 'MISSING_COLON_EQUALS', self)
-
-        expression_parser = ExpressionParser(self)
-        expr_node = expression_parser.parse(token)
-        assigin_node.add_child(expr_node)
-
-        if expr_node:
-            expr_type = expr_node.get_typespec()
-        else:
-            expr_type = Predefined.undefined_type
-
-        if not TypeChecker().are_assignment_compatible(target_type, expr_type):
-            self.error_handler.flag(token , 'INCOMPATIBLE_TYPES', self)
-
-        assigin_node.set_typespec(target_type)
-        return assigin_node
 
 class VariableParser(StatementParser):
     SUBSCRIPT_FIELD_START_SET = ['LEFT_BRACKET', 'DOT']
@@ -287,7 +253,7 @@ class VariableParser(StatementParser):
         super().__init__(parent)
 
     def parse(self, token):
-        name = token.text.lower()
+        name = token.value.lower()
         variable_id = Parser.symtab_stack.lookup(name)
 
         if not variable_id:
@@ -331,19 +297,20 @@ class VariableParser(StatementParser):
             first = False
             token = self.next_token()
             if variable_type.get_form() == TypeForm.ARRAY:
-                expr_node = expressionParser.parse(token)
+                expr_node = expression_parer.parse(token)
                 if expr_node:
                     expr_type = expr_node.get_typespec()
                 else:
                     expr_type = Predefined.undefined_type
 
-                index_type = variable_type.get_attribute(TypeKey.ARRAY_INDEX_TYPE)
-                if not TypeChecker.are_assignment_compatible(index_type, expr_type):
-                    self.error_handler(token, 'INCOMPATIBLE_TYPES', self)
+                index_type = variable_type.get_attribute('ARRAY_INDEX_TYPE')
+                if not TypeChecker().are_assignment_compatible(index_type, expr_type):
+
+                    self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
                 subscript_node.add_child(expr_node)
 
-                variable_type = variable_type.get_attibute(TypeKey.ARRAY_ELEMENT_TYPE)
+                variable_type = variable_type.get_attribute('ARRAY_ELEMENT_TYPE')
             else:
                 self.error_handler.flag(token, 'TOO_MANY_SUBSCRIPTS', self)
                 expression_parer.parse(token)
@@ -683,6 +650,44 @@ class ExpressionParser(StatementParser):
             root_node.set_typespec(type)
 
         return root_node
+
+class AssignmentStatementParser(StatementParser):
+    COLON_EQUALS_SET = copy.deepcopy(ExpressionParser.EXPR_START_SET) + ['COLON_EQUALS'] + \
+                       copy.deepcopy(StatementParser.STMT_FOLLOW_SET)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        assigin_node = iCodeNodeFactory().create('ASSIGN')
+        variable_parser = VariableParser(self)
+        target_node = variable_parser.parse(token)
+        if target_node:
+            target_type = target_node.get_typespec()
+        else:
+            target_type = Predefined.undefined_type
+
+        assigin_node.add_child(target_node)
+        token = self.synchronize(self.COLON_EQUALS_SET)
+        if token.value == 'COLON_EQUALS':
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_COLON_EQUALS', self)
+
+        expression_parser = ExpressionParser(self)
+        expr_node = expression_parser.parse(token)
+        assigin_node.add_child(expr_node)
+
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if not TypeChecker().are_assignment_compatible(target_type, expr_type):
+            self.error_handler.flag(token , 'INCOMPATIBLE_TYPES', self)
+
+        assigin_node.set_typespec(target_type)
+        return assigin_node
 
 class CaseStatementParser(StatementParser):
     def __init__(self, parent):
@@ -1483,7 +1488,7 @@ class RecordTypeParser(TypeSpecificationParser):
     def parse(self, token):
         record_type = TypeSpec(TypeForm.RECORD)
         token = self.next_token()
-        record_type.set_attribute(TypeKey.RECORD_SYMTAB, Parser.symtab_stack.push(None))
+        record_type.set_attribute('RECORD_SYMTAB', Parser.symtab_stack.push(None))
 
         var_decl_parser = VariableDeclarationsParser(self)
         var_decl_parser.set_definition(Definition.FIELD)
@@ -1550,9 +1555,9 @@ class SubrangeTypeParser(TypeSpecificationParser):
         else:
             self.error_handler.flag(token, 'MIN_GT_MAX', self)
 
-        subrange_type.set_attribute(TypeKey.SUBRANGE_BASE_TYPE, min_type)
-        subrange_type.set_attribute(TypeKey.SUBRANGE_MIN_VALUE, min_val)
-        subrange_type.set_attribute(TypeKey.SUBRANGE_MAX_VALUE, max_val)
+        subrange_type.set_attribute('SUBRANGE_BASE_TYPE', min_type)
+        subrange_type.set_attribute('SUBRANGE_MIN_VALUE', min_val)
+        subrange_type.set_attribute('SUBRANGE_MAX_VALUE', max_val)
 
         return subrange_type
 

@@ -1,0 +1,9 @@
+CONST
+TYPE
+    range1 = 0..10;
+    arr1 = ARRAY [range1] OF real;
+VAR
+    var1 : arr1;
+BEGIN
+    var1[5] := 3.14;
+END.
