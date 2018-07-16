@@ -871,8 +871,15 @@ class ForStatementParser(StatementParser):
 
         assignment_parser = AssignmentStatementParser(self)
         init_assign_node = assignment_parser.parse(token)
+        if init_assign_node:
+            control_type = init_assign_node.get_typespec()
+        else:
+            control_type = Predefined.undefined_type
 
         set_line_number(init_assign_node, token)
+
+        if (not TypeChecker().is_integer(control_type)) and (not control_type.get_from == TypeForm.ENUMERATION):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         compound_node.add_child(init_assign_node)
         compound_node.add_child(loop_node)
@@ -891,11 +898,21 @@ class ForStatementParser(StatementParser):
         else:
             rel_op_node = iCodeNodeFactory().create('LT')
 
+        rel_op_node.set_typespec(Predefined.boolean_type)
         control_var_node = init_assign_node.get_children()[0]
         rel_op_node.add_child(control_var_node)
 
         expression_parser = ExpressionParser(self)
-        rel_op_node.add_child(expression_parser.parse(token))
+        expr_node = expression_parser.parse(token)
+        rel_op_node.add_child(expr_node)
+
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if TypeChecker().are_assignment_compatible(control_type, expr_type):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         test_node.add_child(rel_op_node)
         loop_node.add_child(test_node)
@@ -910,16 +927,19 @@ class ForStatementParser(StatementParser):
         loop_node.add_child(statement_parser.parse(token))
 
         next_assign_node = iCodeNodeFactory().create('ASSIGN')
-        next_assign_node.add_child(control_var_node)
+        next_assign_node.set_typespec(control_type)
+        next_assign_node.add_child(copy.copy(control_var_node))
 
         if direction == 'TO':
             arith_op_node = iCodeNodeFactory().create('ADD')
         else:
             arith_op_node = iCodeNodeFactory().create('SUBTRACT')
 
+        arith_op_node.get_typespec(Predefined.integer_type)
         arith_op_node.add_child(control_var_node)
         one_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
         one_node.set_attribute('VALUE', 1)
+        one_node.set_typespec(Predefined.integer_type)
         arith_op_node.add_child(one_node)
 
         next_assign_node.add_child(arith_op_node)
