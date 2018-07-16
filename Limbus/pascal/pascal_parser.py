@@ -439,6 +439,7 @@ class ExpressionParser(StatementParser):
             result_type = root_node.get_typespec()
         else:
             result_type = Predefined.undefined_type
+
         if sign_type and (not TypeChecker.is_integer_or_real(result_type)):
             self.error_handler.flag(sign_token, 'INCOMPATIBLE_TYPES', self)
 
@@ -621,14 +622,14 @@ class ExpressionParser(StatementParser):
             value = id.get_attribute('CONSTANT_VALUE')
             type = id.get_typespec()
 
-            if isinstance(int, value):
-                root_node = iCodeFactory().create('INTEGER_CONSTANT')
+            if isinstance(value, int):
+                root_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
                 root_node.set_attribute('VALUE', value)
-            elif isinstance(float, value):
-                root_node = iCodeFactory().create('REAL_CONSTANT')
+            elif isinstance(value, float):
+                root_node = iCodeNodeFactory().create('REAL_CONSTANT')
                 root_node.set_attribute('VALUE', value)
-            elif isinstance(str, value):
-                root_node = iCodeFactory().create('STRING_CONSTANT')
+            elif isinstance(value, str):
+                root_node = iCodeNodeFactory().create('STRING_CONSTANT')
                 root_node.set_attribute('VALUE', value)
 
             id.append_line_number(token.line_num)
@@ -641,12 +642,15 @@ class ExpressionParser(StatementParser):
             value = id.get_attribute('CONSTANT_VALUE')
             type = id.get_typespec()
 
-            root_node = iCodeFactory().create('INTEGER_CONSTANT')
+            root_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
             root_node.set_attribute('VALUE', value)
 
             id.append_line_number(token.line_num)
             token = self.next_token()
             root_node.set_typespec(type)
+        else:
+            variable_parser = VariableParser(self)
+            root_node = variable_parser.parse(token)
 
         return root_node
 
