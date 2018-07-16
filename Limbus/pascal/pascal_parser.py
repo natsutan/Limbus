@@ -961,7 +961,16 @@ class IfStatementParser(StatementParser):
 
         if_node = iCodeNodeFactory().create('IF')
         expression_parser = ExpressionParser(self)
-        if_node.add_child(expression_parser.parse(token))
+        expr_node = expression_parser.parse(token)
+        if_node.add_child(expr_node)
+
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_type = Predefined.undefined_type
+
+        if not TypeChecker().is_bool(expr_type):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         token = self.synchronize(IfStatementParser.THEN_SET)
         if token.value == 'THEN':
