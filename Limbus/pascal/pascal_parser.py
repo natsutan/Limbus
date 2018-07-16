@@ -1021,6 +1021,7 @@ class RepeatStatementParser(StatementParser):
 
         return loop_node
 
+
 class WhileStatementParser(StatementParser):
     DO_SET = StatementParser.STMT_START_SET + ['DO'] + StatementParser.STMT_FOLLOW_SET
 
@@ -1039,7 +1040,16 @@ class WhileStatementParser(StatementParser):
         break_node.add_child(not_node)
 
         expression_parser = ExpressionParser(self)
-        not_node.add_child(expression_parser.parse(token))
+        expr_node = expression_parser.parse(token)
+        not_node.add_child(expr_node)
+
+        if expr_node:
+            expr_type = expr_node.get_typespec()
+        else:
+            expr_node = Predefined.undefined_type
+
+        if not TypeChecker().is_bool(expr_node):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         token = self.synchronize(WhileStatementParser.DO_SET)
         if token.value == 'DO':
