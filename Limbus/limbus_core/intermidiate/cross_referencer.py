@@ -47,7 +47,7 @@ class CrossReferencer:
             print("\n--- RECORD " + name + " ---")
             self.print_column_headings()
 
-            symtab = record_type.get_attribute(TypeKey.RECORD_SYMTAB)
+            symtab = record_type.get_attribute('RECORD_SYMTAB')
             new_recoerd_types = []
             self.print_symtab(symtab, new_recoerd_types)
 
