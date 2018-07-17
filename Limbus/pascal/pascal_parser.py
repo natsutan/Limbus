@@ -68,6 +68,7 @@ class PascalParserTD(Parser):
             token = self.next_token()
             root_node = block_parser.parse(token, self.routine_id)
 
+
             if root_node == None:
                 self.error_handler.abort_translation('PARSE_ERROR', self)
                 return
@@ -1056,9 +1057,9 @@ class WhileStatementParser(StatementParser):
         if expr_node:
             expr_type = expr_node.get_typespec()
         else:
-            expr_node = Predefined.undefined_type
+            expr_type = Predefined.undefined_type
 
-        if not TypeChecker().is_bool(expr_node):
+        if not TypeChecker().is_bool(expr_type):
             self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         token = self.synchronize(WhileStatementParser.DO_SET)

@@ -1,17 +1,19 @@
 CONST
+    seven =  7;
+    ten   = 10;
+
 TYPE
-    range1 = 0..10;
-        rec7 = RECORD
-               i : integer;
-               r : real;
-               b1, b2 : boolean;
-               c : char
-           END;
-    arr1 = ARRAY [range1] OF real;
+  range1 = 0..10;
+  arr1 = ARRAY [range1] OF real;
+  enum1 = (foo, bar, baz);
+
 VAR
     var1 : arr1;
-    var7 : rec7;
+
 BEGIN
-     var7.i  := 10;
-     var1[var7.i] := 3.14;
+    CASE ten OF
+        foo:      var1[1] := 12.0;
+    END;
+
+
 END.
