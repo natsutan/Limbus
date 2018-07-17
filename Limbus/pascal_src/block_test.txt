@@ -8,12 +8,10 @@ TYPE
   enum1 = (foo, bar, baz);
 
 VAR
-    var1 : arr1;
-
+    x : enum1;
+    y : enum1;
 BEGIN
-    CASE ten OF
-        foo:      var1[1] := 12.0;
+    CASE x OF
+    foo: y := bar;
     END;
-
-
 END.

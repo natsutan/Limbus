@@ -3,7 +3,7 @@ from pascal.pascal import Pascal
 
 #hello_ps = 'pascal_src/assignments.txt'
 #hello_ps = 'pascal_src/declarations.txt'
-hello_ps = 'pascal_src/block_test.txt'
+hello_ps = 'pascal_src/block.txt'
 
 def main():
     pascal = Pascal('execute', hello_ps, 'xi')

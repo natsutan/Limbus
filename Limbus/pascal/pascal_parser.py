@@ -715,7 +715,7 @@ class CaseStatementParser(StatementParser):
             expr_type = Predefined.undefined_type
 
         if (not TypeChecker().is_integer(expr_type)) and (not TypeChecker().is_char(expr_type)) and expr_type.get_form() != TypeForm.ENUMERATION:
-            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', this)
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
 
         token = self.synchronize(self.OF_SET)
         if token.value == 'OF':
@@ -813,7 +813,7 @@ class CaseStatementParser(StatementParser):
         const_node = None
         const_type = None
 
-        name = token.text.lower()
+        name = token.value.lower()
         id = Parser.symtab_stack.lookup(name)
 
         if not id:
@@ -831,7 +831,7 @@ class CaseStatementParser(StatementParser):
             if sign and (not TypeChecker().is_integer(const_type)):
                 self.error_handler.flag(token, 'INVALID_CONSTANT', self)
 
-            const_node = iCodeFactory().create('INTEGER_CONSTANT')
+            const_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
             const_node.set_attribute('VALUE', const_value)
 
         id.append_line_number(token.line_num)
