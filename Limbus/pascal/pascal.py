@@ -183,5 +183,5 @@ class Pascal:
                 tree_printer = ParseTreePrinter(fp)
                 tree_printer.print(self.iCode)
 
-        self.backend.process(self.iCode, self.symtab_stack)
+#        self.backend.process(self.iCode, self.symtab_stack)
 
