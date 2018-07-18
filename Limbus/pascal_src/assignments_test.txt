@@ -1,6 +1,0 @@
-BEGIN
-        BEGIN {Temperature conversions.}
-        {five  := -1 + 2 - 3 + 4 + 3;}
-        ratio := 3/9.0;
-    END;
-END.
