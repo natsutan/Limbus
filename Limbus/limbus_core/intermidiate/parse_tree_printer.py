@@ -97,4 +97,21 @@ class ParseTreePrinter:
         self.indentation = save_indentation
 
     def print_typespec(self, node):
-        pass
+        typespec = node.get_typespec()
+
+        if typespec:
+            save_margin = self.indentation
+            self.indentation += self.indent
+
+            type_id = typespec.get_identifier()
+            if type_id:
+                type_name = type_id.get_name()
+            else:
+#                code = typespec.hash_code() + typespec.get_form().hash_code()
+#                code = "123"
+                code = hash(typespec) + hash(typespec.get_form())
+                type_name = "$anon_" + str(code)
+
+            self.print_attribute("TYPE_ID", type_name)
+            self.indentation = save_margin
+

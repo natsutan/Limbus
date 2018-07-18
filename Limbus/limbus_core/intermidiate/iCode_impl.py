@@ -21,6 +21,7 @@ class iCodeNode(iCodeNodeIF):
         self.parent = None
         self.children = []
         self.attribute = {}
+        self.typespec = None
 
     def get_type(self):
         return self.type
@@ -48,6 +49,12 @@ class iCodeNode(iCodeNodeIF):
 
     def get_all_attributes(self):
         return self.attribute
+
+    def set_typespec(self, typespec):
+        self.typespec = typespec
+
+    def get_typespec(self):
+        return self.typespec
 
     def copy(self):
         return copy.deepcopy(self)

@@ -240,7 +240,7 @@ class ExpressionExecutor(StatementExecutor):
         elif node_type == 'LE':
             return oprand1 <= oprand2
         elif node_type == 'GT':
-            return oprand1 >  oprand2
+            return oprand1 > oprand2
         elif node_type == 'GE':
             return oprand1 >= oprand2
 

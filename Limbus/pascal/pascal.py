@@ -167,6 +167,10 @@ class Pascal:
         self.parser.parse()
         self.source.close()
 
+        if self.parser.get_error_count() != 0:
+            print("PARSE ERROR, STOP PROCESSING")
+            return
+
         self.iCode = self.parser.get_iCode()
         self.symtab_stack = self.parser.get_symTab()
 
@@ -179,5 +183,5 @@ class Pascal:
                 tree_printer = ParseTreePrinter(fp)
                 tree_printer.print(self.iCode)
 
-        self.backend.process(self.iCode, self.symtab_stack)
+#        self.backend.process(self.iCode, self.symtab_stack)
 

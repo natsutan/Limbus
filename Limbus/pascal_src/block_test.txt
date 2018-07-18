@@ -1,0 +1,17 @@
+CONST
+    seven =  7;
+    ten   = 10;
+
+TYPE
+  range1 = 0..10;
+  arr1 = ARRAY [range1] OF real;
+  enum1 = (foo, bar, baz);
+
+VAR
+    x : enum1;
+    y : enum1;
+BEGIN
+    CASE x OF
+    foo: y := bar;
+    END;
+END.

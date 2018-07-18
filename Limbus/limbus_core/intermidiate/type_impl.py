@@ -117,13 +117,13 @@ class TypeSpec(TypeSpecIF):
         else:
             self.form = TypeForm.ARRAY
             index_type = TypeSpec(TypeForm.SUBRANGE)
-            index_type.set_attribute(TypeKey.SUBRANGE_BASE_TYPE, Predefined.integer_type)
-            index_type.set_attribute(TypeKey.SUBRANGE_MIN_VALUE, 1)
-            index_type.set_attribute(TypeKey.SUBRANGE_MAX_VALUE, len(value))
+            index_type.set_attribute('SUBRANGE_BASE_TYPE', Predefined.integer_type)
+            index_type.set_attribute('SUBRANGE_MIN_VALUE', 1)
+            index_type.set_attribute('SUBRANGE_MAX_VALUE', len(value))
 
-            self.set_attribute(TypeKey.ARRAY_INDEX_TYPE, index_type)
-            self.set_attribute(TypeKey.ARRAY_ELEMENT_TYPE, Predefined.char_type)
-            self.set_attribute(TypeKey.ARRAY_ELEMENT_COUNT, len(value))
+            self.set_attribute('ARRAY_INDEX_TYPE', index_type)
+            self.set_attribute('ARRAY_ELEMENT_TYPE', Predefined.char_type)
+            self.set_attribute('ARRAY_ELEMENT_COUNT', len(value))
 
     def get_form(self):
         return self.form
@@ -153,7 +153,7 @@ class TypeSpec(TypeSpecIF):
 
     def base_type(self):
         if self.form == TypeForm.SUBRANGE:
-            return self.get_attribute(TypeKey.SUBRANGE_BASE_TYPE)
+            return self.get_attribute('SUBRANGE_BASE_TYPE')
         else:
             return self
 
