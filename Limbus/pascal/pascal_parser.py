@@ -54,38 +54,32 @@ class PascalParserTD(Parser):
         return self.routine_id
 
     def parse(self):
-        self.predefined.initialize(Parser.symtab_stack)
-        self.routine_id = Parser.symtab_stack.enter_local('dummy_program_name')
-        self.routine_id.set_definition(Definition.PROGRAM)
-        Parser.symtab_stack.set_program_id(self.routine_id)
 
-        self.routine_id.set_attribute(SymTabKey.ROUTINE_SYMTAB, Parser.symtab_stack.push(None))
-        self.routine_id.set_attribute(SymTabKey.ROUTINE_ICODE, Parser.iCode)
-
-        block_parser = BlockParser(self)
 
         try:
             token = self.next_token()
-            root_node = block_parser.parse(token, self.routine_id)
-
+            program_parser = ProgramParser(self)
+            program_parser.parse(token, None)
+            token = self.current_token()
 
             if root_node == None:
                 self.error_handler.abort_translation('PARSE_ERROR', self)
                 return
 
-            Parser.iCode.set_root(root_node)
-            Parser.symtab_stack.pop()
 
-            token = self.current_token()
-            if token.ptype == PTT.RESERVED and token.value == 'DOT':
-                self.error_handler.flag(token, 'MISSING_PERIOD', self)
-            token = self.current_token()
-
-            line_number = token.line_num
-            err_cnt = self.get_error_count()
-
-            msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
-            self.send_message(msg)
+            # Parser.iCode.set_root(root_node)
+            # Parser.symtab_stack.pop()
+            #
+            # token = self.current_token()
+            # if token.ptype == PTT.RESERVED and token.value == 'DOT':
+            #     self.error_handler.flag(token, 'MISSING_PERIOD', self)
+            # token = self.current_token()
+            #
+            # line_number = token.line_num
+            # err_cnt = self.get_error_count()
+            #
+            # msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
+            # self.send_message(msg)
 
         except FileNotFoundError:
             self.error_handler.abort_translation('IO_ERROR', self)
@@ -135,7 +129,7 @@ class BlockParser(PascalParserTD):
         declaration_parser = DeclarationsParser(self)
         statement_parser = StatementParser(self)
 
-        declaration_parser.parse(token)
+        declaration_parser.parse(token, routine_id)
 
         token = self.synchronize(StatementParser.STMT_START_SET)
         root_node = None
@@ -660,12 +654,18 @@ class AssignmentStatementParser(StatementParser):
                        copy.deepcopy(StatementParser.STMT_FOLLOW_SET)
 
     def __init__(self, parent):
+        self.is_function_target = False
         super().__init__(parent)
 
     def parse(self, token):
         assigin_node = iCodeNodeFactory().create('ASSIGN')
         variable_parser = VariableParser(self)
-        target_node = variable_parser.parse(token)
+
+        if self.is_function_target:
+            target_node = variable_parser.parse_function_name_target(token)
+        else:
+            target_node = variable_parser.parse(token)
+
         if target_node:
             target_type = target_node.get_typespec()
         else:
@@ -692,6 +692,11 @@ class AssignmentStatementParser(StatementParser):
 
         assigin_node.set_typespec(target_type)
         return assigin_node
+
+    def parse_function_name_assignment(self, token):
+        self.is_function_target = True
+        return self.parse(token)
+
 
 class CaseStatementParser(StatementParser):
     def __init__(self, parent):
