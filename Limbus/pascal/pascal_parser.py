@@ -18,6 +18,7 @@ from pascal.pascal_parser import *
 class PascalErrorHandler:
     error_cnt = 0
     MAX_ERROR = 5
+
     def __init__(self):
         pass
 
