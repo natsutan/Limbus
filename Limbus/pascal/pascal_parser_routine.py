@@ -95,18 +95,49 @@ class CallParser(StatementParser):
                 token = self.current_token()
                 actual_node.add_child(self.parse_write_spec(token))
 
-                # Optional Presicision
+                # Optional Precision
                 token = self.current_token()
                 actual_node.add_child(self.parse_write_spec(token))
 
             prms_node.add_child(actual_node)
             token = self.synchronize(self.COMMA_SET, ptt_set=self.COMMA_SET_PTT)
-            token_type = token.get_type()
 
+            if token.value == 'COMMA':
+                token = self.next_token()
+            elif token.value in ExpressionParser.EXPR_START_SET:
+                self.error_handler.flag(token, 'MISSING_COMMA', self)
+            elif token.value == 'RIGHT_PAREN':
+                token = self.synchronize(ExpressionParser.EXPR_START_SET, ptt_set=ExpressionParser.EXPR_START_SET_PTT)
 
+        token = self.next_token()
+        if len(prms_node.get_children()) == 0 or (is_declared and prms_index != prms_cnt - 1):
+            self.error_handler.flag(token, 'WRONG_NUMBER_OF_PARMS', self)
 
-        return ""
+        return prms_node
 
+    def check_actual_parameter(self, token: PascalWordToken, formal_id: SymTabEntry, actual_node: iCodeNode):
+        formal_defn: Definition = formal_id.get_definition()
+        formal_type: TypeSpec = formal_id.get_typespec()
+        actual_type: TypeSpec = actual_node.get_typespec()
+
+        if formal_defn == Definition.VAR_PARM:
+            if actual_node.get_type() != iCodeNodeType.VARIABLE or actual_type != formal_type:
+                self.error_handler.flag(token, 'INVALID_VAR_PARM', self)
+        elif not TypeChecker().are_assignment_compatible(formal_type, actual_type):
+            self.error_handler.flag(token, 'INCOMPATIBLE_TYPES', self)
+
+    def parse_write_spec(self, token: PascalWordToken):
+        if token.value == 'COLON':
+            token = self.next_token()
+            expression_parser: ExpressionParser = ExpressionParser(self)
+            spec_node: iCodeNode = expression_parser.parse(token)
+            if spec_node.get_type() == iCodeNodeType.STRING_CONSTANT:
+                return spec_node
+            else:
+                self.error_handler.flag(token, 'INVALID_NUMBER', self)
+                return None
+        else:
+            return None
 
 class CallDeclaredParser(CallParser):
 
