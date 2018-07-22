@@ -139,6 +139,7 @@ class CallParser(StatementParser):
         else:
             return None
 
+
 class CallDeclaredParser(CallParser):
 
     def __init__(self, parent):
@@ -155,4 +156,20 @@ class CallDeclaredParser(CallParser):
         prms_node = self.parse_actual_parameters(token, pfid, True, False, True)
         call_node.add_child(prms_node)
         return call_node
+
+
+class CallStandardParser(CallParser):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token):
+        call_node: iCodeNode = iCodeNodeFactory().create('CALL')
+        name: str = token.value.lower()
+        pfid: SymTabEntry = Parser.symtab_stack.lookup(name)
+        routine_code: RoutineCode = pfid.get_attribute('ROUTINE_CODE')
+
+        call_node.set_attribute('ID', pfid)
+        token = self.next_token()
+
 
