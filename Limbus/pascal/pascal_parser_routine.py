@@ -1,12 +1,10 @@
 import sys
 import copy
 
-from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.parser import Parser
 from limbus_core.intermidiate.iCode_factory import iCodeFactory, iCodeNodeFactory
 from limbus_core.intermidiate.iCode_if import iCodeNodeType
 from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
-from limbus_core.intermidiate.symtabstack_impl import SymTabKey
 from limbus_core.intermidiate.type_checker import TypeChecker
 
 from ..limbus_core.frontend.token import Token
@@ -15,7 +13,6 @@ from ..limbus_core.intermidiate.iCode_impl import iCodeNode
 from ..pascal.pascal_parser import ExpressionParser
 from ..pascal.pascal_token import PascalSpecialSymbol, PascalWordToken
 
-from pascal.pascal_error import PascalErrorType, PascalError
 from pascal.pascal_parser import StatementParser, ExpressionParser
 
 from pascal.pascal_token import *
@@ -167,9 +164,83 @@ class CallStandardParser(CallParser):
         call_node: iCodeNode = iCodeNodeFactory().create('CALL')
         name: str = token.value.lower()
         pfid: SymTabEntry = Parser.symtab_stack.lookup(name)
-        routine_code: RoutineCode = pfid.get_attribute('ROUTINE_CODE')
+        routine_code: str = pfid.get_attribute('ROUTINE_CODE')
 
         call_node.set_attribute('ID', pfid)
         token = self.next_token()
 
+        if routine_code == 'READ' or routine_code == 'READLN':
+            return self.parse_read_readln(token, call_node, pfid)
+        elif routine_code == 'WRITE' or routine_code == 'WRITELN':
+            return self.parse_write_writeln(token, call_node, pfid)
+        elif routine_code == 'EOF' or routine_code == 'EOLN':
+            return self.parse_eof_eoln(token, call_node, pfid)
+        elif routine_code == 'ABS' or routine_code == 'SQR':
+            return self.parse_abs_sqr(token, call_node, pfid)
+        elif routine_code in ['ARCTAN', 'COS', 'EXP', 'LN', 'SIN', 'SQRT']:
+            return self.parse_arctan_cos_exp_ln_sin_sqrt(token, call_node, pfid)
+        elif routine_code == 'PRED' or routine_code == 'SUCC':
+            return self.parse_pred_succ(token, call_node, pfid)
+        elif routine_code == 'CHR':
+            return self.parse_chr(token, call_node, pfid)
+        elif routine_code == 'ODD':
+            return self.parse_odd(token, call_node, pfid)
+        elif routine_code == 'ORD':
+            return self.parse_ord(token, call_node, pfid)
+        elif routine_code == 'ROUND' or routine_code == 'TRUNC':
+            return self.parse_round_trunc(token, call_node, pfid)
+        else:
+            return None
 
+    def parse_read_readln(self, token, call_node, pfid):
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, True, False)
+        call_node.add_child(prms_node)
+
+        if pfid == Predefined.readln_id and len(call_node.get_children()) == 0:
+            self.error_handler.flag(token, 'WRONG_NUMBER_OF_PARMS', self)
+
+        return call_node
+
+    def parse_write_writeln(self, token, call_node, pfid):
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, True)
+
+        if pfid == Predefined.writeln_id and len(call_node.get_children()) == 0:
+            self.error_handler.flag(token, 'WRONG_NUMBER_OF_PARMS', self)
+
+        return call_node
+
+    def parse_eof_eoln(self, token, call_node, pfid):
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 0):
+            call_node.set_typespec(Predefined.boolean_type)
+
+        return call_node
+
+    def parse_abs_sqr(self, token, call_node, pfid):
+        prms_node:iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.parse
+
+    def parse_arctan_cos_exp_ln_sin_sqrt(self, token, call_node, pfid):
+        pass
+
+    def parse_pred_succ(self, token, call_node, pfid):
+        pass
+
+    def parse_chr(self, token, call_node, pfid):
+        pass
+
+    def parse_odd(self, token, call_node, pfid):
+        pass
+
+    def parse_ord(self, token, call_node, pfid):
+        pass
+
+    def parse_round_trunc(self, token, call_node, pfid):
+        pass
+
+    def chack_parm_count(self, tokne, node, num):
+        pass

@@ -2,7 +2,7 @@
 
 from enum import Enum,  auto
 from .type_if import TypeFormIF, TypeKeyIF, TypeSpecIF
-from .symtabstack_impl import SymTabKey
+from .symtabstack_impl import SymTabEntry, SymTabStack
 
 
 class TypeForm(TypeFormIF):
@@ -61,10 +61,32 @@ class Predefined:
     char_id = None
     false_id = None
     true_id = None
+    read_id = None
+    readln_id = None
+    write_id = None
+    writeln_id = None
+    abs_id = None
+    arctan_id = None
+    chr_id = None
+    cos_id = None
+    eof_id = None
+    eoln_id = None
+    exp_id = None
+    ln_id = None
+    odd_id = None
+    ord_id = None
+    pred_id = None
+    round_id = None
+    sin_id = None
+    sqr_id = None
+    sqrt_id = None
+    succ_id = None
+    trunc_id = None
 
     def initialize(self, symtab_stack):
         self.initialize_types(symtab_stack)
         self.initialize_constants(symtab_stack)
+        self.initialize_standard_routines(symtab_stack)
 
     def initialize_types(self, symtab_stack):
         Predefined.integer_id = symtab_stack.enter_local("integer")
@@ -106,6 +128,36 @@ class Predefined:
 
         constants = [Predefined.false_id, Predefined.true_id]
         Predefined.boolean_type.set_attribute(Definition.ENUMERATION_CONSTANT, constants)
+
+    def initialize_standard_routines(self, symtab_stack):
+        Predefined.read_id    = self.enter_standard(symtab_stack, Definition.PROCEDURE, "read",    'READ')
+        Predefined.readln_id  = self.enter_standard(symtab_stack, Definition.PROCEDURE, "readln",  'READLN')
+        Predefined.write_id   = self.enter_standard(symtab_stack, Definition.PROCEDURE, "write",   'WRITE')
+        Predefined.writeln_id = self.enter_standard(symtab_stack, Definition.PROCEDURE, "writeln", 'WRITELN')
+
+        Predefined.abs_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "abs",    'ABS')
+        Predefined.arctan_id = self.enter_standard(symtab_stack, Definition.FUNCTION, "arctan", 'ARCTAN')
+        Predefined.chr_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "chr",    'CHR')
+        Predefined.cos_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "cos",    'COS')
+        Predefined.eof_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "eof",    'EOF')
+        Predefined.eoln_id   = self.enter_standard(symtab_stack, Definition.FUNCTION, "eoln",   'EOLN')
+        Predefined.exp_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "exp",    'EXP')
+        Predefined.ln_id     = self.enter_standard(symtab_stack, Definition.FUNCTION, "ln",     'LN')
+        Predefined.odd_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "odd",    'ODD')
+        Predefined.ord_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "ord",    'ORD')
+        Predefined.pred_id   = self.enter_standard(symtab_stack, Definition.FUNCTION, "pred",   'PRED')
+        Predefined.round_id  = self.enter_standard(symtab_stack, Definition.FUNCTION, "round",  'ROUND')
+        Predefined.sin_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "sin",    'SIN')
+        Predefined.sqr_id    = self.enter_standard(symtab_stack, Definition.FUNCTION, "sqr",    'SQR')
+        Predefined.sqrt_id   = self.enter_standard(symtab_stack, Definition.FUNCTION, "sqrt",   'SQRT')
+        Predefined.succ_id   = self.enter_standard(symtab_stack, Definition.FUNCTION, "succ",   'SUCC')
+        Predefined.trunc_id  = self.enter_standard(symtab_stack, Definition.FUNCTION, "trunc",  'TRUNC')
+
+    def enter_standard(self, symtab_stack: SymTabStack, defn: Definition, name:str, routine_code:str):
+        prod_id: SymTabEntry = symtab_stack.enter_local(name)
+        prod_id.set_definition(defn)
+        prod_id.set_attribute('ROUTINE_CODE', routine_code)
+        return prod_id
 
 
 class TypeSpec(TypeSpecIF):
