@@ -222,10 +222,27 @@ class CallStandardParser(CallParser):
         prms_node:iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.parse
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+
+            if arg_type == Predefined.integer_type or arg_type == Predefined.real_type:
+                call_node.set_typespec(arg_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
 
     def parse_arctan_cos_exp_ln_sin_sqrt(self, token, call_node, pfid):
-        pass
+        prms_node:iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+
+            if arg_type == Predefined.integer_type or arg_type == Predefined.real_type:
+                call_node.set_typespec(Predefined.integer_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
 
     def parse_pred_succ(self, token, call_node, pfid):
         pass
