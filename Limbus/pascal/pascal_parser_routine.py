@@ -244,20 +244,75 @@ class CallStandardParser(CallParser):
             else:
                 self.error_handler.flag(token, 'INVALID_TYPE', self)
 
+        return call_node
+
     def parse_pred_succ(self, token, call_node, pfid):
-        pass
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+            if arg_type == Predefined.integer_type or arg_type.get_form() == TypeForm.ENUMERATION:
+                call_node.set_typespec(arg_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
 
     def parse_chr(self, token, call_node, pfid):
-        pass
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+            if arg_type == Predefined.integer_type:
+                call_node.set_typespec(Predefined.char_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
 
     def parse_odd(self, token, call_node, pfid):
-        pass
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+            if arg_type == Predefined.integer_type:
+                call_node.set_typespec(Predefined.boolean_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
 
     def parse_ord(self, token, call_node, pfid):
-        pass
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
+
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+            if arg_type == Predefined.char_type or arg_type.get_form() == TypeForm.ENUMERATION:
+                call_node.set_typespec(Predefined.integer_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
 
     def parse_round_trunc(self, token, call_node, pfid):
-        pass
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        call_node.add_child(prms_node)
 
-    def chack_parm_count(self, tokne, node, num):
-        pass
+        if self.chack_parm_count(token, prms_node, 1):
+            arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
+            if arg_type == Predefined.real_type:
+                call_node.set_typespec(Predefined.integer_type)
+            else:
+                self.error_handler.flag(token, 'INVALID_TYPE', self)
+
+        return call_node
+
+    def chack_parm_count(self, token, prms_node, count):
+        if ((not prms_node)  and count == 0 ) or len(prms_node) == count:
+            return True
+        else:
+            return False
