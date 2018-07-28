@@ -13,7 +13,7 @@ from ..limbus_core.intermidiate.iCode_impl import iCodeNode
 from ..pascal.pascal_parser import ExpressionParser
 from ..pascal.pascal_token import PascalSpecialSymbol, PascalWordToken
 
-from pascal.pascal_parser import StatementParser, ExpressionParser
+from pascal.pascal_parser import StatementParser, ExpressionParser, DeclarationsParser
 
 from pascal.pascal_token import *
 from pascal.pascal_parser import *
@@ -40,7 +40,12 @@ class CallParser(StatementParser):
 
         return call_parser.parse(token)
 
-    def parse_actual_parameters(self, token: PascalWordToken, pfid: SymTabEntry, is_declared: bool, is_read: bool, is_write: bool):
+    def parse_actual_parameters(self, token: PascalWordToken, pfid: SymTabEntry, is_declared: bool, is_read: bool,
+                                is_write: bool):
+        """
+
+        :type is_write: bool
+        """
         expression_parser: ExpressionParser = ExpressionParser(self)
         prms_node: iCodeNode = iCodeFactory('PARAMETERS')
         formal_prms = []
@@ -203,6 +208,7 @@ class CallStandardParser(CallParser):
 
     def parse_write_writeln(self, token, call_node, pfid):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, True)
+        call_node.add_child(prms_node)
 
         if pfid == Predefined.writeln_id and len(call_node.get_children()) == 0:
             self.error_handler.flag(token, 'WRONG_NUMBER_OF_PARMS', self)
@@ -213,16 +219,16 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 0):
+        if check_parm_count(token, prms_node, 0):
             call_node.set_typespec(Predefined.boolean_type)
 
         return call_node
 
     def parse_abs_sqr(self, token, call_node, pfid):
-        prms_node:iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
 
             if arg_type == Predefined.integer_type or arg_type == Predefined.real_type:
@@ -232,11 +238,11 @@ class CallStandardParser(CallParser):
 
         return call_node
 
-    def parse_arctan_cos_exp_ln_sin_sqrt(self, token, call_node, pfid):
-        prms_node:iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
+    def parse_arctan_cos_exp_ln_sin_sqrt(self, token, call_node, pfid) -> object:
+        prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
 
             if arg_type == Predefined.integer_type or arg_type == Predefined.real_type:
@@ -250,7 +256,7 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
             if arg_type == Predefined.integer_type or arg_type.get_form() == TypeForm.ENUMERATION:
                 call_node.set_typespec(arg_type)
@@ -263,7 +269,7 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
             if arg_type == Predefined.integer_type:
                 call_node.set_typespec(Predefined.char_type)
@@ -276,7 +282,7 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
             if arg_type == Predefined.integer_type:
                 call_node.set_typespec(Predefined.boolean_type)
@@ -289,7 +295,7 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
             if arg_type == Predefined.char_type or arg_type.get_form() == TypeForm.ENUMERATION:
                 call_node.set_typespec(Predefined.integer_type)
@@ -302,7 +308,7 @@ class CallStandardParser(CallParser):
         prms_node: iCodeNode = self.parse_actual_parameters(token, pfid, False, False, False)
         call_node.add_child(prms_node)
 
-        if self.chack_parm_count(token, prms_node, 1):
+        if check_parm_count(token, prms_node, 1):
             arg_type: TypeSpec = prms_node.get_children()[0].get_typespec().base_type()
             if arg_type == Predefined.real_type:
                 call_node.set_typespec(Predefined.integer_type)
@@ -311,8 +317,44 @@ class CallStandardParser(CallParser):
 
         return call_node
 
-    def chack_parm_count(self, token, prms_node, count):
-        if ((not prms_node)  and count == 0 ) or len(prms_node) == count:
-            return True
+
+def check_parm_count(token, prms_node, count):
+    if ((not prms_node) and count == 0) or len(prms_node.get_children()) == count:
+        return True
+    else:
+        return False
+
+
+class DeclaredRoutineParser(DeclarationsParser):
+
+    def __init__(self, parent):
+        self.dummy_counter = 0
+        super().__init__(parent)
+
+    def parse(self, token, parent_id: SymTabEntry):
+        routine_defn: Definition = None
+        dummy_name: str = None
+        routine_id: SymTabEntry = None
+        routine_type = token.type
+
+        if routine_type == 'PROGRAM':
+            token = self.next_token()
+            routine_defn = Definition.PROGRAM
+            dummy_name = 'DummyProgramName'.lower()
+        elif routine_defn == 'PROCEDURE':
+            token = self.next_token()
+            routine_defn = Definition.PROCEDURE
+            self.dummy_counter += 1
+            dummy_name = 'DummyFunctionName_'.lower() + "%03d" % self.dummy_counter
         else:
-            return False
+            routine_defn = Definition.PROGRAM
+            dummy_name = 'DummyProgramName'.lower()
+
+        
+
+
+
+
+
+
+
