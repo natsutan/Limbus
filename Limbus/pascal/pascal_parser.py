@@ -161,18 +161,18 @@ class DeclarationsParser(PascalParserTD):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def parse(self, token):
+    def parse(self, token, parent_id):
         token = self.synchronize(DeclarationsParser.DECLARATION_START_SET)
         if token.ptype == PTT.RESERVED and token.value == 'CONST':
             token = self.next_token()
             constant_definition_parser = ConstantDefinitionsParser(self)
-            constant_definition_parser.parse(token)
+            constant_definition_parser.parse(token, None)
 
         token = self.synchronize(self.TYPE_START_SET)
         if token.ptype == PTT.RESERVED and token.value == 'TYPE':
             token = self.next_token()
             type_defination_parser = TypeDefinitionsParser(self)
-            type_defination_parser.parse(token)
+            type_defination_parser.parse(token, None)
 
         token = self.synchronize(self.VAR_START_SET)
         if token.type == TokenType.EOF:
@@ -183,10 +183,22 @@ class DeclarationsParser(PascalParserTD):
             token = self.next_token()
             variable_declarations_parser = VariableDeclarationsParser(self)
             variable_declarations_parser.set_definition(Definition.VARIABLE)
-            variable_declarations_parser.parse(token)
+            variable_declarations_parser.parse(token, None)
 
         token = self.synchronize(DeclarationsParser.ROUTINE_START_SET)
 
+        while token.value == 'PROCEDURE' or token.value == 'FUNCTION':
+            routine_parser = DeclaredRoutineParser(self)
+            routine_parser.parse(token, parent_id)
+
+            token = self.current_token()
+            if token.value == 'SEMICOLON':
+                while token.vaule == 'SEMICOLON':
+                    token = self.next_token()
+
+            token = self.synchronize(self.ROUTINE_START_SET)
+
+        return None
 
 class StatementParser(PascalParserTD):
     STMT_START_SET = ['BEGIN', 'CASE', 'FOR', 'IF', 'REPEAT', 'WHILE', 'IDENTIFIER', 'SEMICOLON']
