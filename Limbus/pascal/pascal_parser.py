@@ -1096,7 +1096,7 @@ class ConstantDefinitionsParser(DeclarationsParser):
         super().__init__(parent)
 
     # ConstantDefinitionsParser
-    def parse(self, token):
+    def parse(self, token, parent_id):
         token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
         while token.ptype == PTT.IDENTIFIER:
             name = token.value.lower()
@@ -1138,6 +1138,8 @@ class ConstantDefinitionsParser(DeclarationsParser):
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
             token = self.synchronize(ConstantDefinitionsParser.IDENTIFIER_SET)
+
+        return None
 
     def parse_constant(self, token):
         sign = None
