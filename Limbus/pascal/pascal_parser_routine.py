@@ -8,12 +8,12 @@ from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec,
 from limbus_core.intermidiate.type_checker import TypeChecker
 
 from ..limbus_core.frontend.token import Token
-from ..limbus_core.intermidiate.symtabstack_impl import SymTabEntry
+from ..limbus_core.intermidiate.symtabstack_impl import SymTabEntry, SymTab
 from ..limbus_core.intermidiate.iCode_impl import iCodeNode
 from ..pascal.pascal_parser import ExpressionParser
 from ..pascal.pascal_token import PascalSpecialSymbol, PascalWordToken
 
-from pascal.pascal_parser import StatementParser, ExpressionParser, DeclarationsParser
+from pascal.pascal_parser import StatementParser, ExpressionParser, DeclarationsParser, BlockParser, VariableDeclarationsParser
 
 from pascal.pascal_token import *
 from pascal.pascal_parser import *
@@ -327,14 +327,27 @@ def check_parm_count(token, prms_node, count):
 
 class DeclaredRoutineParser(DeclarationsParser):
 
+    PARAMETER_SET = copy.deepcopy(DeclarationsParser.DECLARATION_START_SET)
+    PARAMETER_SET = PARAMETER_SET + ['VAR', 'RIGHT_PAREN']
+    PARAMETER_SET_PTT = [PTT.IDENTIFIER, ]
+
+    LEFT_PAREN_SET = copy.deepcopy(DeclarationsParser.DECLARATION_START_SET)
+    LEFT_PAREN_SET = LEFT_PAREN_SET + ['LEFT_PAREN', 'SEMICOLON', 'COLON']
+
+    RIGHT_PAREN_SET = copy.deepcopy(DeclarationsParser.DECLARATION_START_SET)
+    RIGHT_PAREN_SET = RIGHT_PAREN_SET + ['RIGHT_PAREN', 'SEMICOLON', 'COLON']
+
+    PARAMETER_FOLLOW_SET = ['COLON', 'RIGHT_PAREN', 'SEMICOLON'] + \
+                           copy.deepcopy(DeclarationsParser.DECLARATION_START_SET)
+    COMMA_SET = ['COMMA', 'COLON', 'RIGHT_PAREN', 'SEMICOLON'] + copy.deepcopy(DeclarationsParser.DECLARATION_START_SET)
+    COMMA_SET_PTT = [PTT.IDENTIFIER, ]
+
     def __init__(self, parent):
         self.dummy_counter = 0
         super().__init__(parent)
 
-    def parse(self, token, parent_id: SymTabEntry):
+    def parse(self, token, parent_id: SymTabEntry) -> SymTabEntry:
         routine_defn: Definition = None
-        dummy_name: str = None
-        routine_id: SymTabEntry = None
         routine_type = token.type
 
         if routine_type == 'PROGRAM':
@@ -350,11 +363,143 @@ class DeclaredRoutineParser(DeclarationsParser):
             routine_defn = Definition.PROGRAM
             dummy_name = 'DummyProgramName'.lower()
 
-        
+        routine_id: SymTabEntry = self.parse_routine_name(token, dummy_name)
+        routine_id.set_definition(routine_defn)
 
+        token = self.current_token()
+        icode = iCodeFactory().create()
+        routine_id.set_attribute('ROUTINE_ICODE', icode)
+        routine_id.set_attribute('ROUTINE_ROUTINES', [])
 
+        if routine_id.get_attribute('ROUTINE_CODE') == 'FORWARD':
+            symtab: SymTab = routine_id.get_attribute('ROUTINE_SYMTAB')
+            Parser.symtab_stack.push(symtab)
+        else:
+            routine_id.set_attribute('ROUTINE_SYMTAB', Parser.symtab_stack.push(None))
 
+        if routine_defn == Definition.PROGRAM:
+            Parser.symtab_stack.set_program_id(routine_id)
+        elif routine_id.get_attribute('ROUTINE_CODE' != 'FORWARD'):
+            subroutines = parent_id.get_attribute('ROUTINE_ROUTINES')
+            subroutines.add(routine_id)
 
+        if routine_id.get_attribute('ROUTINE_CODE') == 'FORWARD':
+            if token.value != 'SEMICOLON':
+                self.error_handler.flag(token, 'ALREADY_FORWARDED', self)
+                self.parse_header(token, routine_id)
+        else:
+            self.parse_header(token, routine_id)
 
+        token = self.current_token()
+        if token.value == 'SEMICOLON':
+            token = self.next_token()
+            while token.value == 'SEMICOLON':
+                token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
+        if token.ptype == PTT.IDENTIFIER and token.value.lower() == 'forward':
+            token = self.next_token()
+            routine_id.set_attribute('ROUTINE_CODE', 'FORWARD')
+        else:
+            routine_id.set_attribute('ROUTINE_CODE', 'DECLARED')
+            block_parser: BlockParser = BlockParser(self)
+            root_node: iCodeNode = block_parser.parse(token, routine_id)
+            Parser.iCode.set_root(root_node)
+
+        Parser.symtab_stack.pop()
+        return routine_id
+
+    def parse_routine_name(self, token, dummy_name: str) -> SymTabEntry:
+        if token.ptype == PTT.IDENTIFIER:
+            routine_name: str = token.text.lower()
+            routine_id: SymTabEntry = Parser.symtab_stack.lookup_local(routine_name)
+
+            if not routine_id:
+                routine_id = Parser.symtab_stack.enter_local(routine_name)
+            elif routine_id.get_attribute('ROUTINE_CODE') != 'FORWARD':
+                routine_id = None
+                self.error_handler.flag(token, 'IDENTIFIER_REDEFINED', self)
+
+            token = self.next_token()
+        else:
+            self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
+
+        if not routine_id:
+            routine_id = Parser.symtab_stack.enter_local(dummy_name)
+
+        return routine_id
+
+    def parse_header(self, token, routine_id: SymTabEntry):
+        self.parse_formal_parameter(token, routine_id)
+        token = self.current_token()
+
+        if routine_id.get_definition() == Definition.FUNCTION:
+            variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser()
+            variable_decl_parser.set_defination(Definition.FUNCTION)
+            typespec: TypeSpec = variable_decl_parser.parse(token)
+            token = self.current_token()
+
+            if typespec:
+                form: TypeForm = typespec.get_form()
+                if form == TypeForm.ARRAY or form == TypeForm.RECORD:
+                    self.error_handler.flag(token, 'INVALID_TYPE', self)
+        else:
+            typespec = Predefined.undefined_type
+
+        routine_id.set_typespec(typespec)
+        token = self.current_token()
+
+    def parse_formal_parameter(self, token, routine_id: SymTabEntry):
+        token = self.synchronize(self.LEFT_PAREN_SET)
+        if token.value == 'LEFT_PAREN':
+            token = self.next_token()
+            prms: list = []
+            token = self.synchronize(self.PARAMETER_SET, ptt_set=self.PARAMETER_SET_PTT)
+
+            while token.ptype == PTT.IDENTIFIER or token.value == 'VAR':
+                sublist = self.parse_prms_sublist(token, routine_id)
+                prms = prms + sublist
+                token = self.current_token()
+
+            if token.value == 'RIGHT_PAREN':
+                token = self.next_token()
+            else:
+                self.error_handler.flag(token, 'MISSING_RIGHT_PAREN', self)
+
+            routine_id.set_attribute('ROUTINE_PARMS', prms)
+
+    def parse_prms_sublist(self, token, routine_id):
+        is_program: bool = routine_id.get_definition() == Definition.PROGRAM
+
+        if is_program:
+            prm_defn = Definition.PROGRAM_PARM
+        else:
+            prm_defn = None
+
+        if token.value == 'VAR':
+            if not is_program:
+                prm_defn = Definition.VAR_PARM
+            else:
+                self.error_handler.flag(token, 'INVALID_VAR_PARM', self)
+            token = self.next_token()
+        elif not is_program:
+            prm_defn = Definition.VAR_PARM
+
+        variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser()
+        variable_decl_parser.set_defination(prm_defn)
+        sublist = variable_decl_parser.parse_identifier_sublist(token, self.PARAMETER_FOLLOW_SET, self.COMMA_SET,
+                                                                ptt=self.COMMA_SET_PTT)
+        token = self.current_token()
+
+        if not is_program:
+            if token.value == 'SEMICOLON':
+                while token.value ==  'SEMICOLON':
+                    token = self.next_token()
+            elif token.value in VariableDeclarationsParser.NEXT_START_SET:
+                self.parse_header(token, 'MISSING_SEMICOLON', self)
+
+            token = self.synchronize(self.PARAMETER_SET, ptt_set=self.PARAMETER_SET_PTT)
+
+        return sublist
 

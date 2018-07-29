@@ -1421,7 +1421,6 @@ class VariableDeclarationsParser(DeclarationsParser):
                 self.error_handler.flag(token, 'UNEXPECTED EOF', self)
                 return
 
-
             if token.ptype == PascalSpecialSymbol.SEMICOLON:
                 while token.ptype == PascalSpecialSymbol.SEMICOLON:
                     token = self.next_token()
@@ -1429,7 +1428,8 @@ class VariableDeclarationsParser(DeclarationsParser):
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
             token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
-                
+
+    # natu
     def parse_identifier_sublist(self, token):
         sublist = []
         first = True
