@@ -503,3 +503,24 @@ class DeclaredRoutineParser(DeclarationsParser):
 
         return sublist
 
+
+class ProgramParser(DeclarationsParser):
+    PROGRAM_START_SET = ['PROGRAM', 'SEMICOLON'] + DeclarationsParser.DECLARATION_START_SET
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def parse(self, token, parent_id: SymTabEntry):
+        token = self.synchronize(self.PROGRAM_START_SET)
+
+        routine_parser = DeclaredRoutineParser(self)
+        routine_parser.parse(token, parent_id)
+
+        token = self.current_token()
+        if token.value != 'DOT':
+            self.error_handler.flag(token, 'MISSING_PERIOD', self)
+
+        return None
+
+
+

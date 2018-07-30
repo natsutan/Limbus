@@ -656,11 +656,15 @@ class ExpressionParser(StatementParser):
             id.append_line_number(token.line_num)
             token = self.next_token()
             root_node.set_typespec(type)
+        elif defn_code == Definition.FUNCTION:
+            call_parser = CallParser(self)
+            root_node = call_parser.parse(token)
         else:
             variable_parser = VariableParser(self)
             root_node = variable_parser.parse(token)
 
         return root_node
+
 
 class AssignmentStatementParser(StatementParser):
     COLON_EQUALS_SET = copy.deepcopy(ExpressionParser.EXPR_START_SET) + ['COLON_EQUALS'] + \
