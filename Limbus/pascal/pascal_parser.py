@@ -14,7 +14,6 @@ from pascal.pascal_error import PascalErrorType, PascalError
 from pascal.pascal_token import *
 from pascal.pascal_parser import *
 
-
 class PascalErrorHandler:
     error_cnt = 0
     MAX_ERROR = 5
@@ -55,7 +54,7 @@ class PascalParserTD(Parser):
         return self.routine_id
 
     def parse(self):
-
+        from pascal.pascal_parser_routine import ProgramParser
 
         try:
             token = self.next_token()
@@ -102,7 +101,6 @@ class PascalParserTD(Parser):
 
         if token.type == TokenType.EOF:
             return token
-
         if token.ptype in ptt_set:
             sync = True
         elif (token.ptype == PTT.IDENTIFIER) and ('IDENTIFIER' in syncset):
@@ -1457,18 +1455,18 @@ class VariableDeclarationsParser(DeclarationsParser):
 
         return None
 
-    def parse_identifier_sublist(self, token, follow_set, comma_set):
+    def parse_identifier_sublist(self, token, follow_set, comma_set, ptt_set=[]):
         sublist = []
         first = True
 
-        while self.sublist_loop(token, first, follow_set:
+        while self.sublist_loop(token, first, follow_set):
             first = False
             token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
             id = self.parse_identifier(token)
             if id:
                 sublist.append(id)
 
-            token = self.synchronize(comma_set)
+            token = self.synchronize(comma_set, ptt_set=ptt_set)
 
             if token.ptype == PascalSpecialSymbol.COMMA:
                 token = self.next_token()

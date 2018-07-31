@@ -7,13 +7,14 @@ from limbus_core.intermidiate.iCode_if import iCodeNodeType
 from limbus_core.intermidiate.type_impl import Predefined, Definition, TypeSpec, TypeForm
 from limbus_core.intermidiate.type_checker import TypeChecker
 
-from ..limbus_core.frontend.token import Token
-from ..limbus_core.intermidiate.symtabstack_impl import SymTabEntry, SymTab
-from ..limbus_core.intermidiate.iCode_impl import iCodeNode
-from ..pascal.pascal_parser import ExpressionParser
-from ..pascal.pascal_token import PascalSpecialSymbol, PascalWordToken
+from limbus_core.frontend.token import Token
+from limbus_core.intermidiate.symtabstack_impl import SymTabEntry, SymTab
+from limbus_core.intermidiate.iCode_impl import iCodeNode
+from pascal.pascal_token import PascalSpecialSymbol, PascalWordToken
 
 from pascal.pascal_parser import StatementParser, ExpressionParser, DeclarationsParser, BlockParser, VariableDeclarationsParser
+
+#import pascal.pascal_parser
 
 from pascal.pascal_token import *
 from pascal.pascal_parser import *
@@ -423,6 +424,7 @@ class DeclaredRoutineParser(DeclarationsParser):
 
             token = self.next_token()
         else:
+            routine_id = None
             self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
 
         if not routine_id:
@@ -486,10 +488,9 @@ class DeclaredRoutineParser(DeclarationsParser):
         elif not is_program:
             prm_defn = Definition.VAR_PARM
 
-        variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser()
-        variable_decl_parser.set_defination(prm_defn)
-        sublist = variable_decl_parser.parse_identifier_sublist(token, self.PARAMETER_FOLLOW_SET, self.COMMA_SET,
-                                                                ptt=self.COMMA_SET_PTT)
+        variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser(self)
+        variable_decl_parser.set_definition(prm_defn)
+        sublist = variable_decl_parser.parse_identifier_sublist(token, self.PARAMETER_FOLLOW_SET, self.COMMA_SET, ptt_set=self.COMMA_SET_PTT)
         token = self.current_token()
 
         if not is_program:
