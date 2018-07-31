@@ -31,8 +31,11 @@ class PascalErrorHandler:
             self.abort_translation('TOO_MANY_ERRORS', parser)
 
     def abort_translation(self, err_code, parser):
-        msg = Message(MessageType.SYNTAX_ERROR, "FATAL_ERROR:"+err_code)
-        parser.send_message(msg)
+#        msg = Message(MessageType.SYNTAX_ERROR, "FATAL_ERROR:"+err_code)
+        token = parser.current_token()
+        line = parser.get_line()
+        msg = Message(MessageType.SYNTAX_ERROR, (token, err_code, line))
+
         sys.exit(1)
 
     def get_error_count(self):
@@ -55,11 +58,11 @@ class PascalParserTD(Parser):
 
     def parse(self):
         from pascal.pascal_parser_routine import ProgramParser
-
+        Predefined().initialize(Parser.symtab_stack)
         try:
             token = self.next_token()
             program_parser = ProgramParser(self)
-            program_parser.parse(token, None)
+            root_node = program_parser.parse(token, None)
             token = self.current_token()
 
             if root_node == None:
@@ -210,7 +213,7 @@ class StatementParser(PascalParserTD):
             statement_node = CompoundStatementParser(self).parse(token)
         elif token.ptype == PTT.IDENTIFIER:
             # statement_node = AssignmentStatementParser(self).parse(token)
-            name = token.text.lower()
+            name = token.value.lower()
             id = Parser.symtab_stack.lookup(name)
             if id:
                 id_defn = id.get_definition()
@@ -825,7 +828,7 @@ class CaseStatementParser(StatementParser):
             if constant_node:
                 constant_type = constant_node.get_typespec()
         elif token.ptype == PTT.INTEGER:
-            constant_node = self.parse_integer_constant(token.text, sign)
+            constant_node = self.parse_integer_constant(token.value, sign)
             constant_type = Predefined.integer_type
         elif token.ptype == PTT.STRING:
             constant_node = self.parse_character_constant(token, token.value, sign)

@@ -349,7 +349,7 @@ class DeclaredRoutineParser(DeclarationsParser):
 
     def parse(self, token, parent_id: SymTabEntry) -> SymTabEntry:
         routine_defn: Definition = None
-        routine_type = token.type
+        routine_type = token.value
 
         if routine_type == 'PROGRAM':
             token = self.next_token()
