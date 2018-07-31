@@ -211,7 +211,27 @@ class StatementParser(PascalParserTD):
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
             statement_node = CompoundStatementParser(self).parse(token)
         elif token.ptype == PTT.IDENTIFIER:
-            statement_node = AssignmentStatementParser(self).parse(token)
+            # statement_node = AssignmentStatementParser(self).parse(token)
+            name = token.text.lower()
+            id = Parser.symtab_stack.lookup(name)
+            if id:
+                id_defn = id.get_definition()
+            else:
+                id_defn = Predefined.undefined_type
+
+            if id_defn == Definition.VARIABLE or id_defn == Definition.VALUE_PARM or id_defn == Definition.VAR_PARM \
+                    or id_defn == Definition.UNDEFINED:
+                assignment_parser = AssignmentStatementParser(self)
+                statement_node = assignment_parser.parse(token)
+            elif id_defn == Definition.FUNCTION:
+                assignment_parser = AssignmentStatementParser(self)
+                statement_node = assignment_parser.parse(token)
+            elif id_defn == Definition.PROCEDURE:
+                call_parser = CallParser(self)
+                statement_node = call_parser.parse(token)
+            else:
+                self.error_handler.flag(token, 'UNEXPECTED_TOKEN', self)
+                token = self.next_token()
         elif token.ptype == PTT.RESERVED and  token.value == 'REPEAT':
             statement_node = RepeatStatementParser(self).parse(token)
         elif token.ptype == PTT.RESERVED and  token.value == 'WHILE':
@@ -1273,7 +1293,7 @@ class TypeDefinitionsParser(DeclarationsParser):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def parse(self, token):
+    def parse(self, token, parent_id):
         token = self.synchronize(self.IDENTIFIER_SET, ptt_set=self.IDENTIFIER_SET_PTT)
 
         while token.ptype == PTT.IDENTIFIER:
@@ -1319,6 +1339,8 @@ class TypeDefinitionsParser(DeclarationsParser):
 
             token = self.synchronize(self.IDENTIFIER_SET, ptt_set=self.IDENTIFIER_SET_PTT)
 
+        return None
+
 
 class TypeSpecificationParser(PascalParserTD):
     TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
@@ -1345,6 +1367,7 @@ class TypeSpecificationParser(PascalParserTD):
         else:
             simple_type_parser = SimpleTypeParser(self)
             return simple_type_parser.parse(token)
+
 
 class SimpleTypeParser(TypeSpecificationParser):
     SIMPLE_TYPE_START_SET = copy.deepcopy(ConstantDefinitionsParser.CONSTANT_START_SET)
@@ -1394,7 +1417,6 @@ class SimpleTypeParser(TypeSpecificationParser):
             return subrange_parser.parse(token)
 
 
-
 class VariableDeclarationsParser(DeclarationsParser):
     IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
     IDENTIFIER_SET.append('IDENTIFIER')
@@ -1415,11 +1437,11 @@ class VariableDeclarationsParser(DeclarationsParser):
     def set_definition(self, definition):
         self.definition = definition
 
-    def parse(self, token):
+    def parse(self, token, parent_id):
         token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
 
         while token.ptype == PTT.IDENTIFIER:
-            self.parse_identifier_sublist(token)
+            self.parse_identifier_sublist(token, self.IDENTIFIER_FOLLOW_SET, self.COMMA_SET)
             token = self.current_token()
             if token.type == TokenType.EOF:
                 self.error_handler.flag(token, 'UNEXPECTED EOF', self)
@@ -1433,41 +1455,43 @@ class VariableDeclarationsParser(DeclarationsParser):
 
             token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
 
-    # natu
-    def parse_identifier_sublist(self, token):
+        return None
+
+    def parse_identifier_sublist(self, token, follow_set, comma_set):
         sublist = []
         first = True
 
-        while self.sublist_loop(token, first):
+        while self.sublist_loop(token, first, follow_set:
             first = False
             token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
             id = self.parse_identifier(token)
             if id:
                 sublist.append(id)
 
-            token = self.synchronize(VariableDeclarationsParser.COMMA_SET)
+            token = self.synchronize(comma_set)
 
             if token.ptype == PascalSpecialSymbol.COMMA:
                 token = self.next_token()
 
-                if token.value in VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET:
+                if token.value in follow_set:
                     self.error_handler.flag(token, 'MISSING_IDENTIFIER', self)
             elif token.value in VariableDeclarationsParser.IDENTIFIER_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
 
-        type = self.parse_typespec(token)
-        for e in sublist:
-            e.set_typespec(type)
+        if self.definition != Definition.PROGRAM_PARM:
+            type = self.parse_typespec(token)
+            for e in sublist:
+                e.set_typespec(type)
 
         return sublist
 
-    def sublist_loop(self, token, first):
+    def sublist_loop(self, token, first, follow_set):
         """
         最初の一回とTokenの状況でループするかどうかの判断を行う。
         """
         if first:
             return True
-        if token.value in VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET:
+        if token.value in follow_set:
             return False
         else:
             return True
@@ -1500,6 +1524,9 @@ class VariableDeclarationsParser(DeclarationsParser):
         typespec_parser = TypeSpecificationParser(self)
         type = typespec_parser.parse(token)
 
+        if self.definition == Definition.VARIABLE and self.definition == Definition.FIELD and type and (not type.get_identifier()):
+            self.error_handler.flag(token, 'INVALID_TYPE', self)
+
         return type
 
     def set_definition(self, definitation):
@@ -1522,7 +1549,7 @@ class RecordTypeParser(TypeSpecificationParser):
 
         var_decl_parser = VariableDeclarationsParser(self)
         var_decl_parser.set_definition(Definition.FIELD)
-        var_decl_parser.parse(token)
+        var_decl_parser.parse(token, None)
 
         Parser.symtab_stack.pop()
 
@@ -1533,6 +1560,7 @@ class RecordTypeParser(TypeSpecificationParser):
             self.error_handler.flag(token, 'MISSING_END', self)
 
         return record_type
+
 
 class SubrangeTypeParser(TypeSpecificationParser):
     def __init__(self, parent):
