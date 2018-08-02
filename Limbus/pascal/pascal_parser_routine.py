@@ -355,9 +355,14 @@ class DeclaredRoutineParser(DeclarationsParser):
             token = self.next_token()
             routine_defn = Definition.PROGRAM
             dummy_name = 'DummyProgramName'.lower()
-        elif routine_defn == 'PROCEDURE':
+        elif routine_type == 'PROCEDURE':
             token = self.next_token()
             routine_defn = Definition.PROCEDURE
+            self.dummy_counter += 1
+            dummy_name = 'DummyProcedureName_'.lower() + "%03d" % self.dummy_counter
+        elif routine_type == 'FUNCTION':
+            token = self.next_token()
+            routine_defn = Definition.FUNCTION
             self.dummy_counter += 1
             dummy_name = 'DummyFunctionName_'.lower() + "%03d" % self.dummy_counter
         else:
@@ -413,7 +418,7 @@ class DeclaredRoutineParser(DeclarationsParser):
 
     def parse_routine_name(self, token, dummy_name: str) -> SymTabEntry:
         if token.ptype == PTT.IDENTIFIER:
-            routine_name: str = token.text.lower()
+            routine_name: str = token.value.lower()
             routine_id: SymTabEntry = Parser.symtab_stack.lookup_local(routine_name)
 
             if not routine_id:
@@ -437,9 +442,9 @@ class DeclaredRoutineParser(DeclarationsParser):
         token = self.current_token()
 
         if routine_id.get_definition() == Definition.FUNCTION:
-            variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser()
-            variable_decl_parser.set_defination(Definition.FUNCTION)
-            typespec: TypeSpec = variable_decl_parser.parse(token)
+            variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser(self)
+            variable_decl_parser.set_definition(Definition.FUNCTION)
+            typespec: TypeSpec = variable_decl_parser.parse(token, self)
             token = self.current_token()
 
             if typespec:

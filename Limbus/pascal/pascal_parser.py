@@ -163,6 +163,8 @@ class DeclarationsParser(PascalParserTD):
         super().__init__(parent)
 
     def parse(self, token, parent_id):
+        from pascal.pascal_parser_routine import DeclaredRoutineParser
+
         token = self.synchronize(DeclarationsParser.DECLARATION_START_SET)
         if token.ptype == PTT.RESERVED and token.value == 'CONST':
             token = self.next_token()
@@ -194,7 +196,7 @@ class DeclarationsParser(PascalParserTD):
 
             token = self.current_token()
             if token.value == 'SEMICOLON':
-                while token.vaule == 'SEMICOLON':
+                while token.value == 'SEMICOLON':
                     token = self.next_token()
 
             token = self.synchronize(self.ROUTINE_START_SET)

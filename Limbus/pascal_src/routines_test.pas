@@ -13,6 +13,9 @@ VAR
     v, y : real;
     t : boolean;
 
+FUNCTION forwarded(m : integer; VAR t : real) : real; forward;
+
+
 BEGIN {RoutinesTest}
     e := beta;
 END {RoutinesTest}.
