@@ -1422,9 +1422,9 @@ class SimpleTypeParser(TypeSpecificationParser):
 
 class VariableDeclarationsParser(DeclarationsParser):
     IDENTIFIER_SET = copy.deepcopy(DeclarationsParser.VAR_START_SET)
-    IDENTIFIER_SET.append('IDENTIFIER')
     IDENTIFIER_SET.append('END')
     IDENTIFIER_SET.append('SEMICOLON')
+    IDENTIFIER_SET_PTT = [PTT.IDENTIFIER, ]
     NEXT_START_SET = copy.deepcopy(DeclarationsParser.ROUTINE_START_SET)
     NEXT_START_SET.append('IDENTIFIER')
     NEXT_START_SET.append('SEMICOLON')
@@ -1441,7 +1441,7 @@ class VariableDeclarationsParser(DeclarationsParser):
         self.definition = definition
 
     def parse(self, token, parent_id):
-        token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
+        token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET, ptt_set=self.IDENTIFIER_SET_PTT)
 
         while token.ptype == PTT.IDENTIFIER:
             self.parse_identifier_sublist(token, self.IDENTIFIER_FOLLOW_SET, self.COMMA_SET)
@@ -1456,7 +1456,7 @@ class VariableDeclarationsParser(DeclarationsParser):
             elif token.value in VariableDeclarationsParser.NEXT_START_SET:
                 self.error_handler.flag(token, 'MISSING_SEMICOLON', self)
 
-            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
+            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET, ptt_set=VariableDeclarationsParser.IDENTIFIER_SET_PTT)
 
         return None
 
@@ -1466,7 +1466,7 @@ class VariableDeclarationsParser(DeclarationsParser):
 
         while self.sublist_loop(token, first, follow_set):
             first = False
-            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
+            token = self.synchronize(VariableDeclarationsParser.IDENTIFIER_SET, ptt_set=VariableDeclarationsParser.IDENTIFIER_SET_PTT)
             id = self.parse_identifier(token)
             if id:
                 sublist.append(id)
