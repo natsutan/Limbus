@@ -230,7 +230,7 @@ class StatementParser(PascalParserTD):
                 statement_node = assignment_parser.parse(token)
             elif id_defn == Definition.FUNCTION:
                 assignment_parser = AssignmentStatementParser(self)
-                statement_node = assignment_parser.parse(token)
+                statement_node = assignment_parser.parse_function_name_assignment(token)
             elif id_defn == Definition.PROCEDURE:
                 call_parser = CallParser(self)
                 statement_node = call_parser.parse(token)
@@ -283,6 +283,7 @@ class VariableParser(StatementParser):
     RIGHT_BRACKET_SET = ['RIGHT_BRACKET', 'EQUALS', 'SEMICOLON']
 
     def __init__(self, parent):
+        self.is_function_target = False
         super().__init__(parent)
 
     def parse(self, token):
@@ -297,29 +298,45 @@ class VariableParser(StatementParser):
 
         return self.parse_variable_id(token, variable_id)
 
+    def parse_function_name_target(self, token):
+        self.is_function_target = True
+        return self.parse(token)
+
     def parse_variable_id(self, token, variable_id):
-        defn_code = variable_id.get_definition()
-        if defn_code != Definition.VARIABLE and defn_code != Definition.VALUE_PARM and defn_code != Definition.VAR_PARM:
+#        defn_code = variable_id.get_definition()
+        if not self.is_variable_defined(variable_id):
             self.error_handler.flag(token, 'INVALID_IDENTIFIER_USAGE', self)
 
+        variable_id.append_line_number(token.line_num)
         variable_node = iCodeNodeFactory().create('VARIABLE')
         variable_node.set_attribute('ID', variable_id)
         token = self.next_token()
 
         variable_type = variable_id.get_typespec()
 
-        while token.value in self.SUBSCRIPT_FIELD_START_SET:
-            if token.ptype == PascalSpecialSymbol.LEFT_BRACKET:
-                sub_fld_node = self.parse_subscripts(variable_type)
-            else:
-                sub_fld_node = self.parse_field(variable_type)
+        if not self.is_function_target:
+            while token.value in self.SUBSCRIPT_FIELD_START_SET:
+                if token.ptype == PascalSpecialSymbol.LEFT_BRACKET:
+                    sub_fld_node = self.parse_subscripts(variable_type)
+                else:
+                    sub_fld_node = self.parse_field(variable_type)
 
-            token = self.current_token()
-            variable_type = sub_fld_node.get_typespec()
-            variable_node.add_child(sub_fld_node)
+                token = self.current_token()
+                variable_type = sub_fld_node.get_typespec()
+                variable_node.add_child(sub_fld_node)
 
         variable_node.set_typespec(variable_type)
         return variable_node
+
+
+    def is_variable_defined(self, variable_id):
+        defn_code = variable_id.get_definition()
+        if defn_code == Definition.VARIABLE or defn_code == Definition.VAR_PARM or defn_code == Definition.VAR_PARM:
+            return True
+        elif self.is_function_target and (defn_code == Definition.FUNCTION):
+            return True
+        else:
+            return False
 
     def parse_subscripts(self, variable_type):
         expression_parer = ExpressionParser(self)

@@ -13,6 +13,8 @@ VAR
     v, y : real;
     t : boolean;
 
+FUNCTION forwarded(m : integer; VAR t : real) : real; forward;
+
 
 FUNCTION func(VAR x : real; i : real; n : integer) : real;
 
