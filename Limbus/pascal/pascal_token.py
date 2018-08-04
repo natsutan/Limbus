@@ -200,6 +200,7 @@ class PascalNumberToken(Token):
 
         return fv
 
+
 class PascalStringToken(Token):
     def __init__(self, source):
         self.ptype = None

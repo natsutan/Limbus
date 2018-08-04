@@ -1,3 +1,5 @@
+PROGRAM BlockErrors;
+
 CONST
     Seven =  7;
     Ten   = 10;
@@ -27,7 +29,7 @@ TYPE
            END;
 
     arr8 = ARRAY [range2] OF RECORD
-                                 fldi  : integer;
+                                 fldi : integer;
                                  fldr : rec7;
                                  flda : ARRAY[range4] OF range2;
                              END;

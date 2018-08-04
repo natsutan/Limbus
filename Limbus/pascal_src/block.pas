@@ -1,3 +1,5 @@
+PROGRAM Block(infile, outfile);
+
 CONST
     seven =  7;
     ten   = 10;

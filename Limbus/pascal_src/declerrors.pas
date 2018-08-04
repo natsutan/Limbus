@@ -1,3 +1,5 @@
+PROGRAM DeclErrors;
+
 CONST
     ten = 10;
     epsilon = 1.0E-6;

@@ -1,3 +1,0 @@
-{Word tokens}
-Hello world
-begin BEGIN Begin BeGiN begins
