@@ -110,7 +110,7 @@ class CallParser(StatementParser):
                 token = self.next_token()
             elif token.value in ExpressionParser.EXPR_START_SET:
                 self.error_handler.flag(token, 'MISSING_COMMA', self)
-            elif token.value == 'RIGHT_PAREN':
+            elif token.value != 'RIGHT_PAREN':
                 token = self.synchronize(ExpressionParser.EXPR_START_SET, ptt_set=ExpressionParser.EXPR_START_SET_PTT)
 
         token = self.next_token()
