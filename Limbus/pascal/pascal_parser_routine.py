@@ -29,6 +29,7 @@ class CallParser(StatementParser):
     def __init__(self, parent):
         super().__init__(parent)
 
+    # CallParser
     def parse(self, token:Token):
         name = token.value.lower()
         pfid = Parser.symtab_stack.lookup(name)
@@ -48,7 +49,7 @@ class CallParser(StatementParser):
         :type is_write: bool
         """
         expression_parser: ExpressionParser = ExpressionParser(self)
-        prms_node: iCodeNode = iCodeFactory('PARAMETERS')
+        prms_node: iCodeNode = iCodeNodeFactory().create('PARAMETERS')
         formal_prms = []
         prms_cnt = 0
         prms_index = -1
@@ -60,7 +61,7 @@ class CallParser(StatementParser):
             else:
                 prms_cnt = 0
 
-        if token.ptype == PascalSpecialSymbol.LEFT_PAREN:
+        if token.ptype != PascalSpecialSymbol.LEFT_PAREN:
             if prms_cnt != 0:
                 self.error_handler.flag(token, 'WRONG_NUMBER_OF_PARMS', self)
             return None
@@ -148,15 +149,16 @@ class CallDeclaredParser(CallParser):
     def __init__(self, parent):
         super().__init__(parent)
 
+    # CallDeclaredParser
     def parse(self, token):
-        call_node = iCodeFactory('CALL')
+        call_node = iCodeNodeFactory().create('CALL')
         name: str = token.value.lower()
         pfid = Parser.symtab_stack.lookup(name)
         call_node.set_attribute('ID', pfid)
         call_node.set_typespec(pfid.get_typespec())
 
         token = self.next_token()
-        prms_node = self.parse_actual_parameters(token, pfid, True, False, True)
+        prms_node = self.parse_actual_parameters(token, pfid, True, False, False)
         call_node.add_child(prms_node)
         return call_node
 
@@ -347,6 +349,7 @@ class DeclaredRoutineParser(DeclarationsParser):
         self.dummy_counter = 0
         super().__init__(parent)
 
+    # DeclaredRoutineParser
     def parse(self, token, parent_id: SymTabEntry) -> SymTabEntry:
         routine_defn: Definition = None
         routine_type = token.value
@@ -444,7 +447,7 @@ class DeclaredRoutineParser(DeclarationsParser):
         if routine_id.get_definition() == Definition.FUNCTION:
             variable_decl_parser: VariableDeclarationsParser = VariableDeclarationsParser(self)
             variable_decl_parser.set_definition(Definition.FUNCTION)
-            typespec: TypeSpec = variable_decl_parser.parse(token, self)
+            typespec: TypeSpec = variable_decl_parser.parse_typespec(token)
             token = self.current_token()
 
             if typespec:

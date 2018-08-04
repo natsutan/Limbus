@@ -211,6 +211,8 @@ class StatementParser(PascalParserTD):
         super().__init__(parent)
 
     def parse(self, token):
+        from pascal.pascal_parser_routine import CallParser
+
         if token.ptype == PTT.RESERVED and  token.value == 'BEGIN':
             statement_node = CompoundStatementParser(self).parse(token)
         elif token.ptype == PTT.IDENTIFIER:
@@ -471,7 +473,7 @@ class ExpressionParser(StatementParser):
         else:
             result_type = Predefined.undefined_type
 
-        if sign_type and (not TypeChecker.is_integer_or_real(result_type)):
+        if sign_type and (not TypeChecker().is_integer_or_real(result_type)):
             self.error_handler.flag(sign_token, 'INCOMPATIBLE_TYPES', self)
 
         if sign_type == 'MINUS':
@@ -637,6 +639,10 @@ class ExpressionParser(StatementParser):
         return root_node
 
     def parse_identifier(self, token):
+
+        from pascal.pascal_parser_routine import CallParser
+
+
         root_node = None
         name = token.value.lower()
         id = Parser.symtab_stack.lookup(name)
