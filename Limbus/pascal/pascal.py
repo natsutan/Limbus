@@ -23,6 +23,12 @@ class SourceMessageListener(MessageListener):
 
 
 class ParserMessageListener(MessageListener):
+    LINE_FORMAT = ">>> AT LINE %03d\n"
+    ASSIGN_FORMAT = ">>> AT LINE %03d: %s = %s\n"
+    FETCH_FORMAT = ">>> AT LINE %03d: %s : %s\n"
+    CALL_FORMAT = ">>> AT LINE %03d: CALL %s\n"
+    RETURN_FORMAT = ">>> AT LINE %03d: RETURN FROM %s\n"
+
     def message_received(self, msg):
         mtype = msg.type
         body = msg.body
@@ -74,9 +80,14 @@ class ParserMessageListener(MessageListener):
 
 
 class BackendMessageListener(MessageListener):
-    def __init__(self):
+    def __init__(self, opts: dict):
+        self.lines = opts['lines']
+        self.assign = opts['assign']
+        self.fetch = opts['fetch']
+        self.call = opts['call']
+        self.returnn = opts['returnn']
         self.first_output_msg = True
-        self.ASSIGN_FORMAT = '>>> LINE %3d: %s = %s'
+
 
     def message_received(self, msg):
         mtype = msg.type
@@ -86,19 +97,31 @@ class BackendMessageListener(MessageListener):
         elif mtype == MessageType.COMPILER_SUMMARY:
             print('%d instructions generated' % body)
         elif mtype == 'ASSIGN':
-            if self.first_output_msg:
-                print('===== OUTPUT =====')
-                self.first_output_msg = False
-            line_number, name, value = body
-            print(self.ASSIGN_FORMAT % (line_number, name, str(value)))
+            if self.assign:
+                line_number, name, value = body
+                print(self.ASSIGN_FORMAT % (line_number, name, str(value)))
         elif mtype == 'RUNTIME_ERROR':
             err_msg, line_number = body
-
             print("*** RUNTIME ERROR")
             if line_number:
-                print(' AT LINE %03d' % line_number, end = '')
+                print(' AT LINE %03d' % line_number, end='')
             print(" : ", err_msg)
-
+        elif mtype == 'SOURCE_LINE':
+            if self.lines:
+                line_number = body
+                print(self.LINE_FORMAT % line_number)
+        elif mtype == 'FETCH':
+            if self.fetch:
+                line_number, name, value = body
+                print(self.FETCH_FORMAT % (line_number, name, str(value)))
+        elif mtype == 'CALL':
+            if self.call:
+                line_number, routine_name = body
+                print(self.CALL_FORMAT % (line_number, routine_name))
+        elif mtype == 'RETURN':
+            if self.returnn:
+                line_number, routine_name = body
+                print(self.RETURN_FORMAT % (line_number, routine_name))
 
 class PascalScanner(Scanner):
     special_chars = "<>=()[]{}^.+-*/:.,;'="
@@ -144,15 +167,22 @@ class PascalScanner(Scanner):
 class Pascal:
     def __init__(self, op, file, flags):
         # options
-        if 'i' in flags:
-            self.intermediate = True
-        else:
-            self.intermediate = False
 
-        if 'x' in flags:
-            self.xref = True
-        else:
-            self.xref = False
+        self.intermediate =  'i' in flags
+        self.xref = 'x' in flags
+        self.lines = 'l' in flags
+        self.assign = 'a' in flags
+        self.fetch = 'f' in flags
+        self.call = 'c' in flags
+        self.returnn = 'r' in flags
+        self.opts = {
+            'xref': self.xref,
+            'lines': self.lines,
+            'assign': self.assign,
+            'fetch': self.fetch,
+            'call': self.call,
+            'returnn': self.returnn
+        }
 
         self.source = Source(open(file))
         self.source.add_message_listener(SourceMessageListener())
@@ -162,7 +192,7 @@ class Pascal:
         self.parser.add_message_listener(ParserMessageListener())
 
         self.backend = BackendFactory().create_backend(op)
-        self.backend.add_message_listener(BackendMessageListener())
+        self.backend.add_message_listener(BackendMessageListener(self.opts))
 
         self.parser.parse()
         self.source.close()
