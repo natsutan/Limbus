@@ -171,8 +171,9 @@ class Pascal:
             print("PARSE ERROR, STOP PROCESSING")
             return
 
-        self.iCode = self.parser.get_iCode()
         self.symtab_stack = self.parser.get_symTab()
+        program_id = self.symtab_stack.get_program_id()
+        self.iCode = program_id.get_attribute('ROUTINE_ICODE')
 
         if self.xref:
             cross_referencer = CrossReferencer()
@@ -181,7 +182,7 @@ class Pascal:
         if self.intermediate:
             with open('tree.xml', 'w') as fp:
                 tree_printer = ParseTreePrinter(fp)
-                tree_printer.print(self.iCode)
+                tree_printer.print(self.symtab_stack)
 
 #        self.backend.process(self.iCode, self.symtab_stack)
 

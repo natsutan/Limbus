@@ -14,9 +14,10 @@ class ParseTreePrinter:
         self.line = ""
         self.indent = " " * self.INDENT_WIDTH
 
-    def print(self, inode):
+    def print(self, symtab_stack):
         self.ps.write('<!--- ===== INTERMEDIATE CODE =====  -->\n')
-        self.print_node(inode.get_root())
+        program_id = symtab_stack.get_program_id()
+        self.print_routine(program_id)
         self.print_line()
 
     def print_line(self):
@@ -86,7 +87,6 @@ class ParseTreePrinter:
             #self.append(" ")
             #self.append(str(value))
 
-
     def print_child_nodes(self, child_nodes):
         save_indentation = self.indentation
         self.indentation = self.indentation + self.indent
@@ -107,11 +107,23 @@ class ParseTreePrinter:
             if type_id:
                 type_name = type_id.get_name()
             else:
-#                code = typespec.hash_code() + typespec.get_form().hash_code()
-#                code = "123"
                 code = hash(typespec) + hash(typespec.get_form())
                 type_name = "$anon_" + str(code)
 
             self.print_attribute("TYPE_ID", type_name)
             self.indentation = save_margin
+
+    def print_routine(self, routine_id):
+        definition = routine_id.get_definition()
+
+        self.append('<!--- *** ' + str(definition) + ' ' + routine_id.get_name() + ' *** -->')
+        self.print_line()
+
+        icode = routine_id.get_attribute('ROUTINE_ICODE')
+        if icode.get_root():
+            self.print_node(icode.get_root())
+
+        rids = routine_id.get_attribute('ROUTINE_ROUTINES')
+        for rid in rids:
+            self.print_routine(rid)
 

@@ -62,27 +62,8 @@ class PascalParserTD(Parser):
         try:
             token = self.next_token()
             program_parser = ProgramParser(self)
-            root_node = program_parser.parse(token, None)
+            program_parser.parse(token, None)
             token = self.current_token()
-
-            if root_node == None:
-                self.error_handler.abort_translation('PARSE_ERROR', self)
-                return
-
-
-            # Parser.iCode.set_root(root_node)
-            # Parser.symtab_stack.pop()
-            #
-            # token = self.current_token()
-            # if token.ptype == PTT.RESERVED and token.value == 'DOT':
-            #     self.error_handler.flag(token, 'MISSING_PERIOD', self)
-            # token = self.current_token()
-            #
-            # line_number = token.line_num
-            # err_cnt = self.get_error_count()
-            #
-            # msg = Message(MessageType.PARSER_SUMMARY, (line_number, err_cnt))
-            # self.send_message(msg)
 
         except FileNotFoundError:
             self.error_handler.abort_translation('IO_ERROR', self)
