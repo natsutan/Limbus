@@ -182,7 +182,7 @@ class Pascal:
         if self.intermediate:
             with open('tree.xml', 'w') as fp:
                 tree_printer = ParseTreePrinter(fp)
-                tree_printer.print(self.iCode)
+                tree_printer.print(self.symtab_stack)
 
 #        self.backend.process(self.iCode, self.symtab_stack)
 
