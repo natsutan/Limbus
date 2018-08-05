@@ -25,7 +25,7 @@ class CrossReferencer:
         definiton = routine_id.get_definition()
         print("\n***" + str(definiton) + " " + routine_id.get_name() + " ***")
         self.print_column_headings()
-        symtab = routine_id.get_attribute(SymTabKey.ROUTINE_SYMTAB)
+        symtab = routine_id.get_attribute('ROUTINE_SYMTAB')
         new_record_types = []
         self.print_symtab(symtab, new_record_types)
         if len(new_record_types) > 0:

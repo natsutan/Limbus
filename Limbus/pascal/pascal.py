@@ -171,8 +171,9 @@ class Pascal:
             print("PARSE ERROR, STOP PROCESSING")
             return
 
-        self.iCode = self.parser.get_iCode()
         self.symtab_stack = self.parser.get_symTab()
+        program_id = self.symtab_stack.get_program_id()
+        self.iCode = program_id.get_attribute('ROUTINE_ICODE')
 
         if self.xref:
             cross_referencer = CrossReferencer()

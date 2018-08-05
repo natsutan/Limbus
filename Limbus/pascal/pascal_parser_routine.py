@@ -414,7 +414,7 @@ class DeclaredRoutineParser(DeclarationsParser):
             routine_id.set_attribute('ROUTINE_CODE', 'DECLARED')
             block_parser: BlockParser = BlockParser(self)
             root_node: iCodeNode = block_parser.parse(token, routine_id)
-            Parser.iCode.set_root(root_node)
+            icode.set_root(root_node)
 
         Parser.symtab_stack.pop()
         return routine_id
