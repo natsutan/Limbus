@@ -31,7 +31,7 @@ class CrossReferencer:
         if len(new_record_types) > 0:
             self.print_records(new_record_types)
 
-        routine_ids = routine_id.get_attribute(SymTabKey.ROUTINE_ROUTINES)
+        routine_ids = routine_id.get_attribute('ROUTINE_ROUTINES')
         if routine_ids:
             for rid in routine_ids:
                 self.print_routine(rid)

@@ -388,9 +388,9 @@ class DeclaredRoutineParser(DeclarationsParser):
 
         if routine_defn == Definition.PROGRAM:
             Parser.symtab_stack.set_program_id(routine_id)
-        elif routine_id.get_attribute('ROUTINE_CODE' != 'FORWARD'):
+        elif routine_id.get_attribute('ROUTINE_CODE') != 'FORWARD':
             subroutines = parent_id.get_attribute('ROUTINE_ROUTINES')
-            subroutines.add(routine_id)
+            subroutines.append(routine_id)
 
         if routine_id.get_attribute('ROUTINE_CODE') == 'FORWARD':
             if token.value != 'SEMICOLON':
