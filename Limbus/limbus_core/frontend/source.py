@@ -81,3 +81,20 @@ class Source(MessageProducer):
 
     def send_message(self, message):
         self.message_handler.send_message(message)
+
+    def is_at_eol(self):
+        if self.line and self.current_pos == len(self.line):
+            return True
+        else:
+            return False
+
+    def is_at_eof(self):
+        if self.current_pos == -2:
+            self.read_line()
+
+        return self.line is None
+
+    def skip_to_next_line(self):
+        if not (self.line is None):
+            self.current_pos = len(self.line) + 1
+

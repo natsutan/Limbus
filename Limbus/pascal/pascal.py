@@ -123,6 +123,7 @@ class BackendMessageListener(MessageListener):
                 line_number, routine_name = body
                 print(self.RETURN_FORMAT % (line_number, routine_name))
 
+
 class PascalScanner(Scanner):
     special_chars = "<>=()[]{}^.+-*/:.,;'="
 
@@ -162,6 +163,15 @@ class PascalScanner(Scanner):
                     cc = self.next_char()
             else:
                 cc = self.next_char()
+
+    def is_at_eol(self):
+        return self.source.is_at_eol()
+
+    def is_at_eof(self):
+        return self.source.is_at_eof()
+
+    def is_skip_to_next_line(self):
+        return self.source.is_skip_to_next_line()
 
 
 class Pascal:
