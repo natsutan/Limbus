@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .executer import Executer
+from .executor import Executor
 from .codegenerator import CodeGeneretor
 
 
