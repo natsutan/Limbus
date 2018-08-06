@@ -1,7 +1,5 @@
-import sys
 from abc import ABCMeta, abstractmethod
 
-from ..message import Message, MessageType
 from .activation_record_if import ActivationRecordIF
 
 
@@ -69,19 +67,3 @@ class RuntimeErrorCode:
         self.message = message
 
 
-class RuntimeErrorHandler:
-    MAX_ERRORS = 5
-    error_count = 0
-
-    def flag(self, node, error_code: RuntimeErrorCode, backend):
-
-        while (not (node is None)) and node.get_attribute('LINE') is None:
-            node = node.get_parent()
-
-        msg = Message(MessageType.RUNTIME_ERROR, (error_code.message, node.get_attribute('LINE')))
-        backend.send_message(msg)
-
-        self.error_count += 1
-        if self.MAX_ERRORS < self.error_count:
-            print('*** ABORTED AFTER TOO MANY RUNTIME ERRORS.')
-            sys.exit(-1)

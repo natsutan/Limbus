@@ -1,63 +1,68 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from . backend import Backend
+
+from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
+from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF
+from .. intermidiate .iCode_factory import iCodeNodeFactory
 from .. message import Message, MessageType
 
+from . runtime_if import RuntimeErrorCode, RuntimeStackIF
+from . memory_if import create_memory_map, create_runtime_stack
 
-class RunTimeErrorHandler:
-    def __init__(self):
-        self.MAX_ERRORS = 5
-        self.error_count = 0
 
-    def get_error_count(self):
-        return self.error_count
+class RuntimeErrorHandler:
+    MAX_ERRORS = 5
+    error_count = 0
 
-    def flag(self, node, error_code, backend):
-        # line_number = ""
-        while node and node.get_attribute("LINE"):
+    def flag(self, node, error_code: RuntimeErrorCode, backend):
+
+        while (not (node is None)) and node.get_attribute('LINE') is None:
             node = node.get_parent()
 
-        if node != None:
-            msg = Message('RUNTIME_ERROR', (error_code, node.get_attribute('LINE')))
-        else:
-            msg = Message('RUNTIME_ERROR', (error_code, None))
-
+        msg = Message(MessageType.RUNTIME_ERROR, (error_code.message, node.get_attribute('LINE')))
         backend.send_message(msg)
 
-        Executer.runtime_error += 1
-        if Executer.runtime_error > self.MAX_ERRORS:
-            print("*** ABORTED AFTER TOO MANY RUNTIME ERRORS.")
-            sys.exit(1)
+        self.error_count += 1
+        if self.MAX_ERRORS < self.error_count:
+            print('*** ABORTED AFTER TOO MANY RUNTIME ERRORS.')
+            sys.exit(-1)
 
 
-class Executer(Backend):
-    error_handler = RunTimeErrorHandler()
-    execution_count = 0
-    runtime_error = 0
+class Executor(Backend):
+
+    execution_count: int = 0
+    runtime_stack: RuntimeStackIF = create_runtime_stack()
+    error_handler: RuntimeErrorHandler = RuntimeErrorHandler()
 
     def __init__(self, parent):
+        self.symtab_stack: SymTabStackIF = None
         super().__init__()
 
     def get_error_handler(self):
-        return Executer.error_handler
+        return self.error_handler
 
     def increment_exec_count(self):
-        Executer.execution_count += 1
+        self.execution_count += 1
 
-    def process(self, icode, symtab):
+    def process(self, icode: iCodeIF, symtab_stack: SymTabStackIF):
         self.iCode = icode
-        self.symtab = symtab
+        self.symtab_stack = symtab_stack
+        program_id: SynTabEntryIF = self.symtab_stack.get_program_id()
 
-        root_node = self.iCode.get_root()
-        statement_exec = StatementExecutor(self)
-        statement_exec.execute(root_node)
+        call_node: iCodeNodeIF = iCodeNodeFactory().create('CALL')
+        call_node.set_attribute('ID', program_id)
 
-        ec = Executer.execution_count
-        re = Executer.runtime_error
-        msg = Message(MessageType.INTERPRETER_SUMMARY, (ec, re))
+        call_executor = CallDeclaredExecutor(self)
+        call_executor.execute(call_node)
+
+        runtime_errors = self.error_handler.error_count
+        msg = Message(MessageType.INTERPRETER_SUMMARY, (self.execution_count, runtime_errors))
         self.send_message(msg)
 
 
-class StatementExecutor(Executer):
+class StatementExecutor(Executor):
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -345,3 +350,8 @@ class IfExecutor(StatementExecutor):
 
         self.increment_exec_count()
         return None
+
+
+class CallDeclaredExecutor():
+    def __init__(self, parent):
+        pass
