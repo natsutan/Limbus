@@ -2,15 +2,12 @@ from abc import ABCMeta, abstractmethod
 
 
 class ActivationRecordIF(metaclass=ABCMeta):
-    def __init__(self):
-        self.records: list = []
-
     @abstractmethod
     def get_routine_id(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_cell(self):
+    def get_cell(self, name: str):
         raise NotImplementedError()
 
     @abstractmethod
