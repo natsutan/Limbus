@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 import sys
+import copy
 
 from . backend import Backend
 
 from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
 from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF
 from .. intermidiate .iCode_factory import iCodeNodeFactory
+from .. intermidiate. type_impl import TypeSpec, Predefined
 from .. message import Message, MessageType
 
-from . runtime_if import RuntimeErrorCode, RuntimeStackIF
-from . memory_if import create_memory_map, create_runtime_stack
-
+from . runtime_if import RuntimeErrorCode, RuntimeStackIF, CellIF
+from . memory_if import create_runtime_stack, create_active_recode
+from . activation_record_if import ActivationRecordIF
 
 class RuntimeErrorHandler:
     MAX_ERRORS = 5
     error_count = 0
 
-    def flag(self, node, error_code: RuntimeErrorCode, backend):
+    def flag(self, node, error_code: RuntimeErrorCode, backend: Backend):
 
-        while (not (node is None)) and node.get_attribute('LINE') is None:
+        while node is not None and node.get_attribute('LINE') is None:
             node = node.get_parent()
 
         msg = Message(MessageType.RUNTIME_ERROR, (error_code.message, node.get_attribute('LINE')))
@@ -98,6 +100,16 @@ class StatementExecutor(Executor):
             msg =  Message(MessageType.SOURCE_LINE, line_number)
             self.message_handler.send_message(msg)
 
+    # TODO
+    def check_range(self, node: iCodeNodeIF, typespec: TypeSpec, value):
+        return value
+
+    def copy_of(self, value, node: iCodeNodeIF):
+        return value
+
+    def send_assign_message(self, node: iCodeNodeIF, variable_name:str, value):
+        pass
+
 
 class CompoundExecutor(StatementExecutor):
     def __init__(self, parent):
@@ -115,24 +127,45 @@ class AssignmentExecutor(StatementExecutor):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def execute(self, node):
-        children = node.get_children()
-        variable_node = children[0]
-        expression_node = children[1]
+    def execute(self, node: iCodeNodeIF):
+        children: list = node.get_children()
+        variable_node: iCodeNodeIF = children[0]
+        expression_node: iCodeNodeIF = children[1]
+        variable_id: SynTabEntryIF = variable_node.get_attribute('ID')
 
         expression_exec = ExpressionExecutor(self)
         value = expression_exec.execute(expression_node)
+        target_cell: CellIF = expression_exec.execute_variable(variable_node)
 
-        variable_id = variable_node.get_attribute('ID')
-        variable_id.set_attribute('DATA_VALUE', value)
+        target_type: TypeSpec = variable_node.get_typespec()
+        value_type: TypeSpec = expression_node.get_typespec().base_type()
+        value = expression_exec.execute(expression_node)
 
-        #print("ASSIGN ", variable_id.name, " ", value, " ", variable_id)
-
-        self._send_message(node, variable_id.get_name(), value)
-
+        self.assign_value(node, variable_id, target_cell, target_type, value, value_type)
         self.increment_exec_count()
 
         return None
+
+    def assign_value(self, node: iCodeNodeIF, target_id: SynTabEntryIF, target_cell: CellIF, target_type: TypeSpec,
+                     value, value_type: TypeSpec):
+        value = self.check_range(node, target_type, value)
+
+        # Convert an integer value to real if necessary.
+        if target_type == Predefined.real_type and value_type == Predefined.integer_type:
+            target_cell.value = float(value)
+        elif target_type.is_pascal_string():
+            target_length: int = target_type.get_attribute('ARRAY_ELEMENT_COUNT')
+            value_length: int = value_type.get_attribute('ARRAY_ELEMENT_COUNT')
+            string_value: str = str(value)
+
+            if target_length > value_length:
+                string_value += ' ' * (target_length - value_length)
+
+            target_cell.value = self.copy_of(string_value, node)
+        else:
+            target_cell.vaue = self.copy_of(value, node)
+
+        self.send_assign_message(node, target_id.get_name(), value)
 
     def _send_message(self, node, name, value):
         line_number = node.get_attribute('LINE')
@@ -313,7 +346,7 @@ class LoopExecutor(StatementExecutor):
             for child in loop_children:
                 child_type = child.get_type()
                 if child_type == 'TEST':
-                    if expr_node == None:
+                    if expr_node is None:
                         expr_node = child.get_children()[0]
                     exit_loop = expression_exec.execute(expr_node)
                 else:
@@ -352,6 +385,28 @@ class IfExecutor(StatementExecutor):
         return None
 
 
-class CallDeclaredExecutor():
+class CallExecutor(StatementExecutor):
+    def __init__(self):
+        super.__init__()
+
+
+class CallDeclaredExecutor(CallExecutor):
     def __init__(self, parent):
+        super.__init__()
+
+    def execute(self, node: iCodeNodeIF):
+        routine_id: SynTabEntryIF = node.get_attribute('ID')
+        new_ar: ActivationRecordIF = create_active_recode(routine_id)
+
+        if len(node.get_children()) > 0:
+            prms_node: iCodeNodeIF = node.get_children()[0]
+            actual_nodes: list = prms_node.get_children()
+            formal_ids: list = routine_id.get_attribute('ROUTINE_PARMS')
+            self.execute_actual_parameters(actual_nodes, formal_ids, new_ar)
+
+        self.runtime_stack.push(new_ar)
+
+
+
+    def execute_actual_parameters(self, actual_nodes: list, formal_ids: list, new_ar: ActivationRecordIF):
         pass
