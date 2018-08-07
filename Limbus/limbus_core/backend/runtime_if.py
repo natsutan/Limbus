@@ -16,9 +16,6 @@ class CellIF(metaclass=ABCMeta):
 
 
 class RuntimeStackIF(metaclass=ABCMeta):
-    def __init__(self):
-        self.records: list = []
-
     @abstractmethod
     def get_topmost(self, nesting_level: int):
         raise NotImplementedError()

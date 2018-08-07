@@ -26,3 +26,6 @@ class ActivationRecordIF(metaclass=ABCMeta):
     def make_linked_to(self, ar):
         raise NotImplementedError()
 
+    @abstractmethod
+    def is_dummy(self) -> bool:
+        raise NotImplementedError()
