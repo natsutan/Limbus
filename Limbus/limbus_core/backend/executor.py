@@ -398,13 +398,18 @@ class IfExecutor(StatementExecutor):
 
 
 class CallExecutor(StatementExecutor):
-    def __init__(self):
-        super.__init__()
+
+    def __init__(self, parent):
+        super.__init__(parent)
+
+    def execute(self, node: iCodeNodeIF):
+        routine_id = node.get_attribute('ID')
 
 
 class CallDeclaredExecutor(CallExecutor):
+
     def __init__(self, parent):
-        super.__init__()
+        super.__init__(parent)
 
     def execute(self, node: iCodeNodeIF):
         routine_id: SynTabEntryIF = node.get_attribute('ID')

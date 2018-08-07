@@ -68,4 +68,3 @@ class MemoryMap(MemoryMapIF):
         memory_map: MemoryMapIF = create_memory_map(symtab)
 
         return memory_map
-
