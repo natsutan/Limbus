@@ -8,7 +8,7 @@ class ActivationRecord(ActivationRecordIF):
 
     def __init__(self, routine_id: SynTabEntryIF):
         self.dummy = False
-        self.link:ActivationRecordIF = None
+        self.link: ActivationRecordIF = None
         self.symtab: SymTabIF = routine_id.get_attribute('ROUTINE_SYMTAB')
         self.routine_id: SynTabEntryIF = routine_id
         self.nesting_level: int = self.symtab.get_nesting_level()
