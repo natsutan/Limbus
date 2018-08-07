@@ -30,8 +30,10 @@ class TypeSpecIF(metaclass=ABCMeta):
     def base_type(self):
         raise NotImplementedError()
 
+
 class TypeFormIF(metaclass=ABCMeta):
     pass
+
 
 class TypeKeyIF(metaclass=ABCMeta):
     pass
