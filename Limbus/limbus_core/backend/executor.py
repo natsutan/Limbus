@@ -7,7 +7,7 @@ from . backend import Backend
 from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
 from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF
 from .. intermidiate .iCode_factory import iCodeNodeFactory
-from .. intermidiate. type_impl import TypeSpec, Predefined
+from .. intermidiate. type_impl import TypeSpec, Predefined, Definition
 from .. message import Message, MessageType
 
 from . runtime_if import RuntimeErrorCode, RuntimeStackIF, CellIF
@@ -68,8 +68,8 @@ class StatementExecutor(Executor):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def execute(self, node):
-        node_type = node.type
+    def execute(self, node: iCodeNodeIF):
+        node_type = node.get_type()
         self.send_sourceline_message(node)
 
         if node_type == 'COMPOUND':
@@ -109,6 +109,15 @@ class StatementExecutor(Executor):
 
     def send_assign_message(self, node: iCodeNodeIF, variable_name:str, value):
         pass
+
+    def send_call_message(self, note: iCodeNodeIF, routine_name: str):
+        pass
+
+    def send_return_message(self, node: iCodeNodeIF, routine_name: str):
+        pass
+
+    def get_line_number(self, node: iCodeNodeIF):
+        return None
 
 
 class CompoundExecutor(StatementExecutor):
@@ -185,7 +194,6 @@ class ExpressionExecutor(StatementExecutor):
 
         if node_type == 'VARIABLE':
             entry = node.get_attribute('ID')
-            #print("Exe:entry:", entry.name, " ", entry.attribute, " ", entry)
             val = entry.get_attribute('DATA_VALUE')
             return val
         elif node_type == 'INTEGER_CONSTANT':
@@ -283,6 +291,10 @@ class ExpressionExecutor(StatementExecutor):
             return oprand1 >= oprand2
 
         return 0
+
+    # todo
+    def execute_value(self, node: iCodeNodeIF):
+        return None
 
 
 class SelectExecutor(StatementExecutor):
@@ -405,8 +417,37 @@ class CallDeclaredExecutor(CallExecutor):
             self.execute_actual_parameters(actual_nodes, formal_ids, new_ar)
 
         self.runtime_stack.push(new_ar)
+        self.send_call_message(node, routine_id.get_name())
 
+        icode: iCodeIF = routine_id.get_attribute('ROUTINE_ICODE')
+        root_node: iCodeNodeIF = icode.get_root()
 
+        statement_exec = StatementExecutor(self)
+        value = statement_exec.execute(root_node)
+
+        self.runtime_stack.pop()
+        self.send_return_message(node, routine_id.get_name())
+        return value
 
     def execute_actual_parameters(self, actual_nodes: list, formal_ids: list, new_ar: ActivationRecordIF):
-        pass
+        expression_exec = ExpressionExecutor(self)
+        assignment_exec = AssignmentExecutor(self)
+
+        for i in range(len(formal_ids)):
+            formal_id: SynTabEntryIF = formal_ids[i]
+            formar_defn: Definition = formal_id.get_definition()
+            formal_cell: CellIF = new_ar.get_cell(formal_id.get_name())
+            actual_node: iCodeNodeIF = actual_nodes[i]
+
+            if formar_defn == Definition.VAR_PARM:
+                formal_type: TypeSpec = formal_id.get_typespec()
+                value_type: TypeSpec = actual_node.get_typespec().base_type()
+                value = expression_exec.execute(actual_node)
+                assignment_exec.assign_value(actual_node, formal_id, formal_cell, formal_type, value, value_type)
+            else:
+                actual_cell: CellIF = expression_exec.execute_value(actual_node)
+                formal_cell.value = actual_cell
+
+
+
+
