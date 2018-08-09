@@ -4,6 +4,8 @@ import copy
 
 from . backend import Backend
 
+from ... pascal.pascal_limbus import PascalScanner
+from .. frontend.source import Source
 from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
 from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF
 from .. intermidiate .iCode_factory import iCodeNodeFactory
@@ -13,6 +15,7 @@ from .. message import Message, MessageType
 from . runtime_if import RuntimeErrorCode, RuntimeStackIF, CellIF
 from . memory_if import create_runtime_stack, create_active_recode
 from . activation_record_if import ActivationRecordIF
+
 
 class RuntimeErrorHandler:
     MAX_ERRORS = 5
@@ -37,6 +40,9 @@ class Executor(Backend):
     execution_count: int = 0
     runtime_stack: RuntimeStackIF = create_runtime_stack()
     error_handler: RuntimeErrorHandler = RuntimeErrorHandler()
+
+    standard_in = PascalScanner(sys.__stdin__)
+    standard_out = sys.__stdout__
 
     def __init__(self, parent):
         self.symtab_stack: SymTabStackIF = None
@@ -398,12 +404,19 @@ class IfExecutor(StatementExecutor):
 
 
 class CallExecutor(StatementExecutor):
-
     def __init__(self, parent):
         super.__init__(parent)
 
     def execute(self, node: iCodeNodeIF):
         routine_id = node.get_attribute('ID')
+        routine_code: str = routine_id.get_attribute('ROUTINE_CODE')
+        if routine_code == 'DECLARED':
+            call_exec = CallDeclaredExecutor(self)
+        else:
+            call_exec = CallStandardExecutor(self)
+
+        self.increment_exec_count()
+        return call_exec.execute(node)
 
 
 class CallDeclaredExecutor(CallExecutor):
@@ -440,11 +453,11 @@ class CallDeclaredExecutor(CallExecutor):
 
         for i in range(len(formal_ids)):
             formal_id: SynTabEntryIF = formal_ids[i]
-            formar_defn: Definition = formal_id.get_definition()
+            formal_defn: Definition = formal_id.get_definition()
             formal_cell: CellIF = new_ar.get_cell(formal_id.get_name())
             actual_node: iCodeNodeIF = actual_nodes[i]
 
-            if formar_defn == Definition.VAR_PARM:
+            if formal_defn == Definition.VAR_PARM:
                 formal_type: TypeSpec = formal_id.get_typespec()
                 value_type: TypeSpec = actual_node.get_typespec().base_type()
                 value = expression_exec.execute(actual_node)
@@ -454,5 +467,191 @@ class CallDeclaredExecutor(CallExecutor):
                 formal_cell.value = actual_cell
 
 
+class CallStandardExecutor(CallExecutor):
+    def __init__(self, parent):
+        expression_exec = None
+        super.__init__(parent)
 
+    def execute(self, node: iCodeNodeIF):
+        routine_id = node.get_attribute('ID')
+        routine_code: str = routine_id.get_attribute('ROUTINE_CODE')
+        typespec: TypeSpec = node.get_typespec()
+        self.expression_exec = ExpressionExecutor(self)
+        actual_node: iCodeNodeIF = None
+
+        if len(node.get_children()) > 0:
+            prms_node: iCodeNodeIF = node.get_children()[0]
+            actual_node = prms_node.get_children()[0]
+
+        if routine_code == 'READ' or routine_code == 'READLN':
+            return self.execute_read_readln(node, routine_code)
+        elif routine_code == 'WRITE' or routine_code == 'WRITELN':
+            return self.exec_write_writeln(node, routine_code)
+        elif routine_code == 'EOF' or routine_code == 'EOLN':
+            return self.exec_eof_eoln(node, routine_code)
+        elif routine_code == 'ABS' or routine_code == 'SQR':
+            return self.exec_abs_sqr(node, routine_code, actual_node)
+        elif routine_code in ['ARCTAN', 'COS', 'EXP', 'LN', 'SIN', 'SQRT']:
+            return self.exec_arctan_cos_exp_ln_sin_sqrt(node, routine_code, actual_node)
+        elif routine_code == 'PRED' or routine_code == 'SUCC':
+            return self.exec_pred_succ(node, routine_code, actual_node, typespec)
+        elif routine_code == 'CHR':
+            return self.exec_chr(node, routine_code, actual_node)
+        elif routine_code == 'ODD':
+            return self.exec_odd(node, routine_code, actual_node)
+        elif routine_code == 'ORD':
+            return self.exec_ord(node, routine_code, actual_node)
+        elif routine_code == 'ROUND' or routine_code == 'TRUNC':
+            return self.exec_round_trunc(node, routine_code, actual_node)
+        return None
+
+    def execute_read_readln(self, call_node: iCodeNodeIF, routine_code: str):
+        if len(call_node.get_children()) > 0:
+            prms_node: iCodeNodeIF = call_node.get_children()[0]
+        else:
+            prms_node: iCodeNodeIF = None
+
+        if prms_node is not None:
+            actuals: list = prms_node.get_children()
+            for actual_node in actuals:
+                typespec: TypeSpec = actual_node.get_typespec()
+                basetype: TypeSpec = typespec.base_type()
+                variable_cell: CellIF = self.expression_exec(actual_node)
+
+                try:
+                    if basetype == Predefined.integer_type:
+                        token = self.standard_in.next_token()
+                        value = int(self.parse_number(token, basetype))
+                    elif basetype == Predefined.real_type:
+                        token = self.standard_in.next_token()
+                        value = float(self.parse_number(token, basetype))
+                    elif basetype == Predefined.boolean_type:
+                        token = self.standard_in.next_token()
+                        value = self.parse_boolean(token)
+                    elif basetype == Predefined.char_type:
+                        ch = self.standard_in.next_ch()
+                        if ch == Source.EOL or ch == Source.EOF:
+                            ch = ' '
+                        value = ch
+                    else:
+                        raise ValueError()
+
+                except ValueError:
+                    self.error_handler.flag(call_node, 'INVALID_INPUT', self)
+                    if basetype == Predefined.real_type:
+                        value = 0.0
+                    elif basetype == Predefined.char_type:
+                        value = ' '
+                    elif basetype == Predefined.boolean_type:
+                        value = False
+                    else:
+                        value = 0
+
+                value = self.check_range(call_node, typespec, value)
+                variable_cell.value = value
+                actual_id: SynTabEntryIF = actual_node.get_attribute('ID')
+
+                self.send_assign_message(call_node, actual_id.get_name(), value)
+
+        if routine_code == 'READLN':
+            try:
+                self.standard_in.is_skip_to_next_line()
+            except:
+                self.error_handler.flag(call_node, 'INVALID_INPUT', self)
+
+        return None
+
+    def parse_number(self, token, typespec: TypeSpec):
+        token_type = token.type
+        sign = None
+
+        if token_type == 'PLUS' or token_type == 'MINUS':
+            sign = token_type
+            token = self.standard_in.next_token()
+            token_type = token.type
+
+        value = token.value
+        if token_type == PTT.INTEGER:
+            if sign == 'MINUS':
+                value = - int(token.value)
+
+            if typespec == Predefined.integer_type:
+                return int(value)
+            else:
+                return float(value)
+        if token_type == PTT.REAL:
+            if sign == 'MINUS':
+                value = - float(value)
+
+            return float(value)
+
+        raise ValueError
+
+    @staticmethod
+    def parse_boolean(token):
+        if token.value.lower() == 'true':
+            return True
+        elif token.value.lower() == 'false':
+            return False
+        raise ValueError
+
+    def exec_write_writeln(self, call_node: iCodeNodeIF, routine_code: str):
+        if len(call_node.get_children()) > 0:
+            prms_node: iCodeNodeIF = call_node.get_children()[0]
+        else:
+            prms_node: iCodeNodeIF = None
+
+        if prms_node is not None:
+            actuals: list = prms_node.get_children()
+            for write_prm_node in actuals:
+                children: list = write_prm_node.get_children()
+                expr_node: iCodeNodeIF = children[0]
+                data_type: TypeSpec = expr_node.get_typespec().basetype()
+
+                typecode: str = 's'
+                if data_type == Predefined.integer_type:
+                    typecode = 'd'
+                elif data_type == Predefined.real_type:
+                    typecode = 'f'
+                elif data_type == Predefined.boolean_type:
+                    typecode = 's'
+                elif data_type == Predefined.char_type:
+                    typecode = 'c'
+
+                value = self.expression_exec.execute(expr_node)
+
+                if data_type == Predefined.char_type and isinstance(value, str):
+                    value = value[0]
+
+                self.standard_out.print(str(value), end='')
+
+        if routine_code == 'WRITELN':
+            # \n
+            self.standard_out.print('')
+
+        return None
+
+    def exec_eof_eoln(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_abs_sqr(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_arctan_cos_exp_ln_sin_sqrt(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_pred_succ(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_chr(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_odd(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_ord(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
+
+    def exec_round_trunc(self, call_node: iCodeNodeIF, routine_code: str):
+        pass
 
