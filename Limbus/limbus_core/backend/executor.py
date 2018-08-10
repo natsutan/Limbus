@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import copy
+import math
 
 from . backend import Backend
 
@@ -632,26 +633,89 @@ class CallStandardExecutor(CallExecutor):
         return None
 
     def exec_eof_eoln(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+        try:
+            if rotuine_code == 'EOF':
+                return self.standard_in.at_eof()
+            else:
+                return self.standard_in.at_eol()
+        except:
+            self.error_handler.flag(call_node, 'INVALID_INPUT', self)
+            return True
 
-    def exec_abs_sqr(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
 
-    def exec_arctan_cos_exp_ln_sin_sqrt(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+    def exec_abs_sqr(self, call_node: iCodeNodeIF, routine_code: str, actual_code: iCodeNodeIF):
+        arg_value = self.expression_exec.execute(actual_node)
+        if isinstance(arg_value, int):
+            value = int(arg_value)
+            if routine_code == 'ABS':
+                return int(math.fabs(value))
+            else:
+                return value * value
+        else:
+            value = float(arg_value)
+            if routine_code == 'ABS':
+                return math.fabs(value)
+            else:
+                return value * value
 
-    def exec_pred_succ(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+    def exec_arctan_cos_exp_ln_sin_sqrt(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF):
+        arg_value = self.expression_exec.execute(actual_node)
+        value = float(arg_value)
+        if routine_code == 'ARCTAN':
+            return math.atan(value)
+        elif routine_code == 'COS':
+            return math.cos(value)
+        elif routine_code == 'EXP':
+            return math.exp(value)
+        elif routine_code == 'SIN':
+            return math.sin(value)
+        elif routine_code == 'LN':
+            if value > 0.0:
+                return math.log(value, 2)
+            else:
+                self.error_handler.flag(call_node, 'INVALID_STANDARD_FUNCTION_ARGUMENT', self)
+                return 0.0
+        elif routine_code == 'SQRT':
+            if value > 0.0:
+                return math.sqrt(value)
+            else:
+                self.error_handler.flag(call_node, 'INVALID_STANDARD_FUNCTION_ARGUMENT', self)
+        return 0.0
 
-    def exec_chr(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+    def exec_pred_succ(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF, typespec: TypeSpec):
+        value = int(self.expression_exec.execute(actual_node))
+        if routine_code == 'PRED':
+            new_value = value - 1
+        else:
+            new_value = value + 1
+        new_value = self.check_range(call_node, typespec, new_value)
+        return new_value
 
-    def exec_odd(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
 
-    def exec_ord(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+    def exec_chr(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF):
+        value = self.expression_exec.execute(actual_node)
+        ch = str(value)
+        return ch
 
-    def exec_round_trunc(self, call_node: iCodeNodeIF, routine_code: str):
-        pass
+    def exec_odd(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF):
+        value = int(self.expression_exec.execute(actual_node))
+        return value % 2 == 1
 
+    def exec_ord(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF):
+        value = self.expression_exec.execute(actual_node)
+        if isinstance(value, str):
+            return int(value[0])
+        else:
+            return int(value)
+
+    def exec_round_trunc(self, call_node: iCodeNodeIF, routine_code: str, actual_node: iCodeNodeIF):
+        value = float(self.expression_exec.execute(actual_node))
+        if routine_code == 'ROUND':
+            if value > 0.0:
+                value = int(value + 0.5)
+            else:
+                value = int(value - 0.5)
+        else:
+            value = int(value)
+
+        return value
