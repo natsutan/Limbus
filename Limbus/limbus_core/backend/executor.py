@@ -4,13 +4,14 @@ import copy
 import math
 
 from . backend import Backend
+from .backend_factory import object_default_value
 
 from ... pascal.pascal_limbus import PascalScanner
 from .. frontend.source import Source
 from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
-from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF
+from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF, iCodeNodeType
 from .. intermidiate .iCode_factory import iCodeNodeFactory
-from .. intermidiate. type_impl import TypeSpec, Predefined, Definition
+from .. intermidiate. type_impl import TypeSpec, Predefined, Definition, TypeForm
 from .. message import Message, MessageType
 
 from . runtime_if import RuntimeErrorCode, RuntimeStackIF, CellIF
@@ -123,9 +124,14 @@ class StatementExecutor(Executor):
     def send_return_message(self, node: iCodeNodeIF, routine_name: str):
         pass
 
+    def send_fetch_message(self, node: iCodeNodeIF, variable_name: str, value):
+        pass
+
     def get_line_number(self, node: iCodeNodeIF):
         return None
 
+    def to_java(self, target_type: TypeSpec, pascal_value):
+        pass
 
 class CompoundExecutor(StatementExecutor):
     def __init__(self, parent):
@@ -179,7 +185,7 @@ class AssignmentExecutor(StatementExecutor):
 
             target_cell.value = self.copy_of(string_value, node)
         else:
-            target_cell.vaue = self.copy_of(value, node)
+            target_cell.value= self.copy_of(value, node)
 
         self.send_assign_message(node, target_id.get_name(), value)
 
@@ -222,9 +228,41 @@ class ExpressionExecutor(StatementExecutor):
             expression_node = children[0]
             value = self.execute(expression_node)
             return not value
+        elif node_type == 'CALL':
+            function_id: SynTabEntryIF = node.get_attribute('ID')
+            routine_code: str = function_id.get_attribute('ROUTINE_CODE')
+            call_exec = CallExecutor(self)
+            value = call_exec.execute(node)
+
+            if routine_code == 'DECLARED':
+                function_name: str = function_id.get_name()
+                nesting_level: int = function_id.get_symtab().get_nesting_level()
+                ar: ActivationRecordIF = self.runtime_stack.get_topmost(nesting_level)
+                function_value_cell: CellIF = ar.get_cell(function_name)
+                value = function_value_cell.value
+                self.send_fetch_message(node, function_id.get_name(), value)
+
+            return value
         else:
             value = self.execute_binary_op(node, node_type)
             return value
+
+    def execute_value(self, node: iCodeNodeIF):
+        variable_id: SynTabEntryIF = node.get_attribute('ID')
+        variable_name: str = variable_id.get_name()
+        variable_type: TypeSpec = variable_id.get_typespec()
+
+        variable_cell: CellIF = self.execute_variable(node)
+        value = variable_cell.value
+
+        if value is not None:
+            value = self.to_java(variable_type, value)
+        else:
+            self.error_handler.flag(node, 'UNINITIALIZED_VALUE', self)
+            value = object_default_value(variable_type)
+            variable_cell.value = value
+        self.send_fetch_message(node, variable_name, value)
+        return value
 
     def execute_binary_op(self, node, node_type):
         children = node.get_children()
@@ -234,7 +272,16 @@ class ExpressionExecutor(StatementExecutor):
         oprand1 = self.execute(opnode1)
         oprand2 = self.execute(opnode2)
 
-        intmode = isinstance(oprand1, int) and isinstance(oprand2, int)
+        intmode: bool = False
+        char_mode: bool = False
+        str_mode: bool = False
+
+        if isinstance(oprand1, int) and isinstance(oprand2, int):
+            intmode = True
+        elif (isinstance(oprand1, str) and len(oprand1) == 1) and (isinstance(oprand2, str) and len(oprand2) == 1):
+            char_mode = True
+        elif isinstance(oprand1, str) and isinstance(oprand2, str):
+            str_mode = True
 
         if node_type in self.ARITH_OPS:
             if intmode:
@@ -280,6 +327,7 @@ class ExpressionExecutor(StatementExecutor):
                     else:
                         self.error_handler.flag(node, 'DIVISION_BY_ZERO', self)
                         return 0
+        # とりあえずそのままで。
         elif node_type == 'AND':
             return oprand1 and oprand2
         elif node_type == 'OR':
@@ -299,9 +347,46 @@ class ExpressionExecutor(StatementExecutor):
 
         return 0
 
-    # todo
-    def execute_value(self, node: iCodeNodeIF):
-        return None
+    def execute_variable(self, node: iCodeNodeIF) -> CellIF:
+        variable_id: SynTabEntryIF = node.get_attribute('ID')
+        variable_name: str = variable_id.get_name()
+        variable_type: TypeSpec = variable_id.get_typespec()
+        nesting_level: int = variable_id.get_symtab().get_nesting_level()
+
+        ar: ActivationRecordIF = self.runtime_stack.get_topmost(nesting_level)
+        variable_cell: CellIF = ar.get_cell(variable_name)
+
+        modifiers: [iCodeNodeIF] = node.get_children()
+
+        if isinstance(variable_cell.value, CellIF):
+            variable_cell = variable_cell.value
+
+        for modifier in modifiers:
+            node_type: iCodeNodeType = modifier.get_type()
+
+            if node_type == iCodeNodeType.SUBSCRIPTS:
+                subscripts: [iCodeNodeIF] = modifier.get_children()
+                for subscript in subscripts:
+                    index_type: TypeSpec = variable_type.get_attribute('ARRAY_INDEX_TYPE')
+                    if index_type.get_form() == TypeForm.SUBRANGE:
+                        min_index: int = index_type.get_attribute('SUBRANGE_MIN_VALUE')
+                    else:
+                        min_index = 0
+                    value: int = self.execute(subscript)
+                    value: int = self.check_range(node, index_type, value)
+
+                    index: int = value - min_index
+                    variable_cell: [CellIF] = variable_cell.value[index]
+                    variable_type: TypeSpec = variable_type.get_attribute('ARRAY_ELEMENT_TYPE')
+
+            elif node_type == iCodeNodeType.FIELD:
+                field_id: SynTabEntryIF = modifier.get_attribute('ID')
+                field_name: str = field_id.get_name()
+                field_map: dict = variable_cell.value
+                variable_cell = field_map[field_name]
+                variable_type = field_id.get_typespec()
+
+        return variable_cell
 
 
 class SelectExecutor(StatementExecutor):
