@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum,  auto
-from .type_if import TypeFormIF, TypeKeyIF, TypeSpecIF
-from .symtabstack_impl import SymTabEntry, SymTabStack
+import sys
+sys.path.append('limbus_core\\intermidiate')
+
+from type_if import TypeFormIF, TypeKeyIF, TypeSpecIF
+from symtabstack_impl import SymTabEntry, SymTabStack
 
 
 class TypeForm(TypeFormIF):

@@ -598,7 +598,7 @@ class ExpressionParser(StatementParser):
             if len(token.value) == 1:
                 result_type = Predefined.char_type
             else:
-                result_type = TypeSpec(value)
+                result_type = TypeSpec(token.value)
             root_node.set_typespec(result_type)
             token = self.next_token()
 
@@ -996,7 +996,7 @@ class ForStatementParser(StatementParser):
         else:
             arith_op_node = iCodeNodeFactory().create('SUBTRACT')
 
-        arith_op_node.get_typespec(Predefined.integer_type)
+        arith_op_node.set_typespec(Predefined.integer_type)
         arith_op_node.add_child(control_var_node)
         one_node = iCodeNodeFactory().create('INTEGER_CONSTANT')
         one_node.set_attribute('VALUE', 1)

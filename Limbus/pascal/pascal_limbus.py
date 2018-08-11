@@ -5,14 +5,13 @@ from limbus_core.message import Message, MessageType ,MessageListener
 from limbus_core.frontend.token import Token, TokenType, ErrorToken
 from limbus_core.frontend.scanner import Scanner
 from limbus_core.frontend.source import Source
-from limbus_core.backend.backend_factory import BackendFactory
 from limbus_core.intermidiate.cross_referencer import CrossReferencer
 from limbus_core.intermidiate.parse_tree_printer import ParseTreePrinter
 
 from pascal.pascal_parser import PascalParserTD
 from pascal.pascal_error import PascalErrorType, PascalError
 from pascal.pascal_token import *
-
+from pascal.pascal_scanner import PascalScanner
 
 class SourceMessageListener(MessageListener):
     def message_received(self, msg):
@@ -124,57 +123,11 @@ class BackendMessageListener(MessageListener):
                 print(self.RETURN_FORMAT % (line_number, routine_name))
 
 
-class PascalScanner(Scanner):
-    special_chars = "<>=()[]{}^.+-*/:.,;'="
-
-    def __init__(self, source):
-        super().__init__(source)
-
-    def extract_token(self):
-        self.skip_whitespace()
-        cc = self.current_char()
-
-        if cc == Scanner.EOF:
-            token = Token(self.source)
-            token.type = TokenType.EOF
-        elif cc.isalpha():
-            token = PascalWordToken(self.source)
-        elif cc.isdigit():
-            token = PascalNumberToken(self.source)
-        elif cc == "'":
-            token = PascalStringToken(self.source)
-        elif cc in PascalScanner.special_chars:
-            token = PascalSpecialToken(self.source)
-        else:
-            token = ErrorToken("PascalScanner", self.source)
-            self.next_char()
-
-        return token
-
-    def skip_whitespace(self):
-        cc = self.current_char()
-        while cc == ' ' or cc == '{' or cc == '\n' :
-            # comment
-            if cc == '{':
-                cc = self.next_char()
-                while cc == Scanner.EOF or cc != '}':
-                    cc = self.next_char()
-                if cc == '}':
-                    cc = self.next_char()
-            else:
-                cc = self.next_char()
-
-    def is_at_eol(self):
-        return self.source.is_at_eol()
-
-    def is_at_eof(self):
-        return self.source.is_at_eof()
-
-    def is_skip_to_next_line(self):
-        return self.source.is_skip_to_next_line()
-
-
 class Pascal:
+    import sys
+    sys.path.append("limbus_core\\backend")
+#    from backend_factory import BackendFactory
+
     def __init__(self, op, file, flags):
         # options
 
@@ -201,7 +154,9 @@ class Pascal:
         self.parser = PascalParserTD(self.scanner)
         self.parser.add_message_listener(ParserMessageListener())
 
-        self.backend = BackendFactory().create_backend(op)
+        import backend_factory
+
+        self.backend = backend_factory.BackendFactory().create_backend(op)
         self.backend.add_message_listener(BackendMessageListener(self.opts))
 
         self.parser.parse()

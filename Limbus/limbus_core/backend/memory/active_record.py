@@ -1,13 +1,11 @@
 
 from ... intermidiate.symtab_if import SynTabEntryIF, SymTabIF
 from ..activation_record_if import ActivationRecordIF
-from .. memory_if import MemoryMapIF, create_memory_map
 
 
 class ActivationRecord(ActivationRecordIF):
 
     def __init__(self, routine_id: SynTabEntryIF):
-        self.dummy = False
         self.link: ActivationRecordIF = None
         self.symtab: SymTabIF = routine_id.get_attribute('ROUTINE_SYMTAB')
         self.routine_id: SynTabEntryIF = routine_id

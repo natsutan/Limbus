@@ -1,10 +1,13 @@
-from .. runtime_if import RuntimeDisplayIF, RuntimeStackIF
-from .. memory_if import create_runtime_display, create_active_recode
-from .. activation_record_if import ActivationRecordIF
+import sys
+sys.path.append('limbus_core\\backend')
+
+from runtime_if import RuntimeDisplayIF, RuntimeStackIF
+from activation_record_if import ActivationRecordIF
 
 
 class RuntimeStack(RuntimeStackIF):
     def __init__(self):
+        from memory_if import create_runtime_display
         self.display: RuntimeDisplayIF = create_runtime_display()
         self.records: list = []
 
@@ -34,9 +37,7 @@ class RuntimeStack(RuntimeStackIF):
 class RuntimeDisplay(RuntimeDisplayIF):
     def __init__(self):
         # dummy element 0
-        dummy_ar: ActivationRecordIF = create_active_recode()
-        dummy_ar.dummy = True
-        self.list = [dummy_ar, ]
+        self.list = [None, ]
 
     def get_active_record(self, nesting_level: int) -> ActivationRecordIF:
         return self.list[nesting_level]

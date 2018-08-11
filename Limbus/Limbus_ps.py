@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pascal.pascal import Pascal
+from pascal.pascal_limbus import Pascal
 
 #hello_ps = 'pascal_src/assignments.txt'
 #hello_ps = 'pascal_src/declarations.txt'

@@ -1,29 +1,22 @@
 # -*- coding: utf-8 -*-
 import sys
-import copy
 import math
 
-from . backend import Backend
-from .backend_factory import object_default_value
+sys.path.append('limbus_core\\intermidiate')
+from iCode_if import iCodeIF, iCodeNodeIF, iCodeNodeType
+from type_impl import TypeSpec, Predefined, Definition, TypeForm
+from symtab_if import SynTabEntryIF
 
-from ... pascal.pascal_limbus import PascalScanner
-from .. frontend.source import Source
-from .. intermidiate .symtabstack_impl import SymTabStackIF, SynTabEntryIF
-from .. intermidiate .iCode_if import iCodeIF, iCodeNodeIF, iCodeNodeType
-from .. intermidiate .iCode_factory import iCodeNodeFactory
-from .. intermidiate. type_impl import TypeSpec, Predefined, Definition, TypeForm
-from .. message import Message, MessageType
-
-from . runtime_if import RuntimeErrorCode, RuntimeStackIF, CellIF
-from . memory_if import create_runtime_stack, create_active_recode
-from . activation_record_if import ActivationRecordIF
-
+sys.path.append('limbus_core\\backend')
+from runtime_if import CellIF
+from activation_record_if import ActivationRecordIF
 
 class RuntimeErrorHandler:
     MAX_ERRORS = 5
     error_count = 0
+    from runtime_if import RuntimeErrorCode
 
-    def flag(self, node, error_code: RuntimeErrorCode, backend: Backend):
+    def flag(self, node, error_code: RuntimeErrorCode, backend):
 
         while node is not None and node.get_attribute('LINE') is None:
             node = node.get_parent()
@@ -36,13 +29,18 @@ class RuntimeErrorHandler:
             print('*** ABORTED AFTER TOO MANY RUNTIME ERRORS.')
             sys.exit(-1)
 
+from backend import Backend
 
 class Executor(Backend):
-
+    from memory_if import create_runtime_stack
+    from runtime_if import RuntimeStackIF
     execution_count: int = 0
     runtime_stack: RuntimeStackIF = create_runtime_stack()
     error_handler: RuntimeErrorHandler = RuntimeErrorHandler()
 
+    import sys
+    sys.path.append('pascal')
+    from pascal_scanner import PascalScanner
     standard_in = PascalScanner(sys.__stdin__)
     standard_out = sys.__stdout__
 
@@ -56,7 +54,7 @@ class Executor(Backend):
     def increment_exec_count(self):
         self.execution_count += 1
 
-    def process(self, icode: iCodeIF, symtab_stack: SymTabStackIF):
+    def process(self, icode, symtab_stack):
         self.iCode = icode
         self.symtab_stack = symtab_stack
         program_id: SynTabEntryIF = self.symtab_stack.get_program_id()
@@ -76,7 +74,7 @@ class StatementExecutor(Executor):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def execute(self, node: iCodeNodeIF):
+    def execute(self, node):
         node_type = node.get_type()
         self.send_sourceline_message(node)
 
@@ -109,7 +107,7 @@ class StatementExecutor(Executor):
             self.message_handler.send_message(msg)
 
     # TODO
-    def check_range(self, node: iCodeNodeIF, typespec: TypeSpec, value):
+    def check_range(self, node, typespec, value):
         return value
 
     def copy_of(self, value, node: iCodeNodeIF):

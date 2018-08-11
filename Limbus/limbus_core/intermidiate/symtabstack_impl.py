@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from enum import Enum,  auto
-from .symtab_if import *
+
+import sys
+sys.path.append('limbus_core\\intermidiate')
+from symtab_if import *
 
 
 class SymTabKey(Enum):

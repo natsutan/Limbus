@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from .executor import Executor
-from .codegenerator import CodeGeneretor
-
 
 class BackendFactory:
     def create_backend(self, operation):
+        from executor import Executor
+        from backend import CodeGeneretor
         if operation == 'compile':
             return CodeGeneretor()
         elif operation == 'execute':
-            return Executer(None)
+            return Executor(None)
         else:
             raise ValueError(operation)
 

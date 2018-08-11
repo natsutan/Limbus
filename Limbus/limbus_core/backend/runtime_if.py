@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 
-from .activation_record_if import ActivationRecordIF
 
 
 class CellIF(metaclass=ABCMeta):
@@ -35,11 +34,11 @@ class RuntimeStackIF(metaclass=ABCMeta):
 
 class RuntimeDisplayIF(metaclass=ABCMeta):
     @abstractmethod
-    def get_active_record(self, nesting_level: int) -> ActivationRecordIF:
+    def get_active_record(self, nesting_level: int):
         raise NotImplementedError()
 
     @abstractmethod
-    def call_update(self, nesting_level: int, ar: ActivationRecordIF):
+    def call_update(self, nesting_level: int, ar):
         raise NotImplementedError()
 
     @abstractmethod
